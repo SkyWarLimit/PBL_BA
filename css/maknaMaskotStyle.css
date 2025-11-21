@@ -1,0 +1,488 @@
+/* ========================================= */
+/* NAVBARRRRRRR */
+/* ========================================= */
+
+/* CSS Kustom untuk Sticky Navbar */
+* {
+    font-family: 'Nunito', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    padding-top: 80px;
+}
+
+.sticky-navbar {
+    width: 100%;
+    height: 80px;
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 50px;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.lab-name-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.lab-name {
+    font-weight: 700;
+    font-size: 18px;
+    color: #333;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.lab-tagline {
+    font-weight: 400;
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    gap: 40px;
+    flex-grow: 1;
+    justify-content: center;
+    height: 100%;
+}
+
+.nav-item {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.nav-link {
+    color: #333;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px 0;
+    transition: color 0.3s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    font-size: 16px;
+    height: 100%;
+}
+
+.nav-link:hover {
+    color: #2B95FD;
+}
+
+.nav-link.active {
+    color: #2B95FD;
+}
+
+/* Garis horizontal di bawah menu aktif */
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #2B95FD;
+    border-radius: 2px 2px 0 0;
+}
+
+/* Dropdown styling */
+.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Icon panah bawah untuk dropdown */
+.dropdown-toggle::after {
+    display: none;
+}
+
+.dropdown-icon {
+    font-size: 12px;
+    margin-left: 5px;
+    color: inherit;
+}
+
+/* Custom Dropdown Menu */
+.dropdown-menu {
+    width: 200px;
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.25) !important;
+    border-radius: 8px;
+    padding: 0;
+    margin-top: 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: none;
+    opacity: 0;
+    transition: all 0.3s ease;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1001;
+}
+
+/* Dropdown muncul saat hover */
+.nav-item.dropdown:hover .dropdown-menu {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Tambahan spacing untuk dropdown container */
+.nav-item.dropdown {
+    position: relative;
+}
+
+.dropdown-item {
+    padding: 12px 20px;
+    font-weight: 500;
+    color: #333;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(43, 149, 253, 0.1);
+    color: #2B95FD;
+}
+
+.login-btn {
+    background-color: #2B95FD;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 5px;
+    font-weight: 600;
+    transition: background-color 0.3s;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.login-btn:hover {
+    background-color: #1a7fd8;
+}
+
+/* Konten dummy untuk demonstrasi scroll */
+.content {
+    height: 2000px;
+    padding: 50px;
+    background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+}
+
+/* Responsif untuk tablet dan mobile */
+@media (max-width: 1200px) {
+    .sticky-navbar {
+        padding: 0 30px;
+    }
+    
+    .nav-menu {
+        gap: 30px;
+    }
+}
+
+@media (max-width: 992px) {
+    .sticky-navbar {
+        padding: 0 20px;
+    }
+    
+    .nav-menu {
+        gap: 20px;
+    }
+    
+    .lab-name {
+        font-size: 16px;
+    }
+    
+    .lab-tagline {
+        font-size: 11px;
+    }
+    
+    .nav-link {
+        font-size: 14px;
+    }
+    
+    .dropdown-menu {
+        width: 180px;
+        margin-top: 0;
+    }
+    
+    /* Untuk mobile, tetap menggunakan klik */
+    .nav-item.dropdown:hover .dropdown-menu {
+        display: none;
+    }
+    
+    .nav-item.dropdown .dropdown-menu.show {
+        display: block;
+        opacity: 1;
+        transform: none;
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .sticky-navbar {
+        height: auto;
+        padding: 15px 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .logo-container {
+        order: 1;
+    }
+    
+    .nav-menu {
+        order: 3;
+        width: 100%;
+        margin-top: 15px;
+        justify-content: space-between;
+        gap: 10px;
+        height: auto;
+    }
+    
+    .nav-item {
+        height: auto;
+    }
+    
+    .nav-link {
+        height: auto;
+    }
+    
+    .nav-link.active::after {
+        bottom: -5px;
+    }
+    
+    .dropdown-menu {
+        width: 160px;
+        margin-top: 0;
+    }
+    
+    .login-btn {
+        order: 2;
+        margin-left: auto;
+    }
+    
+    .lab-name-container {
+        display: none;
+    }
+}
+
+/* ========================================= */
+/* KONTEN MAKNA LOGO */
+/* ========================================= */
+
+.content-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.breadcrumb {
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+.breadcrumb a {
+  color: #2b95fd;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb .active {
+  color: #666;
+}
+
+.breadcrumb .separator {
+  margin: 0 8px;
+  color: #999;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.content-text {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #444;
+  margin-bottom: 40px;
+  text-align: justify;
+}
+
+.logo-center {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.logo-center img {
+  max-width: 300px;
+  height: auto;
+}
+
+/* Responsif untuk tablet dan mobile */
+@media (max-width: 1200px) {
+  .sticky-navbar {
+    padding: 0 30px;
+  }
+
+  .nav-menu {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 992px) {
+  .sticky-navbar {
+    padding: 0 20px;
+  }
+
+  .nav-menu {
+    gap: 20px;
+  }
+
+  .lab-name {
+    font-size: 16px;
+  }
+
+  .lab-tagline {
+    font-size: 11px;
+  }
+
+  .nav-link {
+    font-size: 14px;
+  }
+
+  .dropdown-menu {
+    width: 180px;
+    margin-top: 0;
+  }
+
+  /* Untuk mobile, tetap menggunakan klik */
+  .nav-item.dropdown:hover .dropdown-menu {
+    display: none;
+  }
+
+  .nav-item.dropdown .dropdown-menu.show {
+    display: block;
+    opacity: 1;
+    transform: none;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .sticky-navbar {
+    height: auto;
+    padding: 15px 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .logo-container {
+    order: 1;
+  }
+
+  .nav-menu {
+    order: 3;
+    width: 100%;
+    margin-top: 15px;
+    justify-content: space-between;
+    gap: 10px;
+    height: auto;
+  }
+
+  .nav-item {
+    height: auto;
+  }
+
+  .nav-link {
+    height: auto;
+  }
+
+  .nav-link.active::after {
+    bottom: -5px;
+  }
+
+  .dropdown-menu {
+    width: 160px;
+    margin-top: 0;
+  }
+
+  .login-btn {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .lab-name-container {
+    display: none;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .content-text {
+    font-size: 15px;
+  }
+}
