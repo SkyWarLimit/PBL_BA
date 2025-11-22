@@ -1,485 +1,485 @@
 /* ========================================= */
-        /* NAVBARRRRRRR */
-        /* ========================================= */
+/* NAVBARRRRRRR */
+/* ========================================= */
 
-        /* CSS Kustom untuk Sticky Navbar */
-        * {
-            font-family: 'Nunito', sans-serif;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+/* CSS Kustom untuk Sticky Navbar */
+* {
+  font-family: "Nunito", sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-        body {
-            padding-top: 80px;
-            background-color: #f8f9fa;
-        }
+body {
+  padding-top: 80px;
+  background-color: #f8f9fa;
+}
 
-        .sticky-navbar {
-            width: 100%;
-            height: 80px;
-            background-color: rgba(255, 255, 255, 1);
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 0;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 50px;
-        }
+.sticky-navbar {
+  width: 100%;
+  height: 80px;
+  background-color: rgba(255, 255, 255, 1);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 50px;
+}
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-        }
+.logo-container {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
 
-        .logo {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            margin-right: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
+.logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
 
-        .logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
-        .lab-name-container {
-            display: flex;
-            flex-direction: column;
-        }
+.lab-name-container {
+  display: flex;
+  flex-direction: column;
+}
 
-        .lab-name {
-            font-weight: 700;
-            font-size: 18px;
-            color: #333;
-            white-space: nowrap;
-            line-height: 1.2;
-        }
+.lab-name {
+  font-weight: 700;
+  font-size: 18px;
+  color: #333;
+  white-space: nowrap;
+  line-height: 1.2;
+}
 
-        .lab-tagline {
-            font-weight: 400;
-            font-size: 12px;
-            color: #666;
-            white-space: nowrap;
-            line-height: 1.2;
-            margin-top: 2px;
-        }
+.lab-tagline {
+  font-weight: 400;
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  line-height: 1.2;
+  margin-top: 2px;
+}
 
-        .nav-menu {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            align-items: center;
-            gap: 40px;
-            flex-grow: 1;
-            justify-content: center;
-            height: 100%;
-        }
+.nav-menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  gap: 40px;
+  flex-grow: 1;
+  justify-content: center;
+  height: 100%;
+}
 
-        .nav-item {
-            position: relative;
-            height: 100%;
-            display: flex;
-            align-items: center;
-        }
+.nav-item {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
 
-        .nav-link {
-            color: #333;
-            text-decoration: none;
-            font-weight: 600;
-            padding: 10px 0;
-            transition: color 0.3s;
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-            font-size: 16px;
-            height: 100%;
-        }
+.nav-link {
+  color: #333;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 10px 0;
+  transition: color 0.3s;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  font-size: 16px;
+  height: 100%;
+}
 
-        .nav-link:hover {
-            color: #2B95FD;
-        }
+.nav-link:hover {
+  color: #2b95fd;
+}
 
-        .nav-link.active {
-            color: #2B95FD;
-        }
+.nav-link.active {
+  color: #2b95fd;
+}
 
-        /* Garis horizontal di bawah menu aktif */
-        .nav-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: #2B95FD;
-            border-radius: 2px 2px 0 0;
-        }
+/* Garis horizontal di bawah menu aktif */
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #2b95fd;
+  border-radius: 2px 2px 0 0;
+}
 
-        /* Dropdown styling */
-        .dropdown-toggle {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+/* Dropdown styling */
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
 
-        /* Icon panah bawah untuk dropdown */
-        .dropdown-toggle::after {
-            display: none;
-        }
+/* Icon panah bawah untuk dropdown */
+.dropdown-toggle::after {
+  display: none;
+}
 
-        .dropdown-icon {
-            font-size: 12px;
-            margin-left: 5px;
-            color: inherit;
-        }
+.dropdown-icon {
+  font-size: 12px;
+  margin-left: 5px;
+  color: inherit;
+}
 
-        /* Custom Dropdown Menu */
-        .dropdown-menu {
-            width: 200px;
-            background: rgba(255, 255, 255, 0.65) !important;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 0, 0, 0.25) !important;
-            border-radius: 8px;
-            padding: 0;
-            margin-top: 0;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: none;
-            opacity: 0;
-            transition: all 0.3s ease;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            z-index: 1001;
-        }
+/* Custom Dropdown Menu */
+.dropdown-menu {
+  width: 200px;
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.25) !important;
+  border-radius: 8px;
+  padding: 0;
+  margin-top: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: none;
+  opacity: 0;
+  transition: all 0.3s ease;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1001;
+}
 
-        /* Dropdown muncul saat hover */
-        .nav-item.dropdown:hover .dropdown-menu {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
+/* Dropdown muncul saat hover */
+.nav-item.dropdown:hover .dropdown-menu {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
 
-        /* Tambahan spacing untuk dropdown container */
-        .nav-item.dropdown {
-            position: relative;
-        }
+/* Tambahan spacing untuk dropdown container */
+.nav-item.dropdown {
+  position: relative;
+}
 
-        .dropdown-item {
-            padding: 12px 20px;
-            font-weight: 500;
-            color: #333;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            height: 40px;
-            cursor: pointer;
-            white-space: nowrap;
-            text-decoration: none;
-        }
+.dropdown-item {
+  padding: 12px 20px;
+  font-weight: 500;
+  color: #333;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
 
-        .dropdown-item:last-child {
-            border-bottom: none;
-        }
+.dropdown-item:last-child {
+  border-bottom: none;
+}
 
-        .dropdown-item:hover {
-            background-color: rgba(43, 149, 253, 0.1);
-            color: #2B95FD;
-        }
+.dropdown-item:hover {
+  background-color: rgba(43, 149, 253, 0.1);
+  color: #2b95fd;
+}
 
-        .login-btn {
-            background-color: #2B95FD;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 5px;
-            font-weight: 600;
-            transition: background-color 0.3s;
-            flex-shrink: 0;
-            white-space: nowrap;
-        }
+.login-btn {
+  background-color: #2b95fd;
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  font-weight: 600;
+  transition: background-color 0.3s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 
-        .login-btn:hover {
-            background-color: #1a7fd8;
-        }
+.login-btn:hover {
+  background-color: #1a7fd8;
+}
 
-        /* ========================================= */
-        /* CONTENT AREA */
-        /* ========================================= */
-        
-        .content-container {
-            padding: 40px 50px;
-        }
-        
-        .breadcrumb {
-            background-color: transparent;
-            padding: 0;
-            margin-bottom: 30px;
-        }
-        
-        .breadcrumb-item a {
-            color: #2B95FD;
-            text-decoration: none;
-        }
-        
-        .breadcrumb-item.active {
-            color: #666;
-        }
-        
-        .section-title {
-            color: #04163E;
-            font-size: 36px;
-            font-weight: 800;
-            margin-bottom: 20px;
-        }
-        
-        .section-content {
-            color: #666;
-            margin-bottom: 40px;
-            line-height: 1.6;
-            max-width: 760px;
-        }
-        
-        .calendar-container {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-        }
-        
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .calendar-month {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-        }
-        
-        .calendar-nav {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .calendar-nav button {
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-        
-        .calendar-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .calendar-table th {
-            text-align: center;
-            padding: 10px 0;
-            font-weight: 600;
-            color: #666;
-        }
-        
-        .calendar-table td {
-            text-align: center;
-            padding: 12px 0;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        
-        .calendar-table td:hover {
-            background-color: #f0f8ff;
-        }
-        
-        .calendar-table td.active {
-            background-color: #2B95FD;
-            color: white;
-        }
-        
-        .calendar-table td.other-month {
-            color: #ccc;
-        }
-        
-        .booking-form {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-            margin-top: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-        
-        .form-control {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px 15px;
-            width: 100%;
-        }
-        
-        .time-inputs {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .time-inputs .form-group {
-            flex: 1;
-        }
-        
-        .booking-btn {
-            background-color: #2B95FD;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 5px;
-            font-weight: 600;
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        .booking-btn:hover {
-            background-color: #1a7fd8;
-        }
-        
-        /* Responsif untuk tablet dan mobile */
-        @media (max-width: 1200px) {
-            .sticky-navbar {
-                padding: 0 30px;
-            }
-            
-            .nav-menu {
-                gap: 30px;
-            }
-        }
+/* ========================================= */
+/* CONTENT AREA */
+/* ========================================= */
 
-        @media (max-width: 992px) {
-            .sticky-navbar {
-                padding: 0 20px;
-            }
-            
-            .nav-menu {
-                gap: 20px;
-            }
-            
-            .lab-name {
-                font-size: 16px;
-            }
-            
-            .lab-tagline {
-                font-size: 11px;
-            }
-            
-            .nav-link {
-                font-size: 14px;
-            }
-            
-            .dropdown-menu {
-                width: 180px;
-                margin-top: 0;
-            }
-            
-            /* Untuk mobile, tetap menggunakan klik */
-            .nav-item.dropdown:hover .dropdown-menu {
-                display: none;
-            }
-            
-            .nav-item.dropdown .dropdown-menu.show {
-                display: block;
-                opacity: 1;
-                transform: none;
-                margin-top: 0;
-            }
-            
-            .content-container {
-                padding: 30px 20px;
-            }
-        }
+.content-container {
+  padding: 40px 50px;
+}
 
-        @media (max-width: 768px) {
-            .sticky-navbar {
-                height: auto;
-                padding: 15px 20px;
-                flex-wrap: wrap;
-                gap: 15px;
-            }
-            
-            .logo-container {
-                order: 1;
-            }
-            
-            .nav-menu {
-                order: 3;
-                width: 100%;
-                margin-top: 15px;
-                justify-content: space-between;
-                gap: 10px;
-                height: auto;
-            }
-            
-            .nav-item {
-                height: auto;
-            }
-            
-            .nav-link {
-                height: auto;
-            }
-            
-            .nav-link.active::after {
-                bottom: -5px;
-            }
-            
-            .dropdown-menu {
-                width: 160px;
-                margin-top: 0;
-            }
-            
-            .login-btn {
-                order: 2;
-                margin-left: auto;
-            }
-            
-            .lab-name-container {
-                display: none;
-            }
-            
-            .section-title {
-                font-size: 28px;
-            }
-            
-            .time-inputs {
-                flex-direction: column;
-                gap: 0;
-            }
-        }
+.breadcrumb {
+  background-color: transparent;
+  padding: 0;
+  margin-bottom: 30px;
+}
+
+.breadcrumb-item a {
+  color: #2b95fd;
+  text-decoration: none;
+}
+
+.breadcrumb-item.active {
+  color: #666;
+}
+
+.section-title {
+  color: #04163e;
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.section-content {
+  color: #666;
+  margin-bottom: 40px;
+  line-height: 1.6;
+  max-width: 760px;
+}
+
+.calendar-container {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendar-month {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
+
+.calendar-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.calendar-nav button {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.calendar-table th {
+  text-align: center;
+  padding: 10px 0;
+  font-weight: 600;
+  color: #666;
+}
+
+.calendar-table td {
+  text-align: center;
+  padding: 12px 0;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.calendar-table td:hover {
+  background-color: #f0f8ff;
+}
+
+.calendar-table td.active {
+  background-color: #2b95fd;
+  color: white;
+}
+
+.calendar-table td.other-month {
+  color: #ccc;
+}
+
+.booking-form {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  margin-top: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.form-control {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px 15px;
+  width: 100%;
+}
+
+.time-inputs {
+  display: flex;
+  gap: 15px;
+}
+
+.time-inputs .form-group {
+  flex: 1;
+}
+
+.booking-btn {
+  background-color: #2b95fd;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 5px;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.booking-btn:hover {
+  background-color: #1a7fd8;
+}
+
+/* Responsif untuk tablet dan mobile */
+@media (max-width: 1200px) {
+  .sticky-navbar {
+    padding: 0 30px;
+  }
+
+  .nav-menu {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 992px) {
+  .sticky-navbar {
+    padding: 0 20px;
+  }
+
+  .nav-menu {
+    gap: 20px;
+  }
+
+  .lab-name {
+    font-size: 16px;
+  }
+
+  .lab-tagline {
+    font-size: 11px;
+  }
+
+  .nav-link {
+    font-size: 14px;
+  }
+
+  .dropdown-menu {
+    width: 180px;
+    margin-top: 0;
+  }
+
+  /* Untuk mobile, tetap menggunakan klik */
+  .nav-item.dropdown:hover .dropdown-menu {
+    display: none;
+  }
+
+  .nav-item.dropdown .dropdown-menu.show {
+    display: block;
+    opacity: 1;
+    transform: none;
+    margin-top: 0;
+  }
+
+  .content-container {
+    padding: 30px 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sticky-navbar {
+    height: auto;
+    padding: 15px 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .logo-container {
+    order: 1;
+  }
+
+  .nav-menu {
+    order: 3;
+    width: 100%;
+    margin-top: 15px;
+    justify-content: space-between;
+    gap: 10px;
+    height: auto;
+  }
+
+  .nav-item {
+    height: auto;
+  }
+
+  .nav-link {
+    height: auto;
+  }
+
+  .nav-link.active::after {
+    bottom: -5px;
+  }
+
+  .dropdown-menu {
+    width: 160px;
+    margin-top: 0;
+  }
+
+  .login-btn {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .lab-name-container {
+    display: none;
+  }
+
+  .section-title {
+    font-size: 28px;
+  }
+
+  .time-inputs {
+    flex-direction: column;
+    gap: 0;
+  }
+}
