@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorium Business Analytics</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts - Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
+        rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../assets/css/tableBookingStyle.css">
+</head>
+
+<body>
+    <!-- Sticky Navigation Bar -->
+    <nav class="sticky-navbar">
+        <div class="logo-container">
+            <div class="logo">
+                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
+            </div>
+            <div class="lab-name-container">
+                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-tagline">Transforming Data into Decisions</div>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link" href="beranda.html">Beranda</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="profile.html">Profil</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#">
+                    Publikasi
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="berita.html">Berita</a></li>
+                    <li><a class="dropdown-item" href="galeri.html">Gallery</a></li>
+                    <li><a class="dropdown-item" href="newsInputService.html">News Input Service</a></li>
+                </ul>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle active" href="#">
+                    Peminjaman Lab
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="infoPeminjaman.html">Informasi Laboratorium</a></li>
+                    <li><a class="dropdown-item" href="tableBooking.html">Table Peminjaman</a></li>
+                    <li><a class="dropdown-item" href="booking.html">Pemesanan Lab</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="kontak.html">Kontak</a>
+            </li>
+        </ul>
+        
+        <button class="login-btn">Login</button>
+    </nav>
+
+    <!-- Table Booking Section -->
+    <div class="table-booking-container">
+        <div class="table-header">
+            <div class="date-navigation">
+                <button class="nav-btn" id="prev-week">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="date-range" id="date-range">Dec 01 - 07 2025</div>
+                <button class="nav-btn" id="next-week">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="today-btn" id="today-btn">Today</button>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-add-booking" id="open-add-booking">Add Booking</button>
+                <button class="btn-cancel-booking">Cancel Booking</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="booking-table">
+                <thead>
+                    <tr>
+                        <th>Waktu</th>
+                        <!-- Header hari akan diisi oleh JavaScript -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data akan diisi oleh JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Detail Booking -->
+    <div class="modal-overlay" id="booking-detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Detail Booking</div>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="booking-detail">
+                    <label>Hari & Tanggal:</label>
+                    <p id="detail-date">Senin, 01 Desember 2025</p>
+                </div>
+                <div class="booking-detail">
+                    <label>Waktu:</label>
+                    <p id="detail-time">07:00 - 08:00</p>
+                </div>
+                <div class="booking-detail">
+                    <label>Peminjam:</label>
+                    <p id="detail-booker">John Doe</p>
+                </div>
+                <div class="booking-detail">
+                    <label>Keperluan:</label>
+                    <p id="detail-purpose">Workshop Data Analytics</p>
+                </div>
+                <div class="booking-detail">
+                    <label>Status:</label>
+                    <p id="detail-status">Confirmed</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-cancel-booking-modal">Batalkan Booking</button>
+                <button class="btn-modal btn-close-modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Add Booking -->
+    <div class="modal-overlay" id="add-booking-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Tambah Booking Baru</div>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="booking-date">Tanggal:</label>
+                    <select id="booking-date" class="form-control">
+                        <!-- Opsi tanggal akan diisi oleh JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="booking-time">Waktu:</label>
+                    <div class="time-inputs">
+                        <select id="start-hour" class="form-control">
+                            <!-- Opsi jam mulai akan diisi oleh JavaScript -->
+                        </select>
+                        <select id="start-minute" class="form-control">
+                            <option value="00">00</option>
+                            <option value="15">15</option>
+                            <option value="30">30</option>
+                            <option value="45">45</option>
+                        </select>
+                        <span style="line-height: 38px;">-</span>
+                        <select id="end-hour" class="form-control">
+                            <!-- Opsi jam selesai akan diisi oleh JavaScript -->
+                        </select>
+                        <select id="end-minute" class="form-control">
+                            <option value="00">00</option>
+                            <option value="15">15</option>
+                            <option value="30">30</option>
+                            <option value="45">45</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="booker-name">Nama Peminjam:</label>
+                    <input type="text" id="booker-name" class="form-control" placeholder="Masukkan nama peminjam">
+                </div>
+                <div class="form-group">
+                    <label for="booking-purpose">Keperluan:</label>
+                    <input type="text" id="booking-purpose" class="form-control" placeholder="Masukkan keperluan booking">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-add-booking-modal" id="submit-booking">Simpan Booking</button>
+                <button class="btn-modal btn-close-modal">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // Data contoh booking
+        const sampleBookings = [
+            {
+                date: '2025-12-01',
+                time: '07:00-08:00',
+                booker: 'John Doe',
+                purpose: 'Workshop Data Analytics',
+                status: 'Confirmed'
+            },
+            {
+                date: '2025-12-01',
+                time: '10:30-12:15',
+                booker: 'Jane Smith',
+                purpose: 'Meeting Tim Marketing',
+                status: 'Confirmed'
+            },
+            {
+                date: '2025-12-02',
+                time: '14:45-16:30',
+                booker: 'Ahmad Fauzi',
+                purpose: 'Training Machine Learning',
+                status: 'Pending'
+            },
+            {
+                date: '2025-12-03',
+                time: '09:15-11:00',
+                booker: 'Siti Rahayu',
+                purpose: 'Presentasi Hasil Analisis',
+                status: 'Confirmed'
+            },
+            {
+                date: '2025-12-04',
+                time: '13:30-15:15',
+                booker: 'Budi Santoso',
+                purpose: 'Sesi Mentoring',
+                status: 'Confirmed'
+            }
+        ];
+
+        // JavaScript untuk Sticky Navbar
+        document.addEventListener('DOMContentLoaded', function () {
+            const allNavLinks = document.querySelectorAll('.nav-link');
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+            // Fungsi untuk set menu aktif
+            function setActiveMenu(clickedElement) {
+                // Remove active class dari semua menu
+                allNavLinks.forEach(link => link.classList.remove('active'));
+
+                // Add active class ke element yang diklik
+                if (clickedElement.classList.contains('dropdown-item')) {
+                    // Jika yang diklik adalah dropdown item, aktifkan parent dropdown
+                    const parentDropdown = clickedElement.closest('.dropdown');
+                    const dropdownToggle = parentDropdown.querySelector('.dropdown-toggle');
+                    dropdownToggle.classList.add('active');
+                } else {
+                    // Jika yang diklik adalah menu biasa
+                    clickedElement.classList.add('active');
+                }
+            }
+
+            // Event listeners untuk menu biasa
+            allNavLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // Jangan set active untuk dropdown toggle (karena sudah hover)
+                    if (!this.classList.contains('dropdown-toggle')) {
+                        setActiveMenu(this);
+                    }
+                });
+            });
+
+            // Event listeners untuk dropdown items
+            dropdownItems.forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    setActiveMenu(this);
+                });
+            });
+
+            // Untuk mobile devices, tetap gunakan Bootstrap dropdown
+            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function (e) {
+                    if (window.innerWidth <= 992) {
+                        e.preventDefault();
+                        const dropdownMenu = this.nextElementSibling;
+                        dropdownMenu.classList.toggle('show');
+                    }
+                });
+            });
+
+            // Tutup dropdown ketika klik di luar
+            document.addEventListener('click', function (e) {
+                if (window.innerWidth <= 992) {
+                    if (!e.target.closest('.dropdown')) {
+                        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                            menu.classList.remove('show');
+                        });
+                    }
+                }
+            });
+
+            // Generate table data
+            generateTableData();
+            
+            // Event listeners untuk navigasi minggu
+            document.getElementById('prev-week').addEventListener('click', function() {
+                changeWeek(-7);
+            });
+            
+            document.getElementById('next-week').addEventListener('click', function() {
+                changeWeek(7);
+            });
+
+            // Event listener untuk tombol Today
+            document.getElementById('today-btn').addEventListener('click', function() {
+                goToToday();
+            });
+
+            // Event listeners untuk modal
+            setupModalEvents();
+        });
+
+        // Variabel global untuk menyimpan tanggal saat ini
+        let currentDate = new Date(2025, 11, 1); // 1 Desember 2025
+
+        // Fungsi untuk kembali ke hari ini
+        function goToToday() {
+            currentDate = new Date();
+            generateTableData();
+        }
+
+        // Fungsi untuk mengubah minggu
+        function changeWeek(days) {
+            currentDate.setDate(currentDate.getDate() + days);
+            generateTableData();
+        }
+
+        // Fungsi untuk mendapatkan nama hari dalam bahasa Indonesia
+        function getDayName(dayIndex) {
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            return days[dayIndex];
+        }
+
+        // Fungsi untuk mendapatkan nama bulan dalam bahasa Indonesia
+        function getMonthName(monthIndex) {
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            return months[monthIndex];
+        }
+
+        // Fungsi untuk memformat tanggal menjadi YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Fungsi untuk menghasilkan data tabel
+        function generateTableData() {
+            const timeSlots = generateTimeSlots(); // Generate time slots dengan interval 15 menit
+
+            const tableHead = document.querySelector('.booking-table thead tr');
+            const tableBody = document.querySelector('.booking-table tbody');
+            
+            // Kosongkan tabel
+            while (tableHead.children.length > 1) {
+                tableHead.removeChild(tableHead.lastChild);
+            }
+            tableBody.innerHTML = '';
+            
+            // Buat header hari
+            const startDate = new Date(currentDate);
+            const endDate = new Date(currentDate);
+            endDate.setDate(endDate.getDate() + 6);
+            
+            // Update teks rentang tanggal
+            document.getElementById('date-range').textContent = 
+                `${getMonthName(startDate.getMonth())} ${startDate.getDate()} - ${getMonthName(endDate.getMonth())} ${endDate.getDate()} ${endDate.getFullYear()}`;
+            
+            // Buat header untuk setiap hari
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentDate);
+                date.setDate(date.getDate() + i);
+                
+                const th = document.createElement('th');
+                th.classList.add('day-header');
+                
+                // Tambahkan kelas today jika hari ini
+                const today = new Date();
+                if (date.toDateString() === today.toDateString()) {
+                    th.classList.add('today');
+                }
+                
+                th.textContent = `${getDayName(date.getDay())} ${date.getDate()}/${date.getMonth() + 1}`;
+                th.setAttribute('data-date', formatDate(date));
+                tableHead.appendChild(th);
+            }
+            
+            // Buat baris untuk setiap slot waktu
+            timeSlots.forEach(time => {
+                const row = document.createElement('tr');
+                
+                // Kolom waktu
+                const timeCell = document.createElement('td');
+                timeCell.classList.add('time-header');
+                timeCell.textContent = time;
+                row.appendChild(timeCell);
+                
+                // Kolom untuk setiap hari
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(currentDate);
+                    date.setDate(date.getDate() + i);
+                    const dateStr = formatDate(date);
+                    
+                    const cell = document.createElement('td');
+                    
+                    // Cek apakah ada booking untuk tanggal dan waktu ini
+                    const booking = findBooking(dateStr, time);
+                    
+                    if (booking) {
+                        cell.classList.add('room-booked');
+                        cell.textContent = 'Booked';
+                        cell.setAttribute('data-booking', JSON.stringify(booking));
+                    } else {
+                        cell.classList.add('empty-room');
+                        cell.textContent = 'Empty';
+                    }
+                    
+                    // Tambahkan event listener untuk menampilkan detail booking
+                    cell.addEventListener('click', function() {
+                        if (this.classList.contains('room-booked')) {
+                            showBookingDetail(this.getAttribute('data-booking'));
+                        } else {
+                            // Jika empty, buka modal add booking
+                            openAddBookingModal(dateStr, time);
+                        }
+                    });
+                    
+                    row.appendChild(cell);
+                }
+                
+                tableBody.appendChild(row);
+            });
+
+            // Update opsi tanggal di modal add booking
+            updateBookingDateOptions();
+        }
+
+        // Fungsi untuk menghasilkan slot waktu dengan interval 15 menit
+        function generateTimeSlots() {
+            const slots = [];
+            for (let hour = 7; hour <= 21; hour++) {
+                for (let minute = 0; minute < 60; minute += 15) {
+                    const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    slots.push(timeString);
+                }
+            }
+            return slots;
+        }
+
+        // Fungsi untuk mencari booking berdasarkan tanggal dan waktu
+        function findBooking(date, time) {
+            return sampleBookings.find(booking => {
+                if (booking.date !== date) return false;
+                
+                const [startTime, endTime] = booking.time.split('-');
+                return time >= startTime && time < endTime;
+            });
+        }
+
+        // Fungsi untuk menampilkan modal detail booking
+        function showBookingDetail(bookingData) {
+            const booking = JSON.parse(bookingData);
+            const modal = document.getElementById('booking-detail-modal');
+            
+            // Format tanggal untuk ditampilkan
+            const date = new Date(booking.date);
+            const formattedDate = `${getDayName(date.getDay())}, ${date.getDate()} ${getMonthName(date.getMonth())} ${date.getFullYear()}`;
+            
+            // Isi data di modal
+            document.getElementById('detail-date').textContent = formattedDate;
+            document.getElementById('detail-time').textContent = booking.time.replace('-', ' - ');
+            document.getElementById('detail-booker').textContent = booking.booker;
+            document.getElementById('detail-purpose').textContent = booking.purpose;
+            document.getElementById('detail-status').textContent = booking.status;
+            
+            // Tampilkan modal
+            modal.style.display = 'flex';
+        }
+
+        // Fungsi untuk membuka modal add booking
+        function openAddBookingModal(date, time) {
+            const modal = document.getElementById('add-booking-modal');
+            
+            // Set nilai default
+            document.getElementById('booking-date').value = date;
+            
+            // Parse waktu untuk set nilai default
+            const [hour, minute] = time.split(':');
+            document.getElementById('start-hour').value = hour;
+            document.getElementById('start-minute').value = minute;
+            
+            // Set end time default (1 jam setelah start time)
+            let endHour = parseInt(hour) + 1;
+            if (endHour > 21) endHour = 21;
+            document.getElementById('end-hour').value = String(endHour).padStart(2, '0');
+            document.getElementById('end-minute').value = minute;
+            
+            // Kosongkan field lainnya
+            document.getElementById('booker-name').value = '';
+            document.getElementById('booking-purpose').value = '';
+            
+            // Tampilkan modal
+            modal.style.display = 'flex';
+        }
+
+        // Fungsi untuk mengatur event listener modal
+        function setupModalEvents() {
+            // Modal detail booking
+            const detailModal = document.getElementById('booking-detail-modal');
+            const addModal = document.getElementById('add-booking-modal');
+            
+            // Tombol tutup modal
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    detailModal.style.display = 'none';
+                    addModal.style.display = 'none';
+                });
+            });
+            
+            // Tombol tutup di footer modal
+            document.querySelectorAll('.btn-close-modal').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    detailModal.style.display = 'none';
+                    addModal.style.display = 'none';
+                });
+            });
+            
+            // Tutup modal ketika klik di luar konten modal
+            window.addEventListener('click', function(event) {
+                if (event.target === detailModal) {
+                    detailModal.style.display = 'none';
+                }
+                if (event.target === addModal) {
+                    addModal.style.display = 'none';
+                }
+            });
+            
+            // Tombol add booking di header
+            document.getElementById('open-add-booking').addEventListener('click', function() {
+                openAddBookingModal(formatDate(currentDate), '07:00');
+            });
+            
+            // Submit booking baru
+            document.getElementById('submit-booking').addEventListener('click', function() {
+                const date = document.getElementById('booking-date').value;
+                const startHour = document.getElementById('start-hour').value;
+                const startMinute = document.getElementById('start-minute').value;
+                const endHour = document.getElementById('end-hour').value;
+                const endMinute = document.getElementById('end-minute').value;
+                const booker = document.getElementById('booker-name').value;
+                const purpose = document.getElementById('booking-purpose').value;
+                
+                // Validasi input
+                if (!booker || !purpose) {
+                    alert('Nama peminjam dan keperluan harus diisi!');
+                    return;
+                }
+                
+                // Buat booking baru
+                const newBooking = {
+                    date: date,
+                    time: `${startHour}:${startMinute}-${endHour}:${endMinute}`,
+                    booker: booker,
+                    purpose: purpose,
+                    status: 'Confirmed'
+                };
+                
+                // Tambahkan ke data contoh
+                sampleBookings.push(newBooking);
+                
+                // Refresh tabel
+                generateTableData();
+                
+                // Tutup modal
+                addModal.style.display = 'none';
+                
+                alert('Booking berhasil ditambahkan!');
+            });
+        }
+
+        // Fungsi untuk mengupdate opsi tanggal di modal add booking
+        function updateBookingDateOptions() {
+            const dateSelect = document.getElementById('booking-date');
+            dateSelect.innerHTML = '';
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentDate);
+                date.setDate(date.getDate() + i);
+                
+                const option = document.createElement('option');
+                option.value = formatDate(date);
+                option.textContent = `${getDayName(date.getDay())}, ${date.getDate()} ${getMonthName(date.getMonth())} ${date.getFullYear()}`;
+                
+                dateSelect.appendChild(option);
+            }
+        }
+
+        // Generate opsi jam untuk select
+        function generateHourOptions() {
+            const hours = [];
+            for (let i = 7; i <= 21; i++) {
+                hours.push(String(i).padStart(2, '0'));
+            }
+            return hours;
+        }
+
+        // Isi opsi jam saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            const startHourSelect = document.getElementById('start-hour');
+            const endHourSelect = document.getElementById('end-hour');
+            
+            const hours = generateHourOptions();
+            
+            hours.forEach(hour => {
+                const option1 = document.createElement('option');
+                option1.value = hour;
+                option1.textContent = hour;
+                startHourSelect.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = hour;
+                option2.textContent = hour;
+                endHourSelect.appendChild(option2);
+            });
+            
+            // Set nilai default
+            startHourSelect.value = '07';
+            endHourSelect.value = '08';
+        });
+    </script>
+</body>
+
+</html>
