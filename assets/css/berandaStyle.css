@@ -323,17 +323,18 @@ body {
 }
 
 /* ========================================= */
-/* HERO SECTION STYLING - FIXED OPACITY ISSUE */
+/* HERO SECTION STYLING - RESPONSIVE */
 /* ========================================= */
 
 .hero-section {
   width: 100%;
   position: relative;
   margin-top: 0;
-  height: 578px; /* Tambahkan tinggi tetap */
+  min-height: 578px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 40px 0;
 }
 
 .hero-rectangle {
@@ -341,59 +342,33 @@ body {
   height: 100%;
   background-color: #d5e0ec;
   opacity: 0.5;
-  position: absolute; /* Ubah menjadi absolute */
+  position: absolute;
   top: 0;
   left: 0;
-  z-index: 1; /* Background di belakang */
+  z-index: 1;
 }
 
 .hero-container {
-  max-width: 1340px;
+  max-width: 1400px;
   width: 100%;
   padding: 0 50px;
   display: flex;
   align-items: center;
-  gap: 60px;
-  position: relative; /* Penting untuk z-index */
-  z-index: 2; /* Konten di depan background */
+  position: relative;
+  z-index: 2;
+  gap: 60px; /* Menambahkan jarak antara konten kiri dan maskot */
 }
 
+/* Menghapus hero-inner-rectangle */
 .hero-inner-rectangle {
-  width: 380px;
-  height: 380px;
-  background-color: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: -20px;
-  position: relative;
-  z-index: 3;
+  display: none;
 }
 
 .hero-text-content {
   flex: 1;
   position: relative;
-  padding-left: 60px;
   z-index: 3;
-}
-
-.about-overlay {
-  position: absolute;
-  top: -50px;
-  left: 16;
-  z-index: 3;
-}
-
-.about-text {
-  font-size: 100px;
-  font-weight: 800;
-  font-style: italic;
-  color: rgba(0, 0, 0, 0.08);
-  line-height: 1;
-  display: block;
+  padding-left: 0; /* Menghapus padding kiri */
 }
 
 .title-content {
@@ -408,141 +383,244 @@ body {
 
 .title-line {
   display: block;
-  font-size: 50px;
+  font-size: 36px;
   font-weight: 800;
   font-style: italic;
-  color: #04163e; /* Warna asli tanpa opacity */
+  color: #04163e;
   line-height: 1.1;
   margin-bottom: 1px;
 }
 
 .business-analytics {
-  color: #04163e; /* Warna asli tanpa opacity */
+  color: #04163e;
   margin-bottom: 0;
+  font-size: 32px;
+  font-weight: 600;
 }
 
 .hero-detailed-description {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: #04163e; /* Warna asli tanpa opacity */
+  font-size: 16px;
+  color: #04163e;
   font-weight: 500;
   max-width: 800px;
   position: relative;
+  margin-bottom: 20px;
 }
 
-/* Responsive Design untuk Hero Section */
+/* ========================================= */
+/* CONTAINER UNTUK 3 TOMBOL BERJAJAR */
+/* ========================================= */
+
+.buttons-container {
+  margin-top: 2px;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.feature-btn {
+  flex: 1;
+  min-width: 50px;
+  height: 46px;
+  background: transparent;
+  color: #04163e;
+  border: 1.5px solid #000000;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-btn:hover {
+  background: rgba(43, 149, 253, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.feature-btn:active {
+  transform: translateY(0);
+}
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.btn-icon {
+  font-size: 18px;
+  color: #04163e;
+  width: 20px;
+  text-align: center;
+}
+
+.btn-text {
+  text-align: left;
+  flex: 1;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+}
+
+/* ========================================= */
+/* STYLING UNTUK MASKOT */
+/* ========================================= */
+
+.hero-maskot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.maskot-image {
+  max-width: 400px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* ========================================= */
+/* MEDIA QUERIES UNTUK RESPONSIVITAS MOBILE */
+/* ========================================= */
+
 @media (max-width: 1200px) {
-  .hero-section {
-    height: auto;
-    min-height: 578px;
-  }
-
   .hero-container {
-    gap: 50px;
     padding: 0 40px;
+    gap: 40px; /* Mengurangi jarak pada layar lebih kecil */
   }
-
-  .about-text {
-    font-size: 90px;
-  }
-
-  .title-line {
-    font-size: 45px;
+  
+  .maskot-image {
+    max-width: 350px; /* Menyesuaikan ukuran maskot */
   }
 }
 
 @media (max-width: 992px) {
   .hero-section {
-    height: auto;
-    padding: 60px 0;
-  }
-
-  .hero-container {
-    flex-direction: column;
-    text-align: center;
-    gap: 40px;
-    padding: 0 30px;
-  }
-
-  .hero-inner-rectangle {
-    margin-left: 0;
-  }
-
-  .hero-text-content {
-    padding-left: 0;
-  }
-
-  .about-overlay {
-    position: relative;
-    top: 0;
-    margin-bottom: -30px;
-  }
-
-  .about-text {
-    font-size: 80px;
+    min-height: 500px;
   }
 
   .title-line {
-    font-size: 40px;
+    font-size: 32px;
   }
 
-  .hero-detailed-description {
-    margin: 0 auto;
+  .business-analytics {
+    font-size: 28px;
+  }
+  
+  .hero-container {
+    gap: 30px;
+  }
+  
+  .maskot-image {
+    max-width: 300px;
   }
 }
 
 @media (max-width: 768px) {
   .hero-section {
-    padding: 50px 0;
+    min-height: 450px;
+    padding: 30px 0;
   }
 
   .hero-container {
-    padding: 0 20px;
+    padding: 0 30px;
+    flex-direction: column; /* Mengubah tata letak menjadi vertikal pada layar kecil */
     gap: 30px;
-  }
-
-  .hero-inner-rectangle {
-    width: 320px;
-    height: 320px;
-  }
-
-  .about-text {
-    font-size: 70px;
+    /* HAPUS text-align: center; agar konten tetap rata kiri */
   }
 
   .title-line {
-    font-size: 35px;
+    font-size: 28px;
+  }
+
+  .business-analytics {
+    font-size: 24px;
   }
 
   .hero-detailed-description {
-    font-size: 1rem;
+    font-size: 15px;
+  }
+
+  .buttons-container {
+    gap: 15px;
+    /* HAPUS justify-content: center; agar tombol tetap rata kiri */
+  }
+
+  .feature-btn {
+    min-width: 180px;
+  }
+  
+  .maskot-image {
+    max-width: 250px;
   }
 }
 
 @media (max-width: 576px) {
   .hero-section {
-    padding: 40px 0;
+    min-height: 400px;
+    padding: 20px 0;
   }
 
   .hero-container {
-    padding: 0 15px;
-  }
-
-  .hero-inner-rectangle {
-    width: 280px;
-    height: 280px;
-  }
-
-  .about-text {
-    font-size: 60px;
+    padding: 0 20px;
+    gap: 20px;
   }
 
   .title-line {
-    font-size: 30px;
+    font-size: 24px;
+  }
+
+  .business-analytics {
+    font-size: 20px;
   }
 
   .hero-detailed-description {
-    font-size: 0.95rem;
+    font-size: 14px;
+  }
+
+  .buttons-container {
+    flex-direction: column;
+    gap: 12px;
+    /* HAPUS justify-content: center; agar tombol tetap rata kiri */
+  }
+
+  .feature-btn {
+    min-width: 100%;
+    height: 44px;
+  }
+
+  .btn-content {
+    /* HAPUS justify-content: center; agar konten tombol tetap rata kiri */
+  }
+  
+  .maskot-image {
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title-line {
+    font-size: 22px;
+  }
+
+  .business-analytics {
+    font-size: 18px;
+  }
+
+  .hero-detailed-description {
+    font-size: 13px;
+  }
+  
+  .maskot-image {
+    max-width: 180px;
   }
 }
 
@@ -552,10 +630,11 @@ body {
 
 .about-section {
   width: 100%;
-  padding: 60px 50px;
+  padding: 100px; /* TAMBAHAN: Padding diperbesar */
   background-color: #ffffff;
   display: flex;
   justify-content: center;
+  margin-bottom: 20px; /* TAMBAHAN: Jarak dengan section berikutnya */
 }
 
 .about-container {
@@ -590,98 +669,6 @@ body {
   text-align: center;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .header-container,
-  .about-container {
-    padding: 0 40px;
-  }
-
-  .header-rectangle {
-    width: 320px;
-    height: 400px;
-  }
-}
-
-@media (max-width: 992px) {
-  .header-section,
-  .about-section {
-    padding: 60px 30px;
-  }
-
-  .header-container {
-    flex-direction: column-reverse;
-    text-align: center;
-    gap: 40px;
-  }
-
-  .skills-container {
-    justify-content: center;
-  }
-
-  .header-rectangle {
-    width: 300px;
-    height: 380px;
-  }
-}
-
-@media (max-width: 768px) {
-  .header-section,
-  .about-section {
-    padding: 50px 20px;
-  }
-
-  .header-rectangle {
-    width: 280px;
-    height: 350px;
-  }
-
-  .header-main-title {
-    font-size: 30px;
-  }
-
-  .header-subtitle {
-    font-size: 26px;
-  }
-
-  .skills-container {
-    flex-wrap: wrap;
-  }
-
-  .about-title {
-    font-size: 30px;
-  }
-}
-
-@media (max-width: 576px) {
-  .header-section,
-  .about-section {
-    padding: 40px 15px;
-  }
-
-  .header-rectangle {
-    width: 250px;
-    height: 320px;
-  }
-
-  .header-main-title {
-    font-size: 26px;
-  }
-
-  .header-subtitle {
-    font-size: 22px;
-  }
-
-  .skill-rectangle {
-    width: 100px;
-    height: 100px;
-  }
-
-  .about-title {
-    font-size: 26px;
-  }
-}
-
 /* ========================================= */
 /* RESEARCH FOCUS INFINITE LOOP */
 /* ========================================= */
@@ -699,13 +686,14 @@ body {
 
 /* Section utama */
 .profile-carousel-section {
-  padding: 80px 0;
+  padding: 50px 0; /* TAMBAHAN: Padding diperbesar */
   background-color: #ffffff;
   overflow: hidden;
   min-height: 700px;
   display: flex;
   align-items: center;
   position: relative;
+  margin-bottom: 100px; /* TAMBAHAN: Jarak dengan section berikutnya */
 }
 
 .custom-container-relative {
@@ -819,25 +807,6 @@ body {
 .nav-btn:hover {
   background: var(--color-active);
   border-color: var(--color-active);
-}
-
-/* --- RESPONSIF UNTUK LAPTOP KECIL --- */
-/* Jika layar tidak cukup lebar, kita scale down sedikit */
-@media (max-width: 1400px) {
-  :root {
-    --card-width: 350px;
-    --card-height: 400px;
-    --bg-box-width: 700px;
-    --bg-box-height: 600px;
-  }
-  .carousel-wrapper {
-    left: 520px; /* Sesuaikan ulang */
-    width: 1110px; /* (3x350) + 60 */
-  }
-  .carousel-nav {
-    right: 50px;
-    bottom: 50px;
-  }
 }
 
 /* ========================================= */
@@ -1003,84 +972,6 @@ body {
   z-index: 2;
   background: linear-gradient(to top, #000000b3, #00000000);
   padding: 2rem !important;
-}
-
-/* Mengatur warna teks agar kontras dengan gambar background */
-.card-preview-profile .card-title {
-  font-size: 1rem !important;
-  font-weight: 400 !important;
-  margin-bottom: 2px !important;
-  opacity: 0.9;
-  color: white !important;
-}
-
-.card-preview-profile .card-subtitle {
-  font-size: 1.6rem !important;
-  font-weight: 600 !important;
-  color: white !important;
-  margin-bottom: 0.5rem !important;
-  line-height: 1.2;
-}
-
-.card-preview-profile .card-text {
-  font-size: 0.85rem !important;
-  line-height: 1.4;
-  opacity: 0.9;
-  margin-bottom: 1rem !important;
-  color: white !important;
-}
-
-/* NEW: Hero Image Placeholder */
-.hero-image-placeholder-new {
-  width: 450px;
-  height: 450px;
-  background-color: #ecd5e4 !important;
-  border: 1px solid #dee2e6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-top-left-radius: 0;
-  border-top-right-radius: 50px;
-  border-bottom-right-radius: 50px;
-  border-bottom-left-radius: 50px;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
-}
-
-.hero-section {
-  padding-top: 100px !important;
-  min-height: 100vh;
-  background-color: #d5e0ec;
-}
-
-/* Mengatur ukuran dan tampilan highlight card */
-.highlight-card-placeholder {
-  width: 300px;
-  height: 200px;
-  border: 1px dashed #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f8f9fa !important;
-}
-
-.highlight-card-placeholder:before {
-  content: "Highlight Card";
-  color: #6c757d;
-}
-
-.highlight-card .card {
-  height: 100%;
-  background: center/cover;
-}
-
-/* Membuat scroll horizontal untuk Highlight Section */
-.scroll-container {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.scroll-container::-webkit-scrollbar {
-  display: none;
 }
 
 /* ========================================= */
@@ -1714,4 +1605,3 @@ body {
 .gallery-column:nth-child(2) .gallery-item { animation-delay: 0.2s; }
 .gallery-column:nth-child(3) .gallery-item { animation-delay: 0.3s; }
 .gallery-column:nth-child(4) .gallery-item { animation-delay: 0.4s; }
-
