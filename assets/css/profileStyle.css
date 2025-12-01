@@ -1,26 +1,4 @@
 /* ========================================= */
-/* SOLUSI JARAK SECTION NAVBAR - VISI & MISI */
-/* ========================================= */
-
-/* Method 1: Tambah margin top yang besar untuk section pertama */
-#visi-misi {
-    margin-top: 50px;
-    padding-top: 25px;
-}
-
-/* Method 2: Atau tambah padding besar pada container utama */
-.container.py-5 {
-    padding-top: 4rem !important;
-}
-
-/* Method 3: Atau gunakan spacer khusus sebelum section pertama */
-.section-first-spacer {
-    height: 80px;
-    width: 100%;
-    display: block;
-}
-
-/* ========================================= */
 /* MODIFIKASI WARNA JUDUL MENJADI #04163E */
 /* ========================================= */
 
@@ -751,153 +729,31 @@ body {
 }
 
 /* ========================================= */
-/* PERBAIKAN SCROLL BEHAVIOR */
+/* SOLUSI JARAK SECTION NAVBAR - VISI & MISI */
 /* ========================================= */
 
-html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 160px;
+/* Method 1: Tambah margin top yang besar untuk section pertama */
+#visi-misi {
+    margin-top: 50px;
+    padding-top: 25px;
 }
 
-/* Scroll padding untuk semua section yang memiliki ID */
-#visi-misi,
-#roadmap,
-#struktur-organisasi,
-#anggota-laboratory,
-#makna-logo-maskot,
-#research-focus {
-    scroll-margin-top: 160px;
-    padding-top: 20px;
+/* Method 2: Atau tambah padding besar pada container utama */
+.container.py-5 {
+    padding-top: 4rem !important;
 }
 
-/* Responsive Design untuk Section Navigation */
-@media (max-width: 1200px) {
-    .section-nav-link {
-        font-size: 12px;
-        padding: 0 8px;
-    }
-    
-    .nav-text {
-        font-size: 12px;
-    }
-}
-
-@media (max-width: 992px) {
-    .section-nav-menu {
-        height: 55px;
-    }
-    
-    .section-nav-item {
-        height: 55px;
-    }
-    
-    .section-nav-link {
-        font-size: 11px;
-        padding: 0 6px;
-    }
-    
-    .nav-text {
-        font-size: 11px;
-    }
-}
-
-@media (max-width: 768px) {
-    .section-navbar {
-        top: 70px;
-    }
-    
-    .section-nav-container {
-        overflow-x: auto;
-        justify-content: flex-start;
-    }
-    
-    .section-nav-container::-webkit-scrollbar {
-        height: 4px;
-    }
-    
-    .section-nav-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-    
-    .section-nav-container::-webkit-scrollbar-thumb {
-        background: #2B95FD;
-        border-radius: 2px;
-    }
-    
-    .section-nav-menu {
-        width: auto;
-        min-width: 1200px;
-        height: 50px;
-    }
-    
-    .section-nav-item {
-        flex: 0 0 200px;
-        height: 50px;
-    }
-    
-    .section-nav-link {
-        font-size: 12px;
-        padding: 0 10px;
-    }
-    
-    .nav-text {
-        font-size: 12px;
-    }
-    
-    /* Perbaikan garis biru untuk mobile */
-    .section-nav-link.active::after {
-        bottom: -1px;
-        height: 3px;
-    }
-}
-
-@media (max-width: 576px) {
-    .section-nav-menu {
-        min-width: 1080px;
-        height: 48px;
-    }
-    
-    .section-nav-item {
-        flex: 0 0 180px;
-        height: 48px;
-    }
-    
-    .section-nav-link {
-        font-size: 11px;
-        padding: 0 8px;
-    }
-    
-    .nav-text {
-        font-size: 11px;
-    }
-}
-
-@media (max-width: 480px) {
-    .section-nav-menu {
-        min-width: 960px;
-        height: 45px;
-    }
-    
-    .section-nav-item {
-        flex: 0 0 160px;
-        height: 45px;
-    }
-    
-    .section-nav-link {
-        font-size: 10px;
-        padding: 0 6px;
-    }
-    
-    .nav-text {
-        font-size: 10px;
-    }
+/* Method 3: Atau gunakan spacer khusus sebelum section pertama */
+.section-first-spacer {
+    height: 80px;
+    width: 100%;
+    display: block;
 }
 
 /* ========================================= */
 /* GLOBAL & VISI MISI */
 /* ========================================= */
 body { 
-    
     font-family: 'Nunito', sans-serif; 
     color: #333; 
     background-color: #fff; 
@@ -923,7 +779,7 @@ body {
     text-align: left; 
 }
 
-.custom-card { 
+.vision-mission-card { 
     background-color: #f4f6f8; 
     padding: 30px 40px; 
     border-radius: 4px; 
@@ -932,24 +788,24 @@ body {
     margin-bottom: 15px; 
 }
 
-.custom-card .card-title { 
+.vision-mission-card .vision-mission-title { 
     color: #000000; 
     font-weight: 800; 
     margin-bottom: 15px; 
     font-size: 1.75rem; 
 }
 
-.custom-card .card-text, .mission-list li { 
+.vision-mission-card .vision-mission-text, .vision-mission-list li { 
     color: #212529; 
     line-height: 1.6; 
     font-weight: 600; 
 }
 
-.mission-list { 
+.vision-mission-list { 
     padding-left: 20px; 
 }
 
-.mission-list li { 
+.vision-mission-list li { 
     margin-bottom: 8px; 
 }
 
@@ -1579,41 +1435,6 @@ body {
 }
 
 /* ========================================= */
-/* --- MAKNA LOGO & MASKOT STYLING --- */
-/* ========================================= */
-
-.logo-mascot-section {
-    margin-bottom: 40px;
-}
-
-.subsection-title {
-    color: #1f3a60;
-    font-weight: 700;
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-    border-left: 4px solid #1f3a60;
-    padding-left: 15px;
-}
-
-.btn-read-more {
-    background-color: #1f3a60;
-    color: #ffffff;
-    border: none;
-    padding: 10px 25px;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.btn-read-more:hover {
-    background-color: #345482;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(31, 58, 96, 0.2);
-}
-
-/* ========================================= */
 /* --- MAKNA LOGO & MASKOT STYLING BESAR --- */
 /* ========================================= */
 
@@ -1875,4 +1696,157 @@ a.btn-read-more {
 a.btn-read-more:hover {
     color: #ffffff !important;
     text-decoration: none !important;
+}
+
+/* ========================================= */
+/* RESEARCH FOCUS INFINITE LOOP */
+/* ========================================= */
+
+/* --- VARIABEL UKURAN (TIDAK BERUBAH) --- */
+:root {
+  --card-width: 330px;
+  --card-height: 355px;
+  --card-gap: 24px;
+  --bg-box-width: 620px;
+  --bg-box-height: 605px;
+  --color-active: #d5e0ec;
+  --color-gray-bg: #d9d9d9;
+}
+
+/* Section utama */
+.profile-carousel-section {
+  padding: 6px 0;
+  background-color: #ffffff;
+  overflow: hidden;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.custom-container-relative {
+  position: relative;
+  width: 100%;
+  max-width: 1520px;
+  margin: 0 auto;
+  height: var(--bg-box-height);
+}
+
+/* --- 1. BACKDROP GRAY BOX (KOTAK ABU) --- */
+.gray-backdrop-box {
+  position: absolute;
+  width: var(--bg-box-width);
+  height: var(--bg-box-height);
+  background-color: var(--color-gray-bg);
+  border-radius: 0 60px 60px 0;
+  overflow: hidden;
+  z-index: 1;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.backdrop-img-content {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  transition: opacity 0.5s ease-in-out;
+  filter: grayscale(0.3) contrast(1.1);
+}
+
+.backdrop-img-content.fade-out {
+  opacity: 0;
+}
+
+/* --- 2. CAROUSEL WRAPPER & TRACK --- */
+.carousel-wrapper {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 465px;
+  width: 1038px;
+  overflow: hidden;
+  padding: 10px 0;
+}
+
+.carousel-track {
+  display: flex;
+  gap: var(--card-gap);
+  flex-wrap: nowrap;
+}
+
+.custom-card {
+  flex: 0 0 var(--card-width);
+  height: var(--card-height);
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* State Aktif (Kartu Biru) */
+.custom-card.active {
+  background-color: var(--color-active);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+}
+
+/* Hover effect untuk kartu */
+.custom-card:hover:not(.active) {
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Konten dalam kartu */
+.card-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.card-content p {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* --- 4. NAVIGATION BUTTONS (POSISI DIPERBAIKI) --- */
+.carousel-nav {
+  position: absolute;
+  bottom: 30px;
+  left: 86%;
+  display: flex;
+  gap: 15px;
+  z-index: 10;
+}
+
+.nav-btn {
+  width: 60px;
+  height: 60px;
+  background: #fff;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.nav-btn:hover {
+  background: var(--color-active);
+  border-color: var(--color-active);
 }
