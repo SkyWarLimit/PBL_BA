@@ -421,8 +421,6 @@ body {
 }
 
 .feature-btn {
-  flex: 1;
-  min-width: 50px;
   height: 46px;
   background: transparent;
   color: #04163e;
@@ -437,6 +435,23 @@ body {
   padding: 0 20px;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0; /* Mencegah tombol menyusut */
+}
+
+/* Ukuran khusus untuk setiap tombol */
+.btn-short {
+  min-width: 180px; /* Lebar minimal untuk tombol pendek */
+  flex: 0 1 auto; /* Tidak tumbuh, bisa menyusut, ukuran otomatis */
+}
+
+.btn-medium {
+  min-width: 220px; /* Lebar minimal untuk tombol sedang */
+  flex: 0 1 auto;
+}
+
+.btn-long {
+  min-width: 250px; /* Lebar minimal untuk tombol panjang */
+  flex: 0 1 auto;
 }
 
 .feature-btn:hover {
@@ -454,6 +469,7 @@ body {
   align-items: center;
   gap: 12px;
   width: 100%;
+  justify-content: center; /* Pusatkan konten */
 }
 
 .btn-icon {
@@ -468,6 +484,7 @@ body {
   flex: 1;
   font-weight: 500;
   letter-spacing: -0.2px;
+  white-space: nowrap; /* Mencegah teks wrap */
 }
 
 /* ========================================= */
@@ -689,7 +706,7 @@ body {
   padding: 50px 0; /* TAMBAHAN: Padding diperbesar */
   background-color: #ffffff;
   overflow: hidden;
-  min-height: 700px;
+  min-height: 100px;
   display: flex;
   align-items: center;
   position: relative;
@@ -699,9 +716,11 @@ body {
 .custom-container-relative {
   position: relative;
   width: 100%;
-  max-width: 1520px;
+  max-width: 1330px; /* Dikurangi dari 1300px */
   margin: 0 auto;
   height: var(--bg-box-height);
+  padding: 0 20px; /* Tambahan padding untuk responsif */
+  box-sizing: border-box;
 }
 
 /* --- 1. BACKDROP GRAY BOX (KOTAK ABU) --- */
@@ -713,18 +732,21 @@ body {
   border-radius: 0 60px 60px 0;
   overflow: hidden;
   z-index: 1;
-  left: 0;
+  left: 20px; /* Diubah dari 0 untuk memberikan ruang */
   top: 50%;
   transform: translateY(-50%);
+  max-width: 90%; /* Batas maksimum */
 }
 
 .backdrop-img-content {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.6;
-  transition: opacity 0.3s ease-in-out;
+  opacity: 0.8;
+  transition: opacity 0.5s ease-in-out;
+  filter: grayscale(0.3) contrast(1.1);
 }
+
 .backdrop-img-content.fade-out {
   opacity: 0;
 }
@@ -735,8 +757,9 @@ body {
   z-index: 5;
   top: 50%;
   transform: translateY(-50%);
-  left: 465px;
-  width: 1038px;
+  left: 380px; /* Disesuaikan dengan perubahan lainnya */
+  width: calc(100% - 420px); /* Lebih responsif */
+  max-width: 1400px; /* Batas maksimum */
   overflow: hidden;
   padding: 10px 0;
 }
@@ -784,7 +807,7 @@ body {
 .carousel-nav {
   position: absolute;
   bottom: 30px;
-  left: 90%;
+  left: 84%;
   display: flex;
   gap: 15px;
   z-index: 10;
