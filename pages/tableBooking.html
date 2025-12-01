@@ -62,7 +62,7 @@
                 <a class="nav-link" href="kontak.html">Kontak</a>
             </li>
         </ul>
-        
+
         <button class="login-btn">Login</button>
     </nav>
 
@@ -73,7 +73,7 @@
                 <button class="nav-btn" id="prev-week">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <div class="date-range" id="date-range">Dec 01 - 07 2025</div>
+                <div class="date-range" id="date-range">Dec 1 - 5, 2025</div>
                 <button class="nav-btn" id="next-week">
                     <i class="fas fa-chevron-right"></i>
                 </button>
@@ -86,7 +86,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="booking-table">
+            <table class="booking-table" id="booking-table">
                 <thead>
                     <tr>
                         <th>Waktu</th>
@@ -114,15 +114,15 @@
                 </div>
                 <div class="booking-detail">
                     <label>Waktu:</label>
-                    <p id="detail-time">07:00 - 08:00</p>
+                    <p id="detail-time">07:00 - 10:30</p>
                 </div>
                 <div class="booking-detail">
                     <label>Peminjam:</label>
-                    <p id="detail-booker">John Doe</p>
+                    <p id="detail-booker">Team Data Analytics</p>
                 </div>
                 <div class="booking-detail">
                     <label>Keperluan:</label>
-                    <p id="detail-purpose">Workshop Data Analytics</p>
+                    <p id="detail-purpose">Weekly Team Meeting & Planning</p>
                 </div>
                 <div class="booking-detail">
                     <label>Status:</label>
@@ -190,52 +190,98 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Custom JavaScript -->
     <script>
-        // Data contoh booking
+        // Data contoh booking (Senin 1 Desember 2025 jam 07:00-10:30)
         const sampleBookings = [
             {
-                date: '2025-12-01',
-                time: '07:00-08:00',
-                booker: 'John Doe',
-                purpose: 'Workshop Data Analytics',
-                status: 'Confirmed'
+                id: 1,
+                date: '2025-12-01', // Senin 1 Desember 2025
+                startTime: '07:00',
+                endTime: '10:30',
+                booker: 'Team Data Analytics',
+                purpose: 'Weekly Team Meeting & Planning Session',
+                status: 'Confirmed',
+                color: 'rgba(66, 133, 244, 0.15)',
+                borderColor: 'rgba(66, 133, 244, 0.5)'
             },
             {
-                date: '2025-12-01',
-                time: '10:30-12:15',
-                booker: 'Jane Smith',
-                purpose: 'Meeting Tim Marketing',
-                status: 'Confirmed'
+                id: 2,
+                date: '2025-12-02', // Selasa 2 Desember
+                startTime: '14:00',
+                endTime: '16:30',
+                booker: 'Workshop Python',
+                purpose: 'Python Programming Workshop for Beginners',
+                status: 'Confirmed',
+                color: 'rgba(76, 175, 80, 0.15)',
+                borderColor: 'rgba(76, 175, 80, 0.5)'
             },
             {
-                date: '2025-12-02',
-                time: '14:45-16:30',
-                booker: 'Ahmad Fauzi',
-                purpose: 'Training Machine Learning',
-                status: 'Pending'
+                id: 3,
+                date: '2025-12-03', // Rabu 3 Desember
+                startTime: '09:00',
+                endTime: '12:00',
+                booker: 'Kunjungan Sekolah',
+                purpose: 'Kunjungan MA MIFTAHUL HUDA PURWOSARI',
+                status: 'Confirmed',
+                color: 'rgba(255, 152, 0, 0.15)',
+                borderColor: 'rgba(255, 152, 0, 0.5)'
             },
             {
-                date: '2025-12-03',
-                time: '09:15-11:00',
-                booker: 'Siti Rahayu',
-                purpose: 'Presentasi Hasil Analisis',
-                status: 'Confirmed'
-            },
-            {
-                date: '2025-12-04',
-                time: '13:30-15:15',
-                booker: 'Budi Santoso',
-                purpose: 'Sesi Mentoring',
-                status: 'Confirmed'
+                id: 4,
+                date: '2025-12-04', // Kamis 4 Desember
+                startTime: '13:00',
+                endTime: '17:00',
+                booker: 'Data Visualization Training',
+                purpose: 'Advanced Data Visualization Techniques',
+                status: 'Confirmed',
+                color: 'rgba(156, 39, 176, 0.15)',
+                borderColor: 'rgba(156, 39, 176, 0.5)'
             }
         ];
 
-        // JavaScript untuk Sticky Navbar
+        // Variabel global untuk menyimpan tanggal saat ini
+        let currentDate = new Date(2025, 11, 1); // 1 Desember 2025
+
+        // Variabel untuk melacak booking yang sudah ditampilkan
+        let renderedBookings = new Set();
+
+        // Konstanta untuk perhitungan posisi
+        const START_HOUR = 7;
+        const END_HOUR = 21;
+        const TOTAL_HOURS = END_HOUR - START_HOUR;
+        const PIXELS_PER_HOUR = 60; // 60px per jam
+        const TOTAL_HEIGHT = TOTAL_HOURS * PIXELS_PER_HOUR; // 14 jam × 60px = 840px
+
         document.addEventListener('DOMContentLoaded', function () {
+            // Setup navbar (dari kode asli)
+            setupNavbar();
+
+            // Generate table data
+            generateTableData();
+            
+            // Event listeners untuk navigasi minggu
+            document.getElementById('prev-week').addEventListener('click', function() {
+                changeWeek(-5);
+            });
+            
+            document.getElementById('next-week').addEventListener('click', function() {
+                changeWeek(5);
+            });
+
+            // Event listener untuk tombol Today
+            document.getElementById('today-btn').addEventListener('click', function() {
+                goToToday();
+            });
+
+            // Event listeners untuk modal
+            setupModalEvents();
+            
+            // Isi opsi jam
+            generateHourOptions();
+        });
+
+        // Fungsi untuk setup navbar
+        function setupNavbar() {
             const allNavLinks = document.querySelectorAll('.nav-link');
             const dropdownItems = document.querySelectorAll('.dropdown-item');
 
@@ -246,12 +292,10 @@
 
                 // Add active class ke element yang diklik
                 if (clickedElement.classList.contains('dropdown-item')) {
-                    // Jika yang diklik adalah dropdown item, aktifkan parent dropdown
                     const parentDropdown = clickedElement.closest('.dropdown');
                     const dropdownToggle = parentDropdown.querySelector('.dropdown-toggle');
                     dropdownToggle.classList.add('active');
                 } else {
-                    // Jika yang diklik adalah menu biasa
                     clickedElement.classList.add('active');
                 }
             }
@@ -260,7 +304,6 @@
             allNavLinks.forEach(link => {
                 link.addEventListener('click', function (e) {
                     e.preventDefault();
-                    // Jangan set active untuk dropdown toggle (karena sudah hover)
                     if (!this.classList.contains('dropdown-toggle')) {
                         setActiveMenu(this);
                     }
@@ -275,7 +318,7 @@
                 });
             });
 
-            // Untuk mobile devices, tetap gunakan Bootstrap dropdown
+            // Untuk mobile devices
             const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
             dropdownToggles.forEach(toggle => {
                 toggle.addEventListener('click', function (e) {
@@ -297,34 +340,17 @@
                     }
                 }
             });
-
-            // Generate table data
-            generateTableData();
-            
-            // Event listeners untuk navigasi minggu
-            document.getElementById('prev-week').addEventListener('click', function() {
-                changeWeek(-7);
-            });
-            
-            document.getElementById('next-week').addEventListener('click', function() {
-                changeWeek(7);
-            });
-
-            // Event listener untuk tombol Today
-            document.getElementById('today-btn').addEventListener('click', function() {
-                goToToday();
-            });
-
-            // Event listeners untuk modal
-            setupModalEvents();
-        });
-
-        // Variabel global untuk menyimpan tanggal saat ini
-        let currentDate = new Date(2025, 11, 1); // 1 Desember 2025
+        }
 
         // Fungsi untuk kembali ke hari ini
         function goToToday() {
             currentDate = new Date();
+            // Set ke hari Senin jika weekend
+            const day = currentDate.getDay();
+            if (day === 0 || day === 6) { // Minggu atau Sabtu
+                const diff = day === 0 ? 1 : 2; // Minggu maju 1 hari, Sabtu maju 2 hari
+                currentDate.setDate(currentDate.getDate() + diff);
+            }
             generateTableData();
         }
 
@@ -340,9 +366,15 @@
             return days[dayIndex];
         }
 
-        // Fungsi untuk mendapatkan nama bulan dalam bahasa Indonesia
-        function getMonthName(monthIndex) {
-            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        // Fungsi untuk mendapatkan nama hari dalam bahasa Inggris (pendek)
+        function getShortDayName(dayIndex) {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            return days[dayIndex];
+        }
+
+        // Fungsi untuk mendapatkan nama bulan dalam bahasa Inggris (pendek)
+        function getShortMonthName(monthIndex) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             return months[monthIndex];
         }
 
@@ -354,12 +386,28 @@
             return `${year}-${month}-${day}`;
         }
 
+        // Fungsi untuk menghitung posisi vertikal berdasarkan waktu
+        function calculatePosition(time) {
+            const [hour, minute] = time.split(':').map(Number);
+            const hoursFromStart = hour - START_HOUR;
+            const minutesFraction = minute / 60;
+            return (hoursFromStart + minutesFraction) * PIXELS_PER_HOUR;
+        }
+
+        // Fungsi untuk menghitung tinggi berdasarkan durasi
+        function calculateHeight(startTime, endTime) {
+            const startPos = calculatePosition(startTime);
+            const endPos = calculatePosition(endTime);
+            return endPos - startPos;
+        }
+
         // Fungsi untuk menghasilkan data tabel
         function generateTableData() {
-            const timeSlots = generateTimeSlots(); // Generate time slots dengan interval 15 menit
-
             const tableHead = document.querySelector('.booking-table thead tr');
             const tableBody = document.querySelector('.booking-table tbody');
+            
+            // Reset rendered bookings
+            renderedBookings.clear();
             
             // Kosongkan tabel
             while (tableHead.children.length > 1) {
@@ -367,18 +415,23 @@
             }
             tableBody.innerHTML = '';
             
-            // Buat header hari
-            const startDate = new Date(currentDate);
-            const endDate = new Date(currentDate);
-            endDate.setDate(endDate.getDate() + 6);
+            // Hitung tanggal Senin-Jumat
+            const mondayDate = new Date(currentDate);
+            // Pastikan kita mulai dari Senin
+            const dayOfWeek = mondayDate.getDay();
+            const diff = dayOfWeek === 0 ? 1 : (dayOfWeek === 6 ? 2 : 1 - dayOfWeek);
+            mondayDate.setDate(mondayDate.getDate() + diff);
+            
+            const fridayDate = new Date(mondayDate);
+            fridayDate.setDate(fridayDate.getDate() + 4);
             
             // Update teks rentang tanggal
             document.getElementById('date-range').textContent = 
-                `${getMonthName(startDate.getMonth())} ${startDate.getDate()} - ${getMonthName(endDate.getMonth())} ${endDate.getDate()} ${endDate.getFullYear()}`;
+                `${getShortMonthName(mondayDate.getMonth())} ${mondayDate.getDate()} - ${fridayDate.getDate()}, ${fridayDate.getFullYear()}`;
             
-            // Buat header untuk setiap hari
-            for (let i = 0; i < 7; i++) {
-                const date = new Date(currentDate);
+            // Buat header untuk 5 hari kerja (Senin-Jumat)
+            for (let i = 0; i < 5; i++) {
+                const date = new Date(mondayDate);
                 date.setDate(date.getDate() + i);
                 
                 const th = document.createElement('th');
@@ -390,86 +443,149 @@
                     th.classList.add('today');
                 }
                 
-                th.textContent = `${getDayName(date.getDay())} ${date.getDate()}/${date.getMonth() + 1}`;
+                // Format: Mon 12/1
+                th.textContent = `${getShortDayName(date.getDay())} ${date.getDate()}/${date.getMonth() + 1}`;
                 th.setAttribute('data-date', formatDate(date));
                 tableHead.appendChild(th);
             }
             
-            // Buat baris untuk setiap slot waktu
-            timeSlots.forEach(time => {
-                const row = document.createElement('tr');
+            // Buat satu baris untuk container hari (bukan banyak baris per jam)
+            const containerRow = document.createElement('tr');
+            
+            // Kolom waktu (hanya satu sel untuk waktu)
+            const timeCell = document.createElement('td');
+            timeCell.classList.add('time-header');
+            
+            // Buat daftar waktu di kolom kiri
+            const timeList = document.createElement('div');
+            timeList.style.position = 'relative';
+            timeList.style.height = `${TOTAL_HEIGHT}px`;
+            
+            // Tambahkan label waktu setiap jam
+            for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
+                const timeLabel = document.createElement('div');
+                timeLabel.className = 'time-label';
+                timeLabel.textContent = `${hour}:00`;
+                timeLabel.style.top = `${(hour - START_HOUR) * PIXELS_PER_HOUR}px`;
+                timeList.appendChild(timeLabel);
+            }
+            
+            timeCell.appendChild(timeList);
+            timeCell.rowSpan = 1; // Hanya satu baris
+            containerRow.appendChild(timeCell);
+            
+            // Kolom untuk setiap hari (SENIN-JUMAT)
+            for (let day = 0; day < 5; day++) {
+                const date = new Date(mondayDate);
+                date.setDate(date.getDate() + day);
+                const dateStr = formatDate(date);
                 
-                // Kolom waktu
-                const timeCell = document.createElement('td');
-                timeCell.classList.add('time-header');
-                timeCell.textContent = time;
-                row.appendChild(timeCell);
+                const cell = document.createElement('td');
+                cell.classList.add('day-cell', 'empty');
+                cell.setAttribute('data-date', dateStr);
                 
-                // Kolom untuk setiap hari
-                for (let i = 0; i < 7; i++) {
-                    const date = new Date(currentDate);
-                    date.setDate(date.getDate() + i);
-                    const dateStr = formatDate(date);
-                    
-                    const cell = document.createElement('td');
-                    
-                    // Cek apakah ada booking untuk tanggal dan waktu ini
-                    const booking = findBooking(dateStr, time);
-                    
-                    if (booking) {
-                        cell.classList.add('room-booked');
-                        cell.textContent = 'Booked';
-                        cell.setAttribute('data-booking', JSON.stringify(booking));
-                    } else {
-                        cell.classList.add('empty-room');
-                        cell.textContent = 'Empty';
-                    }
-                    
-                    // Tambahkan event listener untuk menampilkan detail booking
-                    cell.addEventListener('click', function() {
-                        if (this.classList.contains('room-booked')) {
-                            showBookingDetail(this.getAttribute('data-booking'));
-                        } else {
-                            // Jika empty, buka modal add booking
-                            openAddBookingModal(dateStr, time);
-                        }
-                    });
-                    
-                    row.appendChild(cell);
+                // Buat container untuk hari ini
+                const container = document.createElement('div');
+                container.className = 'day-container';
+                container.style.height = `${TOTAL_HEIGHT}px`;
+                
+                // Tambahkan grid lines untuk waktu
+                const timeGrid = document.createElement('div');
+                timeGrid.className = 'time-grid';
+                
+                // Tambahkan garis setiap jam
+                for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
+                    const timeLine = document.createElement('div');
+                    timeLine.className = 'time-line';
+                    timeLine.style.top = `${(hour - START_HOUR) * PIXELS_PER_HOUR}px`;
+                    timeGrid.appendChild(timeLine);
                 }
                 
-                tableBody.appendChild(row);
-            });
-
+                container.appendChild(timeGrid);
+                cell.appendChild(container);
+                containerRow.appendChild(cell);
+            }
+            
+            tableBody.appendChild(containerRow);
+            
+            // Render semua booking ke dalam tabel
+            renderAllBookings();
+            
             // Update opsi tanggal di modal add booking
             updateBookingDateOptions();
         }
 
-        // Fungsi untuk menghasilkan slot waktu dengan interval 15 menit
-        function generateTimeSlots() {
-            const slots = [];
-            for (let hour = 7; hour <= 21; hour++) {
-                for (let minute = 0; minute < 60; minute += 15) {
-                    const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-                    slots.push(timeString);
-                }
-            }
-            return slots;
-        }
-
-        // Fungsi untuk mencari booking berdasarkan tanggal dan waktu
-        function findBooking(date, time) {
-            return sampleBookings.find(booking => {
-                if (booking.date !== date) return false;
-                
-                const [startTime, endTime] = booking.time.split('-');
-                return time >= startTime && time < endTime;
+        // Fungsi untuk merender semua booking
+        function renderAllBookings() {
+            // Hapus semua booking rectangle yang ada
+            document.querySelectorAll('.booking-rectangle').forEach(rect => rect.remove());
+            
+            // Reset rendered bookings
+            renderedBookings.clear();
+            
+            // Render setiap booking
+            sampleBookings.forEach(booking => {
+                renderBooking(booking);
             });
         }
 
+        // Fungsi untuk merender satu booking
+        function renderBooking(booking) {
+            if (renderedBookings.has(booking.id)) return;
+            
+            const date = new Date(booking.date);
+            const mondayDate = new Date(currentDate);
+            const dayOfWeek = mondayDate.getDay();
+            const diff = dayOfWeek === 0 ? 1 : (dayOfWeek === 6 ? 2 : 1 - dayOfWeek);
+            mondayDate.setDate(mondayDate.getDate() + diff);
+            
+            // Hitung indeks hari (0-4 untuk Senin-Jumat)
+            const dayIndex = Math.floor((date - mondayDate) / (1000 * 60 * 60 * 24));
+            
+            // Cek apakah booking dalam rentang hari Senin-Jumat
+            if (dayIndex < 0 || dayIndex > 4) return;
+            
+            // Hitung posisi dan tinggi rectangle
+            const topPosition = calculatePosition(booking.startTime);
+            const height = calculateHeight(booking.startTime, booking.endTime);
+            
+            // Cari container untuk hari ini (kolom ke dayIndex + 1 karena kolom 0 adalah waktu)
+            const containers = document.querySelectorAll('.day-container');
+            if (containers.length <= dayIndex) return;
+            
+            const targetContainer = containers[dayIndex];
+            
+            // Buat rectangle untuk booking
+            const rectangle = document.createElement('div');
+            rectangle.className = 'booking-rectangle';
+            rectangle.innerHTML = `
+                <div class="booking-time">${booking.startTime} - ${booking.endTime}</div>
+                <div class="booking-title">${booking.booker}</div>
+                <div class="booking-desc">${booking.purpose}</div>
+            `;
+            
+            // Set posisi dan ukuran
+            rectangle.style.position = 'absolute';
+            rectangle.style.top = `${topPosition}px`;
+            rectangle.style.height = `${height}px`;
+            rectangle.style.backgroundColor = booking.color || 'rgba(66, 133, 244, 0.15)';
+            rectangle.style.borderColor = booking.borderColor || 'rgba(66, 133, 244, 0.5)';
+            rectangle.setAttribute('data-booking-id', booking.id);
+            
+            // Tambahkan event listener untuk detail booking
+            rectangle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                showBookingDetail(booking);
+            });
+            
+            // Tambahkan ke dalam container
+            targetContainer.appendChild(rectangle);
+            
+            renderedBookings.add(booking.id);
+        }
+
         // Fungsi untuk menampilkan modal detail booking
-        function showBookingDetail(bookingData) {
-            const booking = JSON.parse(bookingData);
+        function showBookingDetail(booking) {
             const modal = document.getElementById('booking-detail-modal');
             
             // Format tanggal untuk ditampilkan
@@ -478,7 +594,7 @@
             
             // Isi data di modal
             document.getElementById('detail-date').textContent = formattedDate;
-            document.getElementById('detail-time').textContent = booking.time.replace('-', ' - ');
+            document.getElementById('detail-time').textContent = `${booking.startTime} - ${booking.endTime}`;
             document.getElementById('detail-booker').textContent = booking.booker;
             document.getElementById('detail-purpose').textContent = booking.purpose;
             document.getElementById('detail-status').textContent = booking.status;
@@ -495,7 +611,7 @@
             document.getElementById('booking-date').value = date;
             
             // Parse waktu untuk set nilai default
-            const [hour, minute] = time.split(':');
+            const [hour, minute] = time ? time.split(':') : ['08', '00'];
             document.getElementById('start-hour').value = hour;
             document.getElementById('start-minute').value = minute;
             
@@ -547,7 +663,9 @@
             
             // Tombol add booking di header
             document.getElementById('open-add-booking').addEventListener('click', function() {
-                openAddBookingModal(formatDate(currentDate), '07:00');
+                const today = new Date();
+                const todayStr = formatDate(today);
+                openAddBookingModal(todayStr, '08:00');
             });
             
             // Submit booking baru
@@ -566,20 +684,38 @@
                     return;
                 }
                 
+                // Validasi waktu
+                const startTimeNum = parseInt(startHour) * 60 + parseInt(startMinute);
+                const endTimeNum = parseInt(endHour) * 60 + parseInt(endMinute);
+                
+                if (endTimeNum <= startTimeNum) {
+                    alert('Waktu selesai harus setelah waktu mulai!');
+                    return;
+                }
+                
+                if (startTimeNum < 7 * 60 || endTimeNum > 21 * 60) {
+                    alert('Booking hanya bisa dilakukan antara jam 07:00 - 21:00!');
+                    return;
+                }
+                
                 // Buat booking baru
                 const newBooking = {
+                    id: sampleBookings.length + 1,
                     date: date,
-                    time: `${startHour}:${startMinute}-${endHour}:${endMinute}`,
+                    startTime: `${startHour}:${startMinute}`,
+                    endTime: `${endHour}:${endMinute}`,
                     booker: booker,
                     purpose: purpose,
-                    status: 'Confirmed'
+                    status: 'Confirmed',
+                    color: 'rgba(233, 30, 99, 0.15)',
+                    borderColor: 'rgba(233, 30, 99, 0.5)'
                 };
                 
                 // Tambahkan ke data contoh
                 sampleBookings.push(newBooking);
                 
-                // Refresh tabel
-                generateTableData();
+                // Render booking baru
+                renderBooking(newBooking);
                 
                 // Tutup modal
                 addModal.style.display = 'none';
@@ -593,8 +729,14 @@
             const dateSelect = document.getElementById('booking-date');
             dateSelect.innerHTML = '';
             
-            for (let i = 0; i < 7; i++) {
-                const date = new Date(currentDate);
+            // Hitung tanggal Senin-Jumat
+            const mondayDate = new Date(currentDate);
+            const dayOfWeek = mondayDate.getDay();
+            const diff = dayOfWeek === 0 ? 1 : (dayOfWeek === 6 ? 2 : 1 - dayOfWeek);
+            mondayDate.setDate(mondayDate.getDate() + diff);
+            
+            for (let i = 0; i < 5; i++) {
+                const date = new Date(mondayDate);
                 date.setDate(date.getDate() + i);
                 
                 const option = document.createElement('option');
@@ -605,38 +747,32 @@
             }
         }
 
-        // Generate opsi jam untuk select
+        // Fungsi untuk generate opsi jam
         function generateHourOptions() {
-            const hours = [];
-            for (let i = 7; i <= 21; i++) {
-                hours.push(String(i).padStart(2, '0'));
-            }
-            return hours;
-        }
-
-        // Isi opsi jam saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', function() {
             const startHourSelect = document.getElementById('start-hour');
             const endHourSelect = document.getElementById('end-hour');
             
-            const hours = generateHourOptions();
+            startHourSelect.innerHTML = '';
+            endHourSelect.innerHTML = '';
             
-            hours.forEach(hour => {
+            for (let i = 7; i <= 21; i++) {
+                const hourStr = String(i).padStart(2, '0');
+                
                 const option1 = document.createElement('option');
-                option1.value = hour;
-                option1.textContent = hour;
+                option1.value = hourStr;
+                option1.textContent = hourStr;
                 startHourSelect.appendChild(option1);
                 
                 const option2 = document.createElement('option');
-                option2.value = hour;
-                option2.textContent = hour;
+                option2.value = hourStr;
+                option2.textContent = hourStr;
                 endHourSelect.appendChild(option2);
-            });
+            }
             
             // Set nilai default
-            startHourSelect.value = '07';
-            endHourSelect.value = '08';
-        });
+            startHourSelect.value = '08';
+            endHourSelect.value = '09';
+        }
     </script>
 </body>
 
