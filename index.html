@@ -59,7 +59,7 @@
                 </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="kontak.html">Kontak</a>
+                <a class="nav-link" href="./pages/kontak.html">Kontak</a>
             </li>
         </ul>
 
@@ -84,19 +84,19 @@
                     </p>
                     <!-- Container untuk 3 tombol berjajar -->
                     <div class="buttons-container">
-                        <button class="feature-btn">
+                        <button class="feature-btn btn-short">
                             <span class="btn-content">
                                 <i class="fas fa-chart-line btn-icon"></i>
                                 <span class="btn-text">Data Analytics Skills</span>
                             </span>
                         </button>
-                        <button class="feature-btn">
+                        <button class="feature-btn btn-medium">
                             <span class="btn-content">
                                 <i class="fas fa-chart-bar btn-icon"></i>
                                 <span class="btn-text">Visualization & BI Tools</span>
                             </span>
                         </button>
-                        <button class="feature-btn">
+                        <button class="feature-btn btn-long">
                             <span class="btn-content">
                                 <i class="fas fa-users btn-icon"></i>
                                 <span class="btn-text">Collaboration & Research</span>
@@ -135,34 +135,30 @@
     <section class="profile-carousel-section">
         <div class="custom-container-relative">
             <div class="gray-backdrop-box">
-                <img id="backdrop-image" src="" alt="Supporting Image" class="backdrop-img-content">
+                <img id="backdrop-image" src="../assets/imgAdek/Kotak.jpg" alt="Research Project Image"
+                    class="backdrop-img-content">
             </div>
             <div class="carousel-wrapper">
                 <div class="carousel-track" id="track">
-
-                    <div class="custom-card"
-                        data-bg-img="https://via.placeholder.com/620x605/777777/ffffff?text=Foto+Pendukung+1">
+                    <div class="custom-card" data-bg-img="../assets/imgAdek/Kotak.jpg">
                         <div class="card-content">
                             <h3>Project 1</h3>
                             <p>Deskripsi singkat 1</p>
                         </div>
                     </div>
-                    <div class="custom-card"
-                        data-bg-img="https://via.placeholder.com/620x605/555555/ffffff?text=Foto+Pendukung+2">
+                    <div class="custom-card" data-bg-img="../assets/imgAdek/Kotak1.jpg">
                         <div class="card-content">
                             <h3>Project 2</h3>
                             <p>Deskripsi singkat 2</p>
                         </div>
                     </div>
-                    <div class="custom-card"
-                        data-bg-img="https://via.placeholder.com/620x605/333333/ffffff?text=Foto+Pendukung+3">
+                    <div class="custom-card" data-bg-img="../assets/imgAdek/Kotak2.JPG">
                         <div class="card-content">
                             <h3>Project 3</h3>
                             <p>Deskripsi singkat 3</p>
                         </div>
                     </div>
-                    <div class="custom-card"
-                        data-bg-img="https://via.placeholder.com/620x605/111111/ffffff?text=Foto+Pendukung+4">
+                    <div class="custom-card" data-bg-img="../assets/imgAdek/Kecil.jpg">
                         <div class="card-content">
                             <h3>Project 4</h3>
                             <p>Deskripsi singkat 4</p>
@@ -551,7 +547,9 @@
                     // Mengambil semua kartu saat ini
                     const getCards = () => document.querySelectorAll('.custom-card');
 
-                    // --- 1. FUNGSI UPDATE TAMPILAN (WARNA & BACKGROUND) ---
+                    /* ========================================= */
+                    /* FUNGSI UPDATE TAMPILAN AKTIF */
+                    /* ========================================= */
                     function updateActiveState() {
                         const cards = getCards();
 
@@ -574,7 +572,9 @@
                         }, 300); // Waktu tunggu sesuai durasi CSS opacity
                     }
 
-                    // --- 2. FUNGSI GERAK (NEXT) ---
+                    /* ========================================= */
+                    /* FUNGSI GESER KE KANAN (NEXT) */
+                    /* ========================================= */
                     function moveNext() {
                         if (isAnimating) return;
                         isAnimating = true;
@@ -606,7 +606,9 @@
                         }, 500); // Harus sama dengan durasi transition CSS
                     }
 
-                    // --- 3. FUNGSI GERAK (PREV) ---
+                    /* ========================================= */
+                    /* FUNGSI GESER KE KIRI (PREVIOUS) */
+                    /* ========================================= */
                     function movePrev() {
                         if (isAnimating) return;
                         isAnimating = true;
@@ -637,7 +639,9 @@
                         }, 500);
                     }
 
-                    // Event Listeners
+                    /* ========================================= */
+                    /* EVENT LISTENERS DAN INISIALISASI */
+                    /* ========================================= */
                     nextBtn.addEventListener('click', moveNext);
                     prevBtn.addEventListener('click', movePrev);
 
