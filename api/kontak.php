@@ -1,52 +1,36 @@
-<?php
-// ==================== api/kontak.php ====================
+<?php 
+// ===== FILE: api/kontak.php =====
+require_once '../config/database.php';
 session_start();
-header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
 
-require_once '../koneksi.php';
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
+    jsonResponse(false, 'Unauthorized');
+}
 
-$method = $_SERVER['REQUEST_METHOD'];
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+$database = new Database();
+$db = $database->getConnection();
+$action = $_GET['action'] ?? '';
 
-if ($method == 'GET' && $action == 'list') {
-    $query = "SELECT * FROM kontak ORDER BY is_read ASC, created_at DESC";
-    $result = pg_query($koneksi, $query);
-    
-    if ($result) {
-        $data = pg_fetch_all($result);
-        echo json_encode([
-            'success' => true,
-            'data' => $data ? $data : []
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error: ' . pg_last_error($koneksi)
-        ]);
-    }
-} elseif ($method == 'GET' && $action == 'detail') {
-    $id = pg_escape_string($koneksi, $_GET['id']);
-    
-    // Mark as read
-    $updateQuery = "UPDATE kontak SET is_read = TRUE WHERE id_kontak = $id";
-    pg_query($koneksi, $updateQuery);
-    
-    // Get detail
-    $query = "SELECT * FROM kontak WHERE id_kontak = $id";
-    $result = pg_query($koneksi, $query);
-    
-    if ($result) {
-        $data = pg_fetch_assoc($result);
-        echo json_encode([
-            'success' => true,
-            'data' => $data
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error: ' . pg_last_error($koneksi)
-        ]);
-    }
+switch ($action) {
+    case 'list':
+        $query = "SELECT * FROM kontak ORDER BY created_at DESC";
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        jsonResponse(true, '', $stmt->fetchAll());
+        break;
+        
+    case 'read':
+        $query = "UPDATE kontak SET is_read = true WHERE id_kontak = :id";
+        $stmt = $db->prepare($query);
+        $stmt->execute([':id' => $_POST['id_kontak']]);
+        jsonResponse(true, 'Pesan ditandai sudah dibaca');
+        break;
+        
+    case 'delete':
+        $query = "DELETE FROM kontak WHERE id_kontak = :id";
+        $stmt = $db->prepare($query);
+        $stmt->execute([':id' => $_POST['id_kontak']]);
+        jsonResponse(true, 'Pesan berhasil dihapus');
+        break;
 }
 ?>
