@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratory Business Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/berandaStyle.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Sticky Navigation Bar -->
+    <nav class="sticky-navbar">
+        <div class="logo-container">
+            <div class="logo">
+                <img src="./assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
+            </div>
+            <div class="lab-name-container">
+                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-tagline">Transforming Data into Decisions</div>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link active" href="index.php">Beranda</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="./pages/profile.php">Profil</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#">
+                    Publikasi
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="./pages/berita.php">Berita</a></li>
+                    <li><a class="dropdown-item" href="./pages/galeri.php">Gallery</a></li>
+                    <li><a class="dropdown-item" href="./pages/newsInputService.php">News Input Service</a></li>
+                </ul>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#">
+                    Peminjaman Lab
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="./pages/infoPeminjaman.php">Informasi Laboratorium</a></li>
+                    <li><a class="dropdown-item" href="./pages/tableBooking.php">Table Peminjaman</a></li>
+                    <li><a class="dropdown-item" href="./pages/booking.php">Pemesanan Lab</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="./pages/kontak.php">Kontak</a>
+            </li>
+        </ul>
+
+        <button class="login-btn" onclick="window.location.href='admin/login.php'">Login</button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-rectangle">
+            <!-- Background rectangle dengan opacity -->
+        </div>
+        <div class="hero-container">
+            <!-- Konten teks di sebelah kiri -->
+            <div class="hero-text-content">
+                <div class="title-content">
+                    <h1 class="hero-main-title">
+                        <span class="title-line">Empowering Data-Driven Decision Making</span>
+                        <span class="title-line business-analytics">Welcome to the Business Analytics Laboratory</span>
+                    </h1>
+                    <p class="hero-detailed-description">
+                        Menciptakan Solusi, Bukan Sekedar Analisis
+                    </p>
+                    <!-- Container untuk 3 tombol berjajar -->
+                    <div class="buttons-container">
+                        <button class="feature-btn btn-short">
+                            <span class="btn-content">
+                                <i class="fas fa-chart-line btn-icon"></i>
+                                <span class="btn-text">Data Analytics Skills</span>
+                            </span>
+                        </button>
+                        <button class="feature-btn btn-medium">
+                            <span class="btn-content">
+                                <i class="fas fa-chart-bar btn-icon"></i>
+                                <span class="btn-text">Visualization & BI Tools</span>
+                            </span>
+                        </button>
+                        <button class="feature-btn btn-long">
+                            <span class="btn-content">
+                                <i class="fas fa-users btn-icon"></i>
+                                <span class="btn-text">Collaboration & Research</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maskot di sebelah kanan -->
+            <div class="hero-maskot">
+                <img src="./assets/img/maskotLabb.png" alt="Maskot Business Analytics Laboratory" class="maskot-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="about-container">
+            <h2 class="about-title">About the Laboratory</h2>
+            <div class="about-line"></div>
+            <p class="about-description">
+                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
+                industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and
+                scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap
+                into electronic typesetting, remaining essentially unchanged. Lorem Ipsum is simply dummy text of the
+                printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since
+                the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                It has survived not only five centuries, but also the leap into electronic typesetting, remaining
+                essentially unchanged.
+            </p>
+        </div>
+    </section>
+
+    <!-- Research Focus -->
+    <section class="profile-carousel-section">
+        <div class="custom-container-relative">
+            <div class="gray-backdrop-box">
+                <img id="backdrop-image" src="./assets/imgAdek/Kotak.jpg" alt="Research Project Image"
+                    class="backdrop-img-content">
+            </div>
+            <div class="carousel-wrapper">
+                <div class="carousel-track" id="track">
+                    <div class="custom-card" data-bg-img="./assets/imgAdek/Kotak.jpg">
+                        <div class="card-content">
+                            <h3>Project 1</h3>
+                            <p>Deskripsi singkat 1</p>
+                        </div>
+                    </div>
+                    <div class="custom-card" data-bg-img="./assets/imgAdek/Kotak1.jpg">
+                        <div class="card-content">
+                            <h3>Project 2</h3>
+                            <p>Deskripsi singkat 2</p>
+                        </div>
+                    </div>
+                    <div class="custom-card" data-bg-img="./assets/imgAdek/Kotak2.JPG">
+                        <div class="card-content">
+                            <h3>Project 3</h3>
+                            <p>Deskripsi singkat 3</p>
+                        </div>
+                    </div>
+                    <div class="custom-card" data-bg-img="./assets/imgAdek/Kecil.jpg">
+                        <div class="card-content">
+                            <h3>Project 4</h3>
+                            <p>Deskripsi singkat 4</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-nav">
+                <button class="nav-btn prev-btn" id="prevBtn">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <button class="nav-btn next-btn" id="nextBtn">
+                    <i class="fa fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Profile Section & dll-->
+    <div class="container-xl">
+        <div class="row mb-5 align-items-center">
+            <div class="col-lg-5">
+                <p class="text-uppercase fw-bold text-secondary mb-1">Profile</p>
+                <h2 class="fw-bold mb-3">Profile About Lab</h2>
+                <div class="profile-btn-container">
+                    <button class="profile-btn" onclick="window.location.href='./pages/profile.php'">
+                        <span class="btn-text">
+                            Read More
+                            <i class="fas fa-arrow-up arrow-icon"></i>
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <p class="text-muted mt-3 mt-lg-0">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+                    labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+                    laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+                    voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+                    non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                </p>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-4 mb-4">
+                <div class="card card-preview-profile bg-dark text-white overflow-hidden shadow">
+                    <!-- Tambahkan gambar dengan tag img -->
+                    <img src="./assets/img/noProfile.jpeg" class="card-bg-img" alt="Publikasi">
+                    <div class="card-img-overlay d-flex flex-column justify-content-end p-4">
+                        <h5 class="card-title fw-bold mb-1">Publikasi</h5>
+                        <h6 class="card-subtitle mb-2 text-white">News Input Service</h6>
+                        <p class="card-text small mb-3 text-white">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+                        </p>
+                        <div class="respon-btn-container">
+                            <button class="respon-btn" onclick="window.location.href='./pages/newsInputService.php'">
+                                <span class="btn-text">
+                                    Read More
+                                    <i class="fas fa-arrow-up arrow-icon"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card card-preview-profile bg-dark text-white overflow-hidden shadow">
+                    <!-- Tambahkan gambar dengan tag img -->
+                    <img src="./assets/img/noProfile.jpeg" class="card-bg-img" alt="Peninjarman Lab">
+                    <div class="card-img-overlay d-flex flex-column justify-content-end p-4">
+                        <h5 class="card-title fw-bold mb-1">Peminjaman Lab</h5>
+                        <h6 class="card-subtitle mb-2 text-white">Table Booking</h6>
+                        <p class="card-text small mb-3 text-white">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+                        </p>
+                        <div class="respon-btn-container">
+                            <button class="respon-btn" onclick="window.location.href='./pages/tableBooking.php'">
+                                <span class="btn-text">
+                                    Read More
+                                    <i class="fas fa-arrow-up arrow-icon"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card card-preview-profile bg-dark text-white overflow-hidden shadow">
+                    <!-- Tambahkan gambar dengan tag img -->
+                    <img src="./assets/img/noProfile.jpeg" class="card-bg-img" alt="Berita">
+                    <div class="card-img-overlay d-flex flex-column justify-content-end p-4">
+                        <h5 class="card-title fw-bold mb-1">Kontak</h5>
+                        <h6 class="card-subtitle mb-2 text-white">Contact Laboratory</h6>
+                        <p class="card-text small mb-3 text-white">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+                        </p>
+                        <div class="respon-btn-container">
+                            <button class="respon-btn" onclick="window.location.href='./pages/kontak.php'">
+                                <span class="btn-text">
+                                    Read More
+                                    <i class="fas fa-arrow-up arrow-icon"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- News Section -->
+    <section class="news-section py-5 bg-white">
+        <div class="container-xl">
+            <div class="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h2 class="fw-bold text-dark mb-2">Today's Lab News</h2>
+                    <div class="section-title-underline2"></div>
+                </div>
+                <div class="news-btn-container">
+                    <button class="news-btn" onclick="window.location.href='./pages/berita.php'">
+                        <span class="btn-text">
+                            Read More
+                            <i class="fas fa-arrow-up arrow-icon"></i>
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Rectangle Besar Kiri (640x560) dengan Hover Effect -->
+                <div class="col-lg-6">
+                    <div class="card news-card-lg rounded-3 overflow-hidden border-0 shadow-sm h-100" style="cursor: pointer;" onclick="window.location.href='./pages/beritaUtama.php'">
+                        <div class="news-lg-img-container position-relative h-100">
+                            <!-- Gambar untuk rectangle besar -->
+                            <img src="./assets/img/noProfile.jpeg" alt="News Image" class="news-lg-img">
+
+                            <!-- Content Overlay -->
+                            <div class="news-lg-content position-absolute bottom-0 start-0 w-100 p-4 p-lg-5">
+                                <h3 class="fw-bold text-white mb-3">Lorem Ipsum is simply dummy text of the printing and
+                                    typesetting industry.</h3>
+
+                                <div class="d-flex flex-wrap gap-3 text-white-50 small mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person-circle me-2"></i> Nm. User
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-calendar4-event me-2"></i> 31 November, 2025
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-people-fill me-2"></i> Mahasiswa Polinema
+                                    </div>
+                                </div>
+
+                                <p class="text-white-50 small mb-0 line-clamp-2">
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
+                                    Ipsum has been the industry's standard dummy text ever since the 1500s...
+                                </p>
+                            </div>
+
+                            <!-- Hover Effect Overlay -->
+                            <div class="news-hover-overlay"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rectangle Kecil Kanan (3x 190x160) -->
+                <div class="col-lg-6 d-flex flex-column gap-4">
+                    <!-- Item 1 -->
+                    <div class="news-item-sm d-flex align-items-start gap-3 position-relative">
+                        <div class="news-sm-img rounded-3 flex-shrink-0 position-relative overflow-hidden">
+                            <img src="./assets/img/noProfile.jpeg" alt="Profile" class="news-profile-img">
+                            <div class="news-sm-hover-overlay"></div>
+                        </div>
+
+                        <div class="news-sm-content">
+                            <h5 class="fw-bold text-dark mb-2 line-clamp-2">Lorem Ipsum is simply dummy text of the
+                                printing and typesetting industry.</h5>
+
+                            <div class="d-flex flex-wrap gap-3 text-muted small mb-2" style="font-size: 0.75rem;">
+                                <span class="d-flex align-items-center"><i class="bi bi-person-circle me-1"></i> Nm.
+                                    User</span>
+                                <span class="d-flex align-items-center"><i class="bi bi-calendar4-event me-1"></i> 31
+                                    Nov, 2025</span>
+                                <span class="d-flex align-items-center"><i class="bi bi-people-fill me-1"></i> Mhs.
+                                    Polinema</span>
+                            </div>
+
+                            <p class="text-muted small mb-0 line-clamp-2">
+                                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                                has been the industry's standard dummy text...
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="news-item-sm d-flex align-items-start gap-3 position-relative">
+                        <div class="news-sm-img rounded-3 flex-shrink-0 position-relative overflow-hidden">
+                            <img src="./assets/img/noProfile.jpeg" alt="Profile" class="news-profile-img">
+                            <div class="news-sm-hover-overlay"></div>
+                        </div>
+                        <div class="news-sm-content">
+                            <h5 class="fw-bold text-dark mb-2 line-clamp-2">Lorem Ipsum is simply dummy text of the
+                                printing and typesetting industry.</h5>
+                            <div class="d-flex flex-wrap gap-3 text-muted small mb-2" style="font-size: 0.75rem;">
+                                <span class="d-flex align-items-center"><i class="bi bi-person-circle me-1"></i> Nm.
+                                    User</span>
+                                <span class="d-flex align-items-center"><i class="bi bi-calendar4-event me-1"></i> 31
+                                    Nov, 2025</span>
+                                <span class="d-flex align-items-center"><i class="bi bi-people-fill me-1"></i> Mhs.
+                                    Polinema</span>
+                            </div>
+                            <p class="text-muted small mb-0 line-clamp-2">
+                                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                                has been the industry's standard dummy text...
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="news-item-sm d-flex align-items-start gap-3 position-relative">
+                        <div class="news-sm-img rounded-3 flex-shrink-0 position-relative overflow-hidden">
+                            <img src="./assets/img/noProfile.jpeg" alt="Profile" class="news-profile-img">
+                            <div class="news-sm-hover-overlay"></div>
+                        </div>
+                        <div class="news-sm-content">
+                            <h5 class="fw-bold text-dark mb-2 line-clamp-2">Lorem Ipsum is simply dummy text of the
+                                printing and typesetting industry.</h5>
+                            <div class="d-flex flex-wrap gap-3 text-muted small mb-2" style="font-size: 0.75rem;">
+                                <span class="d-flex align-items-center"><i class="bi bi-person-circle me-1"></i> Nm.
+                                    User</span>
+                                <span class="d-flex align-items-center"><i class="bi bi-calendar4-event me-1"></i> 31
+                                    Nov, 2025</span>
+                                <span class="d-flex align-items-center"><i class="bi bi-people-fill me-1"></i> Mhs.
+                                    Polinema</span>
+                            </div>
+                            <p class="text-muted small mb-0 line-clamp-2">
+                                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                                has been the industry's standard dummy text...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="gallery-section py-5 bg-white">
+        <div class="container-xl">
+            <div class="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h2 class="fw-bold text-dark mb-2">Today's Lab Gallery</h2>
+                    <div class="section-title-underline2"></div>
+                </div>
+                <div class="gallery-btn-container">
+                    <button class="gallery-btn" onclick="window.location.href='./pages/galeri.php'">
+                        <span class="btn-text">
+                            View More
+                            <i class="fas fa-arrow-up arrow-icon"></i>
+                        </span>
+                    </button>
+                </div>
+            </div>
+            <!-- Gallery Section -->
+            <section class="gallery-section">
+                <div class="container">
+                    <div class="gallery-grid">
+                        <!-- Column 1 -->
+                        <div class="gallery-column">
+                            <div class="gallery-item">
+                                <img src="./assets/imgAdek/Panjang.jpg" alt="Gallery Image 1">
+                                <div class="gallery-overlay">
+                                    <div class="gallery-text">
+                                        <h3>Business Analytics Workshop</h3>
+                                        <p>Team collaboration in data analysis</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="./assets/imgAdek/S1.jpg" alt="Gallery Image 10">
+                                <div class="gallery-overlay">
+                                    <div class="gallery-text">
+                                        <h3>Project Discussion</h3>
+                                        <p>Brainstorming solutions</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 2 -->
+                        <div class="gallery-column">
+                            <div class="gallery-item">
+                                <img src="./assets/imgAdek/S3.jpg" alt="Gallery Image 2">
+                                <div class="gallery-overlay">
+                                    <div class="gallery-text">
+                                        <h3>Data Visualization</h3>
+                                        <p>Creating insightful dashboards</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="./assets/imgAdek/Kotak.jpg" alt="Gallery Image 11">
+                                <div class="gallery-overlay">
+                                    <div class="gallery-text">
+                                        <h3>Software Training</h3>
+                                        <p>Learning new analytics tools</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 3 -->
+                        <div class="gallery-column">
+                            <div class="gallery-item">
+                                <img src="./assets/imgAdek/adel jkt48 on Twitter.jpeg" alt="Gallery Image 7">
+                                <div class="gallery-overlay">
+                                    <div class="gallery-text">
+                                        <h3>Collaboration</h3>
+                                        <p>Teamwork in action</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="./assets/imgAdek/Kecil.jpg" alt="Gallery Image 9">
+                                <div class="gallery-overlay">
+                                    <div class="gallery-text">
+                                        <h3>Data Processing</h3>
+                                        <p>Analyzing large datasets</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 4 -->
+                        <div class="gallery-column">
+                            <div class="gallery-item">
+                                <img src="./assets/imgAdek/S2.jpg" alt="Gallery Image 12">
+                                <div class="gallery-overlay">
+                                    <div class="gallery-text">
+                                        <h3>Team Building</h3>
+                                        <p>Strengthening collaboration</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="./assets/imgAdek/Kotak2.JPG" alt="Gallery Image 13">
+                                <div class="gallery-overlay">
+                                    <div class="gallery-text">
+                                        <h3>Data Workshop</h3>
+                                        <p>Hands-on data analysis session</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="./assets/imgAdek/KecilBgt.jpg" alt="Gallery Image 14">
+                                <div class="gallery-overlay">
+                                    <div class="gallery-text">
+                                        <h3>Analytics Tools</h3>
+                                        <p>Exploring new software solutions</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bootstrap JS -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const track = document.getElementById('track');
+                    const prevBtn = document.getElementById('prevBtn');
+                    const nextBtn = document.getElementById('nextBtn');
+                    const backdropImage = document.getElementById('backdrop-image');
+
+                    let isAnimating = false;
+
+                    // Mengambil semua kartu saat ini
+                    const getCards = () => document.querySelectorAll('.custom-card');
+
+                    /* ========================================= */
+                    /* FUNGSI UPDATE TAMPILAN AKTIF */
+                    /* ========================================= */
+                    function updateActiveState() {
+                        const cards = getCards();
+
+                        // Reset semua kartu jadi putih
+                        cards.forEach(c => c.classList.remove('active'));
+
+                        // Kartu PERTAMA di DOM adalah kartu yang "Aktif"
+                        const activeCard = cards[0];
+                        activeCard.classList.add('active');
+
+                        // Ambil URL gambar dari atribut data-bg-img kartu yang aktif
+                        const newImageSrc = activeCard.getAttribute('data-bg-img');
+
+                        // Efek transisi halus untuk gambar background
+                        backdropImage.classList.add('fade-out');
+
+                        setTimeout(() => {
+                            backdropImage.src = newImageSrc;
+                            backdropImage.classList.remove('fade-out');
+                        }, 300); // Waktu tunggu sesuai durasi CSS opacity
+                    }
+
+                    /* ========================================= */
+                    /* FUNGSI GESER KE KANAN (NEXT) */
+                    /* ========================================= */
+                    function moveNext() {
+                        if (isAnimating) return;
+                        isAnimating = true;
+
+                        const cards = getCards();
+                        const cardWidth = cards[0].offsetWidth;
+                        // Ambil gap dari CSS (24px) atau hitung manual
+                        const gap = 24;
+                        const moveDistance = cardWidth + gap;
+
+                        // 1. Geser Track ke Kiri
+                        track.style.transition = 'transform 0.5s ease-in-out';
+                        track.style.transform = `translateX(-${moveDistance}px)`;
+
+                        // 2. Setelah animasi selesai, pindahkan elemen DOM
+                        setTimeout(() => {
+                            track.style.transition = 'none'; // Matikan animasi sebentar
+
+                            // Pindahkan kartu pertama ke urutan terakhir
+                            track.appendChild(cards[0]);
+
+                            // Reset posisi track ke 0
+                            track.style.transform = 'translateX(0)';
+
+                            // Update status warna dan gambar background
+                            updateActiveState();
+
+                            isAnimating = false;
+                        }, 500); // Harus sama dengan durasi transition CSS
+                    }
+
+                    /* ========================================= */
+                    /* FUNGSI GESER KE KIRI (PREVIOUS) */
+                    /* ========================================= */
+                    function movePrev() {
+                        if (isAnimating) return;
+                        isAnimating = true;
+
+                        const cards = getCards();
+                        const lastCard = cards[cards.length - 1];
+                        const cardWidth = cards[0].offsetWidth;
+                        const gap = 24;
+                        const moveDistance = cardWidth + gap;
+
+                        // 1. Pindahkan kartu terakhir ke depan DULU (secara instan)
+                        track.style.transition = 'none';
+                        track.prepend(lastCard);
+
+                        // 2. Geser track ke posisi minus (seolah-olah belum pindah)
+                        track.style.transform = `translateX(-${moveDistance}px)`;
+
+                        // 3. Force Reflow (agar browser sadar perubahan posisi)
+                        void track.offsetWidth;
+
+                        // 4. Animate balik ke 0
+                        track.style.transition = 'transform 0.5s ease-in-out';
+                        track.style.transform = 'translateX(0)';
+
+                        setTimeout(() => {
+                            updateActiveState();
+                            isAnimating = false;
+                        }, 500);
+                    }
+
+                    /* ========================================= */
+                    /* EVENT LISTENERS DAN INISIALISASI */
+                    /* ========================================= */
+                    nextBtn.addEventListener('click', moveNext);
+                    prevBtn.addEventListener('click', movePrev);
+
+                    // Inisialisasi awal
+                    updateActiveState();
+                });
+            </script>
+</body>
+
+</html>
