@@ -6,68 +6,136 @@ header('Content-Type: application/json');
 
 $db = (new Database())->getConnection();
 $method = $_SERVER['REQUEST_METHOD'];
+$user_id = $_SESSION['user_id']; // Ambil ID user yang sedang login
 
+// --- HELPER FUNCTION UNTUK LOG ---
+function logActivity($db, $userId, $activity, $desc) {
+    try {
+        $ip = getClientIP(); // Dari database.php
+        $sql = "INSERT INTO log (id_user, aktivitas, deskripsi, ip_address, waktu) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$userId, $activity, $desc, $ip]);
+    } catch (Exception $e) {
+        // Silent fail: Jangan hentikan proses utama jika log gagal
+    }
+}
+
+// === GET DATA ===
 if ($method == 'GET') {
-    // ... (GET logic sama seperti sebelumnya)
-    $stmt = $db->query("SELECT * FROM artikel ORDER BY tanggal_upload DESC");
-    echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
+    try {
+        if (isset($_GET['id'])) {
+            $query = "SELECT a.*, u.nama as nama_pengupload, u.role as role_pengupload 
+                      FROM artikel a 
+                      LEFT JOIN users u ON a.id_user = u.id_user 
+                      WHERE a.id_artikel = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$_GET['id']]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'data' => $data]);
+        } else {
+            $query = "SELECT a.*, u.nama as nama_pengupload, u.role as role_pengupload 
+                      FROM artikel a 
+                      LEFT JOIN users u ON a.id_user = u.id_user 
+                      ORDER BY a.tanggal_upload DESC";
+            $stmt = $db->query($query);
+            echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
 } 
+
+// === POST DATA ===
 elseif ($method == 'POST') {
     try {
-        // DELETE LOGIC (Sama seperti sebelumnya)
+        // 1. DELETE
         if (isset($_POST['action']) && $_POST['action'] == 'delete') {
-            $stmt = $db->prepare("SELECT file_path FROM artikel WHERE id_artikel = ?");
-            $stmt->execute([$_POST['id']]);
-            $row = $stmt->fetch();
-            if ($row && $row['file_path']) deleteFile($row['file_path']);
-            $db->prepare("DELETE FROM artikel WHERE id_artikel = ?")->execute([$_POST['id']]);
-            echo json_encode(['success' => true, 'message' => 'Berita dihapus']);
+            $id_artikel = $_POST['id'];
+            
+            // Ambil judul dulu untuk log
+            $stmtInfo = $db->prepare("SELECT judul, file_path FROM artikel WHERE id_artikel = ?");
+            $stmtInfo->execute([$id_artikel]);
+            $info = $stmtInfo->fetch();
+            
+            if ($info) {
+                // Hapus file fisik
+                if ($info['file_path']) deleteFile($info['file_path']);
+                
+                // Hapus data
+                $db->prepare("DELETE FROM artikel WHERE id_artikel = ?")->execute([$id_artikel]);
+                
+                // CATAT LOG
+                logActivity($db, $user_id, 'DELETE', "Menghapus berita: " . $info['judul']);
+                
+                echo json_encode(['success' => true, 'message' => 'Berita dihapus']);
+            } else {
+                throw new Exception("Data tidak ditemukan");
+            }
             exit;
         }
 
-        // INSERT / UPDATE LOGIC
+        // --- INPUT DATA ---
         $judul = $_POST['judul'] ?? '';
         $kategori = $_POST['kategori'] ?? 'News Latest';
-        $konten = $_POST['deskripsi'] ?? ''; 
+        $konten = $_POST['deskripsi'] ?? '';
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
-        $nama_upload = $_POST['nama_pengupload'] ?? 'Admin';
-        $role_upload = $_POST['role_pengupload'] ?? 'admin';
+        $id_user = $_SESSION['user_id']; 
 
-        $foto_path = '';
+        if (empty($judul) || empty($konten)) throw new Exception("Data tidak lengkap!");
+
         $foto_query = "";
-        $params = [$judul, $kategori, $konten, $tanggal, $nama_upload, $role_upload];
+        $params = [$judul, $kategori, $konten, $tanggal, $id_user];
 
-        // === UPLOAD FOTO BERITA ===
+        // Handle File Upload
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
-            // Pastikan folder tujuan adalah 'berita'
-            $up = uploadFile($_FILES['foto'], 'berita'); 
+            $up = uploadFile($_FILES['foto'], 'berita');
+            if (!$up['success']) throw new Exception($up['message']);
             
-            if ($up['success']) {
-                $foto_path = $up['path'];
-                $foto_query = ", file_path = ?"; // Untuk update
-            } else {
-                throw new Exception($up['message']);
+            if (isset($_POST['id_artikel']) && !empty($_POST['id_artikel'])) {
+                $old = $db->prepare("SELECT file_path FROM artikel WHERE id_artikel = ?");
+                $old->execute([$_POST['id_artikel']]);
+                $oldRow = $old->fetch();
+                if ($oldRow && $oldRow['file_path']) deleteFile($oldRow['file_path']);
             }
+            $foto_path = $up['path'];
+        } else {
+            $foto_path = null;
         }
 
+        // 2. UPDATE
         if (isset($_POST['id_artikel']) && !empty($_POST['id_artikel'])) {
-            // UPDATE
-            if ($foto_path) $params[] = $foto_path;
-            $params[] = $_POST['id_artikel'];
+            $id = $_POST['id_artikel'];
             
-            // Logic hapus foto lama jika ada update foto baru... (seperti kode sebelumnya)
+            if ($foto_path) {
+                $foto_query = ", file_path = ?";
+                $params[] = $foto_path;
+            }
+            $params[] = $id; 
 
-            $sql = "UPDATE artikel SET judul=?, kategori=?, konten=?, tanggal_upload=?, nama_pengupload=?, role_pengupload=? $foto_query WHERE id_artikel=?";
+            $sql = "UPDATE artikel SET judul=?, kategori=?, konten=?, tanggal_upload=?, id_user=? $foto_query WHERE id_artikel=?";
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
-            echo json_encode(['success' => true, 'message' => 'Berita diperbarui']);
-        } else {
-            // INSERT
-            $sql = "INSERT INTO artikel (judul, kategori, konten, file_path, tanggal_upload, nama_pengupload, role_pengupload, is_published) VALUES (?, ?, ?, ?, ?, ?, ?, true)";
-            // Masukkan path foto ke parameter ke-4
-            $insertParams = [$judul, $kategori, $konten, $foto_path, $tanggal, $nama_upload, $role_upload];
-            $db->prepare($sql)->execute($insertParams);
-            echo json_encode(['success' => true, 'message' => 'Berita ditambah']);
+            
+            // CATAT LOG
+            logActivity($db, $user_id, 'UPDATE', "Mengubah berita: $judul");
+            
+            echo json_encode(['success' => true, 'message' => 'Berita diperbarui!']);
+        } 
+        
+        // 3. INSERT
+        else {
+            if (!$foto_path) throw new Exception("Foto wajib diupload!");
+            
+            $sql = "INSERT INTO artikel (judul, kategori, konten, tanggal_upload, id_user, file_path, is_published) 
+                    VALUES (?, ?, ?, ?, ?, ?, true)";
+            $stmt = $db->prepare($sql);
+            $params[] = $foto_path; 
+            $stmt->execute($params);
+            
+            // CATAT LOG
+            logActivity($db, $user_id, 'INSERT', "Menambahkan berita baru: $judul");
+            
+            echo json_encode(['success' => true, 'message' => 'Berita ditambahkan!']);
         }
 
     } catch (Exception $e) {
