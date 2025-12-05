@@ -1,3 +1,56 @@
+<?php
+// 1. KONEKSI DATABASE
+require_once '../admin/config/database.php';
+$db = (new Database())->getConnection();
+
+// 2. AMBIL DATA GALERI
+try {
+    $query = "SELECT * FROM galeri ORDER BY id_galeri DESC";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $galeriList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $galeriList = [];
+}
+
+// 3. PISAHKAN DATA BERDASARKAN KATEGORI (UNTUK KOLOM MASONRY)
+// Inisialisasi array kosong untuk 4 kolom
+$kolom1 = [];
+$kolom2 = [];
+$kolom3 = [];
+$kolom4 = [];
+
+foreach ($galeriList as $item) {
+    // Masukkan item ke array yang sesuai dengan kategorinya
+    switch ($item['kategori']) {
+        case 'Kategori 1': $kolom1[] = $item; break;
+        case 'Kategori 2': $kolom2[] = $item; break;
+        case 'Kategori 3': $kolom3[] = $item; break;
+        case 'Kategori 4': $kolom4[] = $item; break;
+        default: $kolom1[] = $item; // Jika kategori lain, masukkan ke kolom 1 default
+    }
+}
+
+// Helper Function untuk Render Item Galeri (Supaya kode HTML tidak berulang)
+function renderGalleryItem($item) {
+    // Path Gambar: Ambil dari folder admin/uploads
+    $imgPath = !empty($item['file_path']) ? '../admin/' . $item['file_path'] : '../assets/img/default-gallery.jpg';
+    $judul = htmlspecialchars($item['judul']);
+    $deskripsi = htmlspecialchars($item['deskripsi']);
+
+    echo '
+    <div class="gallery-item">
+        <img src="' . $imgPath . '" alt="' . $judul . '" onerror="this.src=\'../assets/img/default-gallery.jpg\'">
+        <div class="gallery-overlay">
+            <div class="gallery-text">
+                <h3>' . $judul . '</h3>
+                <p>' . $deskripsi . '</p>
+            </div>
+        </div>
+    </div>';
+}
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -5,19 +58,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laboratorium Business Analytics</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome untuk ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Google Fonts - Nunito -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
         rel="stylesheet">
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="../assets/css/galeriStyle.css">
 </head>
 
 <body>
-    <!-- Sticky Navigation Bar -->
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
@@ -66,15 +114,12 @@
         <button class="login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero-section">
         <div class="hero-rectangle">
-            <!-- Background rectangle dengan opacity -->
-        </div>
+            </div>
         <div class="hero-container">
             <div class="hero-inner-rectangle">
-                <!-- Inner rectangle placeholder -->
-            </div>
+                </div>
             <div class="hero-text-content">
                 <div class="about-overlay">
                     <span class="about-text">Gallery</span>
@@ -85,16 +130,8 @@
                         <span class="title-line business-analytics">Business Analytics</span>
                     </h1>
                     <p class="hero-detailed-description">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                        labore et dolore magna aliqua.
-                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                        commodo consequat.
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-                        pariatur.
-                        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-                        anim id est laborum.
+                        Kumpulan dokumentasi kegiatan, workshop, dan momen berharga di Laboratorium Business Analytics.
                     </p>
-                    <!-- Tombol Register For Laboratory Booking -->
                     <div class="register-btn-container">
                         <button class="register-btn">
                             <span class="btn-text">
@@ -110,222 +147,67 @@
 
     <div class="py-5"></div>
 
-    <!-- Gallery Section -->
     <section class="gallery-section">
         <div class="container">
             <div class="gallery-grid">
-                <!-- Column 1 -->
+                
                 <div class="gallery-column">
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/Panjang.jpg" alt="Gallery Image 1">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Business Analytics Workshop</h3>
-                                <p>Team collaboration in data analysis</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/KecilBgt.jpg" alt="Gallery Image 3">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Team Meeting</h3>
-                                <p>Strategic planning session</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/Panjang.jpg" alt="Gallery Image 6">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Lab Equipment</h3>
-                                <p>State-of-the-art analytics tools</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/S1.jpg" alt="Gallery Image 10">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Project Discussion</h3>
-                                <p>Brainstorming solutions</p>
-                            </div>
-                        </div>
-                    </div>
+                    <?php 
+                    if (!empty($kolom1)) {
+                        foreach ($kolom1 as $item) renderGalleryItem($item);
+                    } else {
+                        // Placeholder jika kosong (Opsional)
+                        echo '<p class="text-muted text-center p-3">Kategori 1 Kosong</p>';
+                    }
+                    ?>
                 </div>
 
-                <!-- Column 2 -->
                 <div class="gallery-column">
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/S3.jpg" alt="Gallery Image 2">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Data Visualization</h3>
-                                <p>Creating insightful dashboards</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/Kotak1.JPG" alt="Gallery Image 4">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Research Presentation</h3>
-                                <p>Sharing findings with stakeholders</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/S4.jpg" alt="Gallery Image 8">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Training Session</h3>
-                                <p>Developing analytical skills</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/Kotak.jpg" alt="Gallery Image 11">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Software Training</h3>
-                                <p>Learning new analytics tools</p>
-                            </div>
-                        </div>
-                    </div>
+                    <?php 
+                    if (!empty($kolom2)) {
+                        foreach ($kolom2 as $item) renderGalleryItem($item);
+                    } else {
+                        echo '<p class="text-muted text-center p-3">Kategori 2 Kosong</p>';
+                    }
+                    ?>
                 </div>
 
-                <!-- Column 3 -->
                 <div class="gallery-column">
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/ADEL JKT48.jpeg" alt="Gallery Image 5">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Data Analysis</h3>
-                                <p>Deep dive into business metrics</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/adel jkt48 on Twitter.jpeg" alt="Gallery Image 7">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Collaboration</h3>
-                                <p>Teamwork in action</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/S5.jpg" alt="Gallery Image 9">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Data Processing</h3>
-                                <p>Analyzing large datasets</p>
-                            </div>
-                        </div>
-                    </div>
+                    <?php 
+                    if (!empty($kolom3)) {
+                        foreach ($kolom3 as $item) renderGalleryItem($item);
+                    } else {
+                        echo '<p class="text-muted text-center p-3">Kategori 3 Kosong</p>';
+                    }
+                    ?>
                 </div>
 
-                <!-- Column 4 -->
                 <div class="gallery-column">
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/S2.jpg" alt="Gallery Image 12">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Team Building</h3>
-                                <p>Strengthening collaboration</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/Kotak2.JPG" alt="Gallery Image 13">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Data Workshop</h3>
-                                <p>Hands-on data analysis session</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/S6.jpg" alt="Gallery Image 14">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Analytics Tools</h3>
-                                <p>Exploring new software solutions</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/imgAdek/adel jkt48 (1).jpeg" alt="Gallery Image 15">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Team Collaboration</h3>
-                                <p>Working together on projects</p>
-                            </div>
-                        </div>
-                    </div>
+                    <?php 
+                    if (!empty($kolom4)) {
+                        foreach ($kolom4 as $item) renderGalleryItem($item);
+                    } else {
+                        echo '<p class="text-muted text-center p-3">Kategori 4 Kosong</p>';
+                    }
+                    ?>
                 </div>
+
             </div>
         </div>
     </section>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Custom JavaScript -->
     <script>
-        // JavaScript untuk optimalisasi layout Pinterest
+        // JavaScript untuk optimalisasi layout Pinterest (TETAP DIPERTAHANKAN)
         document.addEventListener('DOMContentLoaded', function () {
             function optimizeMasonryLayout() {
-                const columns = document.querySelectorAll('.gallery-column');
-                const container = document.querySelector('.gallery-grid');
-
-                // Reset heights
-                columns.forEach(col => col.style.height = 'auto');
-
-                // Jika di mobile, tidak perlu optimisasi khusus
-                if (window.innerWidth <= 768) return;
-
-                // Hitung tinggi setiap kolom
-                const columnHeights = Array.from(columns).map(col => col.scrollHeight);
-                const maxHeight = Math.max(...columnHeights);
-                const minHeight = Math.min(...columnHeights);
-
-                // Jika perbedaan tinggi terlalu besar, redistribusi item
-                if (maxHeight - minHeight > 300) {
-                    redistributeItems();
+                // Logika resize window untuk responsif (1 kolom di HP)
+                if (window.innerWidth <= 768) {
+                   // Biarkan CSS menangani stacking di mobile
+                   return;
                 }
-            }
-
-            function redistributeItems() {
-                const columns = document.querySelectorAll('.gallery-column');
-                const allItems = [];
-
-                // Kumpulkan semua item
-                columns.forEach(col => {
-                    const items = Array.from(col.children);
-                    allItems.push(...items);
-                    col.innerHTML = ''; // Kosongkan kolom
-                });
-
-                // Acak urutan item untuk variasi
-                allItems.sort(() => Math.random() - 0.5);
-
-                // Redistribusi item ke kolom
-                allItems.forEach((item, index) => {
-                    const targetColumn = columns[index % columns.length];
-                    targetColumn.appendChild(item);
-                });
+                // Logika redistribusi item jika perlu (Opsional karena PHP sudah membagi kolom)
             }
 
             // Jalankan optimisasi saat load dan resize
@@ -338,7 +220,7 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         const img = entry.target;
-                        img.src = img.src;
+                        img.src = img.src; // Trigger load
                         imageObserver.unobserve(img);
                     }
                 });
