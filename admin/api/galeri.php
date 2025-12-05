@@ -1,7 +1,13 @@
 <?php
 // File: admin/api/galeri.php
 require_once '../../admin/config/database.php';
-checkAuth();
+
+// Pastikan session dimulai sebelum mengambil data session
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+checkAuth(); // Pastikan user sudah login
 header('Content-Type: application/json');
 
 $db = (new Database())->getConnection();
@@ -11,15 +17,15 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'GET') {
     try {
         if (isset($_GET['id'])) {
-            // Ambil 1 data untuk Edit
-            $stmt = $db->prepare("SELECT * FROM galeri WHERE id_galeri = ?");
+            // Ambil 1 data dari view_galeri untuk Edit
+            $stmt = $db->prepare("SELECT * FROM view_galeri WHERE id_galeri = ?");
             $stmt->execute([$_GET['id']]);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
             echo json_encode(['success' => true, 'data' => $data]);
         } else {
-            // Ambil semua data untuk Tabel
-            // Kita tidak perlu JOIN ke users karena uploaded_by kita biarkan kosong
-            $stmt = $db->query("SELECT * FROM galeri ORDER BY id_galeri DESC");
+            // Ambil semua data dari view_galeri untuk Tabel
+            // View ini harusnya sudah men-join tabel users untuk dapat nama & role
+            $stmt = $db->query("SELECT * FROM view_galeri ORDER BY id_galeri DESC");
             echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
         }
     } catch (PDOException $e) {
@@ -50,9 +56,9 @@ elseif ($method == 'POST') {
         $deskripsi = $_POST['deskripsi'] ?? '';
         $kategori = $_POST['kategori'] ?? 'Kategori 1';
         
-        // MODIFIKASI DI SINI: 
-        // Kita set NULL secara paksa agar kolom uploaded_by dibiarkan kosong di database
-        $uploaded_by = null; 
+        // [REVISI PENTING] Ambil ID User dari Session
+        // Jika session kosong (aneh jika sudah checkAuth), fallback ke NULL
+        $uploaded_by = $_SESSION['user_id'] ?? null; 
 
         if (empty($judul)) throw new Exception("Judul foto wajib diisi!");
 
@@ -60,15 +66,18 @@ elseif ($method == 'POST') {
         if (isset($_POST['id_galeri']) && !empty($_POST['id_galeri'])) {
             $id = $_POST['id_galeri'];
             
-            // Parameter: judul, deskripsi, kategori, uploaded_by (null)
-            $params = [$judul, $deskripsi, $kategori, $uploaded_by];
+            // Note: Kita biasanya TIDAK mengupdate uploader saat edit, 
+            // biarkan tetap user aslinya. Jadi $uploaded_by tidak dimasukkan ke query update
+            // kecuali Anda ingin mengubah pemiliknya menjadi pengedit.
+            // Di sini saya asumsikan pemilik tidak berubah saat edit.
+            
+            $params = [$judul, $deskripsi, $kategori];
             $foto_query = "";
 
             if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
-                $up = uploadFile($_FILES['foto'], 'galeri'); // Simpan di uploads/galeri
+                $up = uploadFile($_FILES['foto'], 'galeri'); 
                 if (!$up['success']) throw new Exception($up['message']);
                 
-                // Hapus file lama
                 $old = $db->prepare("SELECT file_path FROM galeri WHERE id_galeri = ?");
                 $old->execute([$id]);
                 $row = $old->fetch();
@@ -77,9 +86,10 @@ elseif ($method == 'POST') {
                 $foto_query = ", file_path = ?";
                 $params[] = $up['path'];
             }
-            $params[] = $id; // ID ditaruh di urutan terakhir
+            $params[] = $id; 
 
-            $sql = "UPDATE galeri SET judul=?, deskripsi=?, kategori=?, uploaded_by=? $foto_query WHERE id_galeri=?";
+            // Update tanpa mengubah uploaded_by
+            $sql = "UPDATE galeri SET judul=?, deskripsi=?, kategori=? $foto_query WHERE id_galeri=?";
             $stmt = $db->prepare($sql);
             
             if ($stmt->execute($params)) {
@@ -93,18 +103,18 @@ elseif ($method == 'POST') {
         else {
             $foto_path = '';
             if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
-                $up = uploadFile($_FILES['foto'], 'galeri'); // Simpan di uploads/galeri
+                $up = uploadFile($_FILES['foto'], 'galeri');
                 if ($up['success']) $foto_path = $up['path'];
                 else throw new Exception($up['message']);
             } else {
                 throw new Exception("Wajib upload foto!");
             }
 
+            // Insert dengan uploaded_by dari session
             $sql = "INSERT INTO galeri (judul, deskripsi, kategori, file_path, uploaded_by, is_active, tanggal_upload) 
                     VALUES (?, ?, ?, ?, ?, true, CURRENT_DATE)";
             $stmt = $db->prepare($sql);
             
-            // Parameter ke-5 adalah $uploaded_by (nilainya NULL)
             if ($stmt->execute([$judul, $deskripsi, $kategori, $foto_path, $uploaded_by])) {
                 echo json_encode(['success' => true, 'message' => 'Foto berhasil ditambahkan!']);
             } else {
