@@ -22,21 +22,33 @@ try {
 
     $db = (new Database())->getConnection();
 
+    // ==================================================================
+    // === GET DATA (READ PENDING SUBMISSIONS) ===
+    // ==================================================================
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         $sql = "SELECT * FROM news_submissions WHERE status = 'pending' ORDER BY tanggal_upload DESC";
         $stmt = $db->prepare($sql);
         $stmt->execute();
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Tambahkan prefix ../ agar tampil di admin
+        // MODIFIKASI: Memaksa path foto mengarah ke admin/uploads/newsInput/
         foreach ($data as &$row) {
-            if (!empty($row['foto_path']) && strpos($row['foto_path'], '../') === false) {
-                $row['foto_path'] = '../' . $row['foto_path']; 
+            if (!empty($row['foto_path'])) {
+                // Ambil hanya nama filenya saja (misal: foto.jpg) untuk menghindari path lama yang salah
+                $fileName = basename($row['foto_path']);
+                
+                // Set path tampilan yang benar untuk admin panel
+                // Lokasi fisik: admin/uploads/newsInput/
+                // Dari admin/index.php aksesnya menjadi: ../admin/uploads/newsInput/
+                $row['foto_path'] = '../admin/uploads/newsInput/' . $fileName; 
             }
         }
         $response = ['success' => true, 'data' => $data];
     }
 
+    // ==================================================================
+    // === POST DATA (APPROVE / REJECT) ===
+    // ==================================================================
     elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $action = $_POST['action'] ?? '';
         $id = $_POST['id'] ?? 0;
@@ -52,58 +64,60 @@ try {
         if ($action === 'approve') {
             $db->beginTransaction();
 
-            // === PROSES PINDAH FILE ===
-            // Path asal (di DB): admin/uploads/newsInput/file.jpg
-            $oldDbPath = $submission['foto_path']; 
-            
-            // Bersihkan path jika ada '../' di database (untuk keamanan move)
-            $cleanOldPath = str_replace('../', '', $oldDbPath);
-            
-            $fileName = basename($cleanOldPath);
+            // === 1. TENTUKAN SUMBER FILE (News Service Folder) ===
+            // Kita ambil nama filenya saja dari database
+            $fileName = basename($submission['foto_path']);
 
-            // Path Fisik di Server
-            // __DIR__ = admin/api/
-            // Root = admin/api/../../
+            // Root Path Server
             $rootPath = __DIR__ . '/../../'; 
             
-            $sourceFile = $rootPath . $cleanOldPath;
+            // Source: admin/uploads/newsInput/ (Sesuai request Anda)
+            $sourceFile = $rootPath . 'admin/uploads/newsInput/' . $fileName;
+            
+            // Target: admin/uploads/berita/ (Folder tujuan berita resmi)
             $targetDir = $rootPath . 'admin/uploads/berita/';
             $targetFile = $targetDir . $fileName;
 
-            // Buat folder jika belum ada
+            // === 2. PINDAHKAN FILE ===
+            // Pastikan folder tujuan ada
             if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
 
-            // Pindahkan file
+            // Cek apakah file sumber ada di newsInput, lalu pindahkan
             if (file_exists($sourceFile)) {
                 rename($sourceFile, $targetFile);
             }
 
-            // Path Baru untuk disimpan di Tabel Artikel
+            // === 3. SIMPAN DATA KE TABEL ARTIKEL ===
+            // Path baru yang akan disimpan di database (untuk tabel artikel)
             $newDbPath = 'admin/uploads/berita/' . $fileName;
 
-            // Masukkan ke tabel ARTIKEL
+            // Generate Ringkasan
+            $clean_konten = strip_tags($submission['deskripsi']);
+            $ringkasan = substr($clean_konten, 0, 150) . (strlen($clean_konten) > 150 ? '...' : '');
+
+            // Insert Query (Tanpa kolom uploaded_by dan is_published yang bikin error)
             $sqlInsert = "INSERT INTO artikel (
-                            judul, konten, file_path, kategori, is_published, 
-                            tanggal_upload, uploaded_by, id_user, updated_at
-                          ) VALUES (?, ?, ?, ?, true, ?, ?, ?, CURRENT_TIMESTAMP)";
+                            judul, konten, ringkasan, file_path, kategori, 
+                            tanggal_upload, id_user, updated_at
+                          ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
             
             $stmtInsert = $db->prepare($sqlInsert);
             $stmtInsert->execute([
                 $submission['judul'],
                 $submission['deskripsi'], 
-                $newDbPath, // Path baru
+                $ringkasan,
+                $newDbPath, // Path baru (admin/uploads/berita/...)
                 $submission['kategori'],
                 $submission['tanggal_upload'],
-                $submission['id_user'], // ID User (Angka)
-                $submission['id_user']  // ID User (Angka)
+                $submission['id_user']
             ]);
 
-            // Update status submission
+            // === 4. UPDATE STATUS SUBMISSION ===
             $sqlUpdate = $db->prepare("UPDATE news_submissions SET status = 'approved', updated_at = CURRENT_TIMESTAMP WHERE id_submission = ?");
             $sqlUpdate->execute([$id]);
 
             $db->commit();
-            $response = ['success' => true, 'message' => 'Berita disetujui. Foto dipindahkan.'];
+            $response = ['success' => true, 'message' => 'Berita disetujui. Foto berhasil dipindahkan ke folder berita.'];
 
         } elseif ($action === 'reject') {
             $stmt = $db->prepare("UPDATE news_submissions SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id_submission = ?");
