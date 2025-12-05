@@ -19,10 +19,12 @@ checkAuth();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Laboratorium Business Analytics</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         /* === MODERN THEME VARIABLES === */
         :root {
@@ -388,21 +390,12 @@ checkAuth();
             background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-            background-color: white; /* Checkerboard for transparency */
+            background-color: white; 
             height: 280px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid #f0f0f0;
-            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid #f0f0f0; position: relative;
         }
-        .asset-img-wrapper img {
-            max-width: 70%;
-            max-height: 80%;
-            object-fit: contain;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.15));
-            transition: all 0.5s ease;
-        }
+        .asset-img-wrapper img { max-width: 70%; max-height: 80%; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.15)); transition: all 0.5s ease; }
         .asset-card:hover .asset-img-wrapper img { transform: scale(1.05); }
         .asset-badge { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.9); backdrop-filter: blur(5px); padding: 5px 15px; border-radius: 30px; font-weight: 700; color: var(--primary); font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
@@ -421,6 +414,19 @@ checkAuth();
             .sidebar { left: -260px; }
             .sidebar.active { left: 0; }
             .main-content { margin-left: 0; padding: 20px; }
+        }
+        
+        /* SweetAlert Customization to match theme */
+        .swal2-popup {
+            font-family: 'Nunito', sans-serif;
+            border-radius: 16px;
+        }
+        .swal2-confirm {
+            background-color: var(--primary) !important;
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3) !important;
+        }
+        .swal2-confirm:focus {
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.5) !important;
         }
     </style>
     <script>
@@ -534,7 +540,7 @@ checkAuth();
         }
 
         // ==========================================
-        // === 3. MANAJEMEN BERITA (MODERN) ===
+        // === 3. MANAJEMEN BERITA (SESUAI API) ===
         // ==========================================
         
         let allBeritaData = []; 
@@ -551,7 +557,7 @@ checkAuth();
         function loadBerita() {
             document.getElementById('page-title-text').innerText = 'Manajemen Berita';
             fetch('api/berita.php').then(r => r.json()).then(result => {
-                allBeritaData = result.data || []; 
+                allBeritaData = result.success ? result.data : [];
                 const html = `
                     <div class="fade-in">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -577,11 +583,10 @@ checkAuth();
                                         <thead class="bg-white">
                                             <tr>
                                                 <th class="ps-4" style="width: 120px;">Cover</th>
-                                                <th style="width: 35%;">Judul Berita</th>
-                                                <th class="text-center">Kategori</th>
-                                                <th class="text-start ps-4">Uploader & Role</th>
-                                                <th class="text-center">Tanggal</th>
-                                                <th class="text-end pe-4">Aksi</th>
+                                                <th>Judul & Ringkasan</th>
+                                                <th class="text-center" style="width: 15%;">Kategori</th>
+                                                <th class="text-center" style="width: 20%;">Author</th>
+                                                <th class="text-end pe-4" style="width: 15%;">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="beritaTableBody"></tbody>
@@ -597,54 +602,116 @@ checkAuth();
 
         function renderBeritaTable(data) {
             const tbody = document.getElementById('beritaTableBody');
-            if (!data.length) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-newspaper fa-3x mb-3 text-light-emphasis"></i><p>Belum ada data berita.</p></div></td></tr>`; return; }
+            if (!data.length) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-newspaper fa-3x mb-3 text-light-emphasis"></i><p>Belum ada data berita.</p></div></td></tr>`; return; }
             
             tbody.innerHTML = data.map(i => {
                 let displayImage = fixImagePath(i.file_path);
-                const initial = (i.nama_pengupload || 'A').charAt(0).toUpperCase();
-                const userRole = i.role || 'Administrator'; 
+                
+                // Author logic
+                const uploaderName = i.nama_pengupload || i.uploaded_by || 'Admin';
+                const roleName = i.role_pengupload || 'Administrator';
+
+                // --- MODIFIKASI WAKTU BERITA ---
+                let dateDisplay = i.tanggal_upload ? i.tanggal_upload.split(' ')[0] : '-';
+                let timeDisplay = '00:00';
+                if (i.updated_at) {
+                    let parts = i.updated_at.split(' ');
+                    if (parts.length > 1) {
+                        timeDisplay = parts[1].substring(0, 5); 
+                    }
+                }
 
                 return `<tr>
                 <td class="ps-4">
                     <img src="${displayImage}" class="content-thumbnail" onerror="this.src='https://via.placeholder.com/80x55?text=No+Img'">
                 </td>
                 <td>
-                    <div class="content-title text-truncate" style="max-width: 300px;">${i.judul}</div>
+                    <div class="content-title text-truncate" style="max-width: 350px;">${i.judul}</div>
+                    <small class="text-muted"><i class="far fa-clock me-1"></i> ${dateDisplay} ${timeDisplay}</small>
                 </td>
                 <td class="text-center">
                     <span class="badge-modern ${getBeritaBadge(i.kategori)}">${i.kategori}</span>
                 </td>
-                <td class="ps-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold me-2" style="width: 35px; height: 35px;">
-                            ${initial}
-                        </div>
-                        <div>
-                            <div class="fw-bold text-dark" style="font-size: 0.9rem;">${i.nama_pengupload || 'Admin'}</div>
-                            <span class="badge bg-light text-secondary border border-secondary border-opacity-25 rounded-pill" style="font-size: 0.65rem; padding: 2px 8px;">
-                                ${userRole}
-                            </span>
-                        </div>
-                    </div>
-                </td>
                 <td class="text-center">
-                     <span class="small text-muted"><i class="far fa-calendar-alt me-1"></i> ${i.tanggal_upload}</span>
+                    <div class="d-flex flex-column align-items-center">
+                        <span class="small fw-bold text-dark">${uploaderName}</span>
+                        <span class="badge bg-light text-secondary border border-secondary border-opacity-25 rounded-pill" style="font-size: 0.65rem; padding: 2px 8px;">
+                            ${roleName}
+                        </span>
+                    </div>
                 </td>
                 <td class="text-end pe-4">
                     <div class="btn-group">
                         <button class="btn btn-sm btn-light text-primary bg-white shadow-sm border me-1 rounded-2" onclick="openBeritaForm(${i.id_artikel})" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="btn btn-sm btn-light text-danger bg-white shadow-sm border rounded-2" onclick="deleteItem('api/berita.php', ${i.id_artikel})" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                        <button class="btn btn-sm btn-light text-danger bg-white shadow-sm border rounded-2" onclick="deleteBerita(${i.id_artikel}, this)" title="Hapus"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </td>
             </tr>`;
             }).join('');
         }
 
+        // === FUNGSI HAPUS BERITA KHUSUS (Updated SweetAlert2) ===
+        function deleteBerita(id, btn) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Berita ini akan dihapus secara permanen beserta fotonya!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e63946',
+                cancelButtonColor: '#ced4da',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('action', 'delete');
+                    formData.append('id', id);
+
+                    const originalContent = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    btn.disabled = true;
+
+                    fetch('api/berita.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(res => {
+                        if (res.success) {
+                            const row = btn.closest('tr');
+                            row.style.transition = 'all 0.5s';
+                            row.style.opacity = '0';
+                            setTimeout(() => {
+                                row.remove();
+                                allBeritaData = allBeritaData.filter(b => b.id_artikel != id);
+                                if(allBeritaData.length === 0) renderBeritaTable([]);
+                                Swal.fire(
+                                    'Terhapus!',
+                                    'Berita berhasil dihapus.',
+                                    'success'
+                                );
+                            }, 500);
+                        } else {
+                            Swal.fire('Gagal!', res.message, 'error');
+                            btn.innerHTML = originalContent;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Error!', 'Terjadi kesalahan koneksi.', 'error');
+                        btn.innerHTML = originalContent;
+                        btn.disabled = false;
+                    });
+                }
+            });
+        }
+
         function filterBerita() { 
             const cat = document.getElementById('filterKategori').value; 
             const search = document.getElementById('searchBerita').value.toLowerCase();
             const filtered = allBeritaData.filter(i => {
-                return (cat === 'all' || i.kategori === cat) && (i.judul.toLowerCase().includes(search) || (i.nama_pengupload && i.nama_pengupload.toLowerCase().includes(search)));
+                const uploader = i.nama_pengupload || i.uploaded_by || '';
+                return (cat === 'all' || i.kategori === cat) && (i.judul.toLowerCase().includes(search) || uploader.toLowerCase().includes(search));
             });
             renderBeritaTable(filtered); 
         }
@@ -657,8 +724,12 @@ checkAuth();
         function renderBeritaFormHTML(data) {
             const isEdit = data !== null;
             const hasImage = isEdit && data.file_path && data.file_path !== '';
-            document.getElementById('page-title-text').innerText = isEdit ? 'Edit Berita' : 'Buat Berita Baru';
             
+            const previewSrc = hasImage ? fixImagePath(data.file_path) : '';
+            const tglVal = isEdit && data.tanggal_upload ? data.tanggal_upload.split(' ')[0] : new Date().toISOString().split('T')[0];
+
+            document.getElementById('page-title-text').innerText = isEdit ? 'Edit Berita' : 'Buat Berita Baru';
+
             const html = `
                 <div class="form-container-view fade-in">
                     <form id="formBerita">
@@ -698,7 +769,7 @@ checkAuth();
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label fw-bold small text-muted">Tanggal Tayang</label>
-                                            <input type="date" name="tanggal" class="form-control" value="${isEdit?data.tanggal_upload:new Date().toISOString().split('T')[0]}" required>
+                                            <input type="date" name="tanggal" class="form-control" value="${tglVal}" required>
                                         </div>
                                     </div>
                                 </div>
@@ -713,7 +784,7 @@ checkAuth();
                                                 <div class="upload-text-muted small">JPG/PNG Max 2MB</div>
                                             </div>
                                             <div id="imagePreviewContainer" class="preview-box ${hasImage ? '' : 'd-none'}">
-                                                <img src="${hasImage ? data.file_path : ''}" id="previewImg" alt="Preview">
+                                                <img src="${previewSrc}" id="previewImg" alt="Preview">
                                                 <button type="button" class="btn-remove-preview" onclick="resetUpload()" title="Hapus Foto"><i class="fas fa-trash-alt"></i></button>
                                             </div>
                                         </div>
@@ -729,23 +800,26 @@ checkAuth();
 
 
         // ==========================================
-        // === 4. MANAJEMEN GALERI (MODERN) ===
+        // === 4. MANAJEMEN GALERI (TABLE VIEW) ===
         // ==========================================
 
         let allGaleriData = [];
 
         function getGaleriBadge(category) {
+            // Update warna badge sesuai kategori baru
             switch ((category || '').toLowerCase()) {
-                case 'kegiatan': return 'badge-kegiatan';
-                case 'fasilitas': return 'badge-fasilitas';
-                default: return 'badge-lainnya';
+                case 'kategori 1': return 'badge-news-latest'; // Biru
+                case 'kategori 2': return 'badge-prestasi';    // Hijau
+                case 'kategori 3': return 'badge-announcement';// Oranye
+                case 'kategori 4': return 'badge-kegiatan';    // Ungu
+                default: return 'badge-default';
             }
         }
 
         function loadGaleri() {
             document.getElementById('page-title-text').innerText = 'Manajemen Galeri';
             fetch('api/galeri.php').then(r => r.json()).then(result => {
-                allGaleriData = result.data || []; 
+                allGaleriData = result.success ? result.data : []; // Sesuaikan API response
                 const html = `
                     <div class="fade-in">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -756,9 +830,10 @@ checkAuth();
                             <div class="d-flex gap-2">
                                 <select id="filterKategoriGaleri" class="form-select border-0 shadow-sm" style="width: 170px; border-radius: 50px; cursor: pointer;" onchange="filterGaleri()">
                                     <option value="all">Semua Kategori</option>
-                                    <option value="Kegiatan">Kegiatan</option>
-                                    <option value="Fasilitas">Fasilitas</option>
-                                    <option value="Lainnya">Lainnya</option>
+                                    <option value="Kategori 1">Kategori 1</option>
+                                    <option value="Kategori 2">Kategori 2</option>
+                                    <option value="Kategori 3">Kategori 3</option>
+                                    <option value="Kategori 4">Kategori 4</option>
                                 </select>
                                 <button class="btn-primary-custom rounded-pill px-4" onclick="openGaleriForm()"><i class="fas fa-plus me-1"></i> Tambah Foto</button>
                             </div>
@@ -773,6 +848,8 @@ checkAuth();
                                                 <th class="ps-4" style="width: 120px;">Foto</th>
                                                 <th>Judul & Deskripsi</th>
                                                 <th class="text-center">Kategori</th>
+                                                <th class="text-center">Author</th>
+                                                <th class="text-center">Tanggal</th>
                                                 <th class="text-end pe-4">Aksi</th>
                                             </tr>
                                         </thead>
@@ -789,10 +866,25 @@ checkAuth();
 
         function renderGaleriTable(data) {
             const tbody = document.getElementById('galeriTableBody');
-            if (!data.length) { tbody.innerHTML = `<tr><td colspan="4" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-images fa-3x mb-3 text-light-emphasis"></i><p>Belum ada data galeri.</p></div></td></tr>`; return; }
+            if (!data.length) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-images fa-3x mb-3 text-light-emphasis"></i><p>Belum ada data galeri.</p></div></td></tr>`; return; }
             
             tbody.innerHTML = data.map(i => {
                 let displayImage = fixImagePath(i.file_path);
+
+                // --- MODIFIKASI WAKTU GALERI ---
+                let dateDisplay = i.tanggal_upload ? i.tanggal_upload.split(' ')[0] : '-';
+                let timeDisplay = '00:00';
+                if (i.updated_at) {
+                    let parts = i.updated_at.split(' ');
+                    if (parts.length > 1) {
+                        timeDisplay = parts[1].substring(0, 5); 
+                    }
+                }
+                
+                // MODIFIKASI: Mengambil nama & role pengupload dari View
+                const uploaderName = i.nama_pengupload || '-';
+                const roleName = i.role_pengupload || '-';
+
                 return `<tr>
                 <td class="ps-4">
                     <img src="${displayImage}" class="content-thumbnail" onerror="this.src='https://via.placeholder.com/80x55?text=No+Img'">
@@ -804,21 +896,91 @@ checkAuth();
                 <td class="text-center">
                     <span class="badge-modern ${getGaleriBadge(i.kategori)}">${i.kategori}</span>
                 </td>
+                <td class="text-center">
+                     <div class="d-flex flex-column align-items-center">
+                        <span class="small fw-bold text-dark">${uploaderName}</span>
+                         <span class="badge bg-light text-secondary border border-secondary border-opacity-25 rounded-pill" style="font-size: 0.65rem; padding: 2px 8px;">
+                            ${roleName}
+                        </span>
+                    </div>
+                </td>
+                <td class="text-center text-muted small">
+                    <i class="far fa-clock me-1"></i> ${dateDisplay} ${timeDisplay}
+                </td>
                 <td class="text-end pe-4">
                     <div class="btn-group">
                         <button class="btn btn-sm btn-light text-primary bg-white shadow-sm border me-1 rounded-2" onclick="openGaleriForm(${i.id_galeri})" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="btn btn-sm btn-light text-danger bg-white shadow-sm border rounded-2" onclick="deleteItem('api/galeri.php', ${i.id_galeri})" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                        <button class="btn btn-sm btn-light text-danger bg-white shadow-sm border rounded-2" onclick="deleteGaleri(${i.id_galeri}, this)" title="Hapus"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </td>
             </tr>`;
             }).join('');
         }
 
+        // === FUNGSI HAPUS GALERI KHUSUS (Updated SweetAlert2) ===
+        function deleteGaleri(id, btn) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Foto ini akan dihapus secara permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e63946',
+                cancelButtonColor: '#ced4da',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('action', 'delete');
+                    formData.append('id', id);
+
+                    // Visual feedback
+                    const originalContent = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    btn.disabled = true;
+
+                    fetch('api/galeri.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(res => {
+                        if (res.success) {
+                            const row = btn.closest('tr');
+                            row.style.transition = 'all 0.5s';
+                            row.style.opacity = '0';
+                            setTimeout(() => {
+                                row.remove();
+                                allGaleriData = allGaleriData.filter(g => g.id_galeri != id);
+                                if(allGaleriData.length === 0) renderGaleriTable([]);
+                                Swal.fire(
+                                    'Terhapus!',
+                                    'Foto berhasil dihapus.',
+                                    'success'
+                                );
+                            }, 500);
+                        } else {
+                            Swal.fire('Gagal!', res.message, 'error');
+                            btn.innerHTML = originalContent;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Error!', 'Terjadi kesalahan koneksi.', 'error');
+                        btn.innerHTML = originalContent;
+                        btn.disabled = false;
+                    });
+                }
+            });
+        }
+
         function filterGaleri() {
             const cat = document.getElementById('filterKategoriGaleri').value;
             const search = document.getElementById('searchGaleri').value.toLowerCase();
             const filtered = allGaleriData.filter(i => {
-                return (cat === 'all' || i.kategori === cat) && (i.judul.toLowerCase().includes(search));
+                // Modifikasi search agar bisa cari nama author juga
+                const uploader = i.nama_pengupload || '';
+                return (cat === 'all' || i.kategori === cat) && (i.judul.toLowerCase().includes(search) || uploader.toLowerCase().includes(search));
             });
             renderGaleriTable(filtered);
         }
@@ -868,9 +1030,10 @@ checkAuth();
                                     <div class="mb-2">
                                         <select name="kategori" class="form-select" required>
                                             <option value="">-- Pilih --</option>
-                                            <option value="Kegiatan" ${isEdit && data.kategori=='Kegiatan'?'selected':''}>Kegiatan</option>
-                                            <option value="Fasilitas" ${isEdit && data.kategori=='Fasilitas'?'selected':''}>Fasilitas</option>
-                                            <option value="Lainnya" ${isEdit && data.kategori=='Lainnya'?'selected':''}>Lainnya</option>
+                                            <option value="Kategori 1" ${isEdit && data.kategori=='Kategori 1'?'selected':''}>Kategori 1</option>
+                                            <option value="Kategori 2" ${isEdit && data.kategori=='Kategori 2'?'selected':''}>Kategori 2</option>
+                                            <option value="Kategori 3" ${isEdit && data.kategori=='Kategori 3'?'selected':''}>Kategori 3</option>
+                                            <option value="Kategori 4" ${isEdit && data.kategori=='Kategori 4'?'selected':''}>Kategori 4</option>
                                         </select>
                                     </div>
                                 </div>
@@ -965,11 +1128,27 @@ checkAuth();
         }
 
         function processSubmission(action, id) {
-            if (!confirm(`Apakah Anda yakin ingin ${action} berita ini?`)) return;
-            const formData = new FormData(); formData.append('action', action); formData.append('id', id);
-            fetch('api/news_service.php', { method: 'POST', body: formData }).then(r => r.json()).then(res => {
-                if (res.success) { alert(res.message); loadNewsService(); } else { alert('Gagal: ' + res.message); }
-            }).catch(err => { console.error(err); alert('Terjadi kesalahan koneksi'); });
+            Swal.fire({
+                title: action === 'approve' ? 'Terbitkan Berita?' : 'Tolak Berita?',
+                text: action === 'approve' ? 'Berita akan dipublikasikan.' : 'Berita akan ditolak.',
+                icon: action === 'approve' ? 'question' : 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4361ee',
+                cancelButtonColor: '#ced4da',
+                confirmButtonText: 'Ya, Proses!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData(); formData.append('action', action); formData.append('id', id);
+                    fetch('api/news_service.php', { method: 'POST', body: formData }).then(r => r.json()).then(res => {
+                        if (res.success) { 
+                            Swal.fire('Berhasil', res.message, 'success'); 
+                            loadNewsService(); 
+                        } else { 
+                            Swal.fire('Gagal', res.message, 'error'); 
+                        }
+                    }).catch(err => { console.error(err); Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error'); });
+                }
+            });
         }
 
         // ==========================================
@@ -1015,7 +1194,6 @@ checkAuth();
                             </div>
                         </div>
                     </div>
-
                     <div class="col-md-6">
                         <div class="card h-100 asset-card shadow-sm">
                             <div class="asset-img-wrapper">
@@ -1049,7 +1227,6 @@ checkAuth();
                          <button type="button" class="btn btn-link text-decoration-none text-muted ps-0" onclick="loadMaknaLogo()"><i class="fas fa-arrow-left me-2"></i>Kembali</button>
                          <button type="submit" class="btn btn-primary-custom px-5 rounded-pill"><i class="fas fa-save me-2"></i> Simpan Perubahan</button>
                     </div>
-
                     <div class="row g-4">
                         <div class="col-lg-5">
                             <div class="card h-100">
@@ -1071,7 +1248,6 @@ checkAuth();
                                 </div>
                             </div>
                         </div>
-
                         <div class="col-lg-7">
                             <div class="card h-100">
                                 <div class="card-body">
@@ -1095,26 +1271,52 @@ checkAuth();
         }
 
         // ==========================================
-        // === HELPER LAINNYA ===
+        // === [UPDATED] VISI & MISI UI (UNIFIED STYLE) ===
         // ==========================================
 
         function loadVisiMisi(){ 
-            document.getElementById('page-title-text').innerText = 'Visi & Misi';
+            document.getElementById('page-title-text').innerText = 'Arah & Tujuan';
             fetch('api/settings.php').then(r=>r.json()).then(res=>{ 
                 const s=res.data||{}; 
+                const vVisi = s.visi?.value || 'Belum ada data visi.';
+                const vMisi = s.misi?.value || 'Belum ada data misi.';
+
                 const html=`
-                <div class="row fade-in">
-                    <div class="col-md-12 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header d-flex justify-content-between">
-                                <span>Preview Visi & Misi</span>
-                                <button class="btn-primary-custom btn-sm" onclick="openVisiMisiForm('${escapeHtml(s.visi?.value)}','${escapeHtml(s.misi?.value)}')"><i class="fas fa-edit"></i> Edit Konten</button>
-                            </div>
-                            <div class="card-body">
-                                <h5 class="text-primary fw-bold">Visi</h5>
-                                <p class="mb-4" style="white-space:pre-line;">${s.visi?.value||'-'}</p>
-                                <h5 class="text-primary fw-bold">Misi</h5>
-                                <p style="white-space:pre-line;">${s.misi?.value||'-'}</p>
+                <div class="row justify-content-center fade-in">
+                    <div class="col-lg-10">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-body p-5">
+                                <div class="d-flex justify-content-between align-items-start mb-5">
+                                    <div>
+                                        <h4 class="fw-bold text-dark m-0">Visi & Misi</h4>
+                                        <p class="text-muted small">Landasan strategis laboratorium.</p>
+                                    </div>
+                                    <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-primary bg-primary bg-opacity-10" onclick="openVisiMisiForm()">
+                                        <i class="fas fa-pencil-alt me-1"></i> Edit
+                                    </button>
+                                </div>
+
+                                <div class="px-md-5">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                            <i class="fas fa-eye"></i>
+                                        </div>
+                                        <h6 class="text-uppercase text-dark fw-bold small ls-2 m-0">Visi Laboratorium</h6>
+                                    </div>
+                                    <div class="text-secondary ps-2 ms-5" style="font-size: 1.05rem; line-height: 1.8; white-space: pre-line;">${vVisi}</div>
+                                </div>
+
+                                <hr class="my-5 opacity-10">
+
+                                <div class="px-md-5">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                            <i class="fas fa-list-ul"></i>
+                                        </div>
+                                        <h6 class="text-uppercase text-dark fw-bold small ls-2 m-0">Misi & Strategi</h6>
+                                    </div>
+                                    <div class="text-secondary ps-2 ms-5" style="font-size: 1.05rem; line-height: 1.8; white-space: pre-line;">${vMisi}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1123,51 +1325,196 @@ checkAuth();
             }); 
         }
 
-        function openVisiMisiForm(v,m){
-            const html = `
-            <div class="form-container-view fade-in">
-                <div class="card">
-                    <div class="card-header"><span>Edit Visi Misi</span><button class="btn btn-light btn-sm border" onclick="loadVisiMisi()"><i class="fas fa-arrow-left"></i> Kembali</button></div>
-                    <div class="card-body">
-                        <form id="fVm">
-                            <div class="mb-3"><label class="fw-bold">Visi</label><textarea name="visi" class="form-control" rows="5">${v}</textarea></div>
-                            <div class="mb-3"><label class="fw-bold">Misi</label><textarea name="misi" class="form-control" rows="10">${m}</textarea></div>
-                            <button class="btn-primary-custom w-100">Simpan Perubahan</button>
-                        </form>
+        function openVisiMisiForm(){
+            // Fetch data first to prevent quotes issues in onclick
+            document.getElementById('content-area').innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>';
+            
+            fetch('api/settings.php').then(r=>r.json()).then(res=>{
+                const s = res.data || {};
+                const v = s.visi?.value || '';
+                const m = s.misi?.value || '';
+                
+                const html = `
+                <div class="row justify-content-center fade-in">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-body p-5">
+                                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                                    <h5 class="fw-bold text-primary m-0"><i class="fas fa-edit me-2"></i> Update Visi & Misi</h5>
+                                    <button type="button" class="btn btn-close" onclick="loadVisiMisi()"></button>
+                                </div>
+                                <form id="fVm">
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold text-dark small text-uppercase ls-1 mb-2">Pernyataan Visi</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white text-muted border-end-0 ps-3"><i class="fas fa-eye"></i></span>
+                                            <textarea name="visi" class="form-control border-start-0 bg-white shadow-none" rows="3" placeholder="Masukkan visi laboratorium...">${v}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold text-dark small text-uppercase ls-1 mb-2">Daftar Misi</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white text-muted border-end-0 ps-3 align-items-start pt-3"><i class="fas fa-list-ol"></i></span>
+                                            <textarea name="misi" class="form-control border-start-0 bg-white shadow-none" rows="10" placeholder="Masukkan poin-poin misi...">${m}</textarea>
+                                        </div>
+                                        <div class="form-text text-muted mt-2 small"><i class="fas fa-info-circle me-1"></i> Gunakan baris baru (Enter) untuk memisahkan setiap poin misi.</div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary-custom btn-lg rounded-pill shadow-sm">
+                                            <i class="fas fa-save me-2"></i> Simpan Perubahan
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>`;
-            document.getElementById('content-area').innerHTML = html;
-            document.getElementById('fVm').onsubmit=(e)=>{e.preventDefault(); submitFormPage('api/settings.php',new FormData(e.target),loadVisiMisi);}
+                </div>`;
+                document.getElementById('content-area').innerHTML = html;
+                document.getElementById('fVm').onsubmit=(e)=>{e.preventDefault(); submitFormPage('api/settings.php',new FormData(e.target),loadVisiMisi);}
+            });
         }
+
+        // ==========================================
+        // === [UPDATED] IDENTITAS LAB UI ===
+        // ==========================================
+
+        function loadIdentitas(){ 
+            document.getElementById('page-title-text').innerText = 'Profil Laboratorium';
+            fetch('api/settings.php').then(r=>r.json()).then(res=>{ 
+                const s=res.data||{}; 
+                const v=(k)=>s[k]?s[k].value:''; 
+                
+                const html=`
+                <div class="row justify-content-center fade-in">
+                    <div class="col-lg-10 col-xl-8">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-body p-4 p-md-5">
+
+                                <div class="text-center mb-5">
+                                    <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-university fa-2x"></i>
+                                    </div>
+                                    <h4 class="fw-bold text-dark">Informasi Umum</h4>
+                                    <p class="text-muted text-center" style="max-width: 500px; margin: 0 auto;">
+                                        Kelola detail identitas laboratorium yang akan ditampilkan pada halaman publik website.
+                                    </p>
+                                </div>
+
+                                <form id="fId">
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold text-dark small text-uppercase ls-1">Nama Laboratorium</label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fas fa-building"></i></span>
+                                            <input type="text" name="nama_lab" class="form-control border-start-0 bg-white" placeholder="Masukkan nama laboratorium" value="${v('nama_lab')}">
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-4 mb-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-dark small text-uppercase ls-1">Email Resmi</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fas fa-envelope"></i></span>
+                                                <input type="email" name="email" class="form-control border-start-0 bg-white" placeholder="email@lab.com" value="${v('email')}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-dark small text-uppercase ls-1">Nomor Telepon</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fas fa-phone"></i></span>
+                                                <input type="text" name="no_telp" class="form-control border-start-0 bg-white" placeholder="+62..." value="${v('no_telp')}">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-5">
+                                        <label class="form-label fw-bold text-dark small text-uppercase ls-1">Alamat Lengkap</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-end-0 text-muted ps-3 pt-3 align-items-start"><i class="fas fa-map-marker-alt"></i></span>
+                                            <textarea name="alamat" class="form-control border-start-0 bg-white" rows="3" placeholder="Nama Jalan, Gedung, Kota...">${v('alamat')}</textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button class="btn btn-primary-custom btn-lg rounded-pill shadow-sm">
+                                            <i class="fas fa-save me-2"></i> Simpan Perubahan
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>`; 
+                document.getElementById('content-area').innerHTML=html; 
+                document.getElementById('fId').onsubmit=(e)=>{e.preventDefault();submitFormPage('api/settings.php', new FormData(e.target), loadIdentitas);} 
+            }); 
+        }
+
+        // ==========================================
+        // === UTILS (UPDATED WITH SWEETALERT2) ===
+        // ==========================================
 
         function submitFormPage(url, data, callback) {
             fetch(url, {method:'POST', body:data})
             .then(r=>r.json())
             .then(res => {
                 if(res.success){
-                    alert('Data berhasil disimpan!'); 
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Data berhasil disimpan.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
                     if(callback) callback(); 
                 } else {
-                    alert('Gagal: ' + res.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: res.message
+                    });
                 }
             })
-            .catch(err => alert('Terjadi kesalahan koneksi'));
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan koneksi'
+                });
+            });
         }
-
-        function loadIdentitas(){ document.getElementById('page-title-text').innerText = 'Identitas Lab'; fetch('api/settings.php').then(r=>r.json()).then(res=>{ const s=res.data||{}; const v=(k)=>s[k]?s[k].value:''; const html=`<div class="card fade-in"><div class="card-header"><span>Form Identitas</span></div><div class="card-body"><form id="fId"><div class="row"><div class="col-6 mb-3"><label class="fw-bold">Nama Lab</label><input type="text" name="nama_lab" class="form-control" value="${v('nama_lab')}"></div><div class="col-6 mb-3"><label class="fw-bold">Email</label><input type="email" name="email" class="form-control" value="${v('email')}"></div><div class="col-6 mb-3"><label class="fw-bold">No. Telepon</label><input type="text" name="no_telp" class="form-control" value="${v('no_telp')}"></div><div class="col-12 mb-3"><label class="fw-bold">Alamat Lengkap</label><textarea name="alamat" class="form-control" rows="3">${v('alamat')}</textarea></div></div><div class="text-end"><button class="btn-primary-custom">Simpan Perubahan</button></div></form></div></div>`; document.getElementById('content-area').innerHTML=html; document.getElementById('fId').onsubmit=(e)=>{e.preventDefault();submitFormPage('api/settings.php', new FormData(e.target), null, loadIdentitas);} }); }
         
         function loadLog(){ document.getElementById('page-title-text').innerText = 'Log Aktivitas'; fetchData('api/log.php?action=list', ['Waktu','User','Aktivitas','Deskripsi','IP'], (i)=>`<td>${i.waktu}</td><td>${i.nama}</td><td><span class="badge bg-info text-dark">${i.aktivitas}</span></td><td class="text-start">${i.deskripsi}</td><td>${i.ip_address}</td>`, 'Riwayat Aktivitas', null); }
 
-        function fetchData(url, heads, rowFn, title, modalFn){ fetch(url).then(r=>r.json()).then(res=>{ if(!res.success)return alert(res.message); const h=heads.map(x=>`<th>${x}</th>`).join('')+(modalFn?'<th>Aksi</th>':''); const b=res.data.length?res.data.map(x=>`<tr>${rowFn(x)}${modalFn?`<td class="text-center"><button class="btn btn-sm btn-light border text-warning me-1" onclick="${modalFn}(${Object.values(x)[0]})"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-light border text-danger" onclick="deleteItem('${url}',${Object.values(x)[0]})"><i class="fas fa-trash"></i></button></td>`:''}</tr>`).join(''):'<tr><td colspan="10" class="text-center py-5 text-muted">Kosong.</td></tr>'; document.getElementById('content-area').innerHTML=`<div class="card fade-in"><div class="card-header"><span>${title}</span>${modalFn?`<button class="btn-primary-custom" onclick="${modalFn}()"><i class="fas fa-plus"></i> Tambah</button>`:''}</div><div class="card-body p-0"><table class="table"><thead><tr>${h}</tr></thead><tbody>${b}</tbody></table></div></div>`; }); }
+        function fetchData(url, heads, rowFn, title, modalFn){ fetch(url).then(r=>r.json()).then(res=>{ if(!res.success)return Swal.fire('Error', res.message, 'error'); const h=heads.map(x=>`<th>${x}</th>`).join('')+(modalFn?'<th>Aksi</th>':''); const b=res.data.length?res.data.map(x=>`<tr>${rowFn(x)}${modalFn?`<td class="text-center"><button class="btn btn-sm btn-light border text-warning me-1" onclick="${modalFn}(${Object.values(x)[0]})"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-light border text-danger" onclick="deleteItem('${url}',${Object.values(x)[0]})"><i class="fas fa-trash"></i></button></td>`:''}</tr>`).join(''):'<tr><td colspan="10" class="text-center py-5 text-muted">Kosong.</td></tr>'; document.getElementById('content-area').innerHTML=`<div class="card fade-in"><div class="card-header"><span>${title}</span>${modalFn?`<button class="btn-primary-custom" onclick="${modalFn}()"><i class="fas fa-plus"></i> Tambah</button>`:''}</div><div class="card-body p-0"><table class="table"><thead><tr>${h}</tr></thead><tbody>${b}</tbody></table></div></div>`; }); }
         
-        function deleteItem(u,id){ if(confirm('Hapus data ini secara permanen?')){ const d=new FormData(); d.append('action','delete'); d.append('id',id); fetch(u,{method:'POST',body:d}).then(r=>r.json()).then(res=>{ if(res.success){ loadPage(currentPage); }else{ alert('Gagal hapus'); } }); } }
+        function deleteItem(u,id){ 
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data akan dihapus secara permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e63946',
+                cancelButtonColor: '#ced4da',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const d=new FormData(); d.append('action','delete'); d.append('id',id); 
+                    fetch(u,{method:'POST',body:d}).then(r=>r.json()).then(res=>{ 
+                        if(res.success){ 
+                            loadPage(currentPage); 
+                            Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                        }else{ 
+                            Swal.fire('Gagal!', 'Data gagal dihapus.', 'error'); 
+                        } 
+                    });
+                }
+            });
+        }
         
         function escapeHtml(s){ return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''; }
         
         function loadBeranda() { document.getElementById('page-title-text').innerText = 'Dashboard'; document.getElementById('content-area').innerHTML = `<div class="row g-4 fade-in"><div class="col-md-3"><div class="card p-4 text-center"><h2 class="fw-bold text-primary">12</h2><small class="text-muted">Booking Pending</small></div></div><div class="col-md-3"><div class="card p-4 text-center"><h2 class="fw-bold text-success">5</h2><small class="text-muted">News Request</small></div></div><div class="col-md-3"><div class="card p-4 text-center"><h2 class="fw-bold text-warning">24</h2><small class="text-muted">Total Berita</small></div></div><div class="col-md-3"><div class="card p-4 text-center"><h2 class="fw-bold text-danger">8</h2><small class="text-muted">Pesan Masuk</small></div></div></div>`; }
         
-        // === UNIVERSAL IMAGE PREVIEW ===
         function previewFile(input) {
             const file = input.files[0];
             if (file) {
@@ -1185,9 +1532,6 @@ checkAuth();
             document.getElementById('fileInput').value = '';
             document.getElementById('uploadPlaceholder').classList.remove('d-none');
             document.getElementById('imagePreviewContainer').classList.add('d-none');
-            // Jika Anda ingin mengembalikan gambar asli saat reset (khusus edit form), logika perlu disesuaikan,
-            // tapi biasanya reset berarti 'batal upload file baru', jadi kembali ke state awal form.
-            // Di sini kita trigger click input file lagi agar user bisa pilih file lain langsung.
             document.getElementById('fileInput').click();
         }
 
