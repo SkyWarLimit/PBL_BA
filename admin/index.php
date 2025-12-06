@@ -24,6 +24,7 @@ checkAuth();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         /* === MODERN THEME VARIABLES === */
@@ -233,12 +234,13 @@ checkAuth();
             align-items: center;
         }
         
-        .card-header span {
+        .card-header span, .card-header h5 {
             font-size: 1.1rem;
             font-weight: 700;
             color: var(--text-main);
             display: flex;
             align-items: center;
+            margin: 0;
         }
         
         .card-header i { margin-right: 10px; color: var(--primary); }
@@ -428,6 +430,23 @@ checkAuth();
         .swal2-confirm:focus {
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.5) !important;
         }
+        
+        /* Style for Contact Message View */
+        .contact-view-table td { padding: 10px; vertical-align: top; }
+        .contact-view-label { font-weight: 700; color: var(--text-main); width: 100px; }
+        .contact-view-value { color: #555; }
+
+        /* Timeline Style (For Dashboard) */
+        .timeline .border-start { border-color: #e9ecef !important; }
+        .timeline .rounded-circle { box-shadow: 0 0 0 4px #fff; }
+
+        /* Dashboard Minimal Stats */
+        .dash-stat-item { display: flex; align-items: center; padding: 15px 20px; background: white; border-radius: 12px; box-shadow: var(--shadow-sm); transition: transform 0.2s; }
+        .dash-stat-item:hover { transform: translateY(-3px); }
+        .dash-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1.1rem; }
+        .dash-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .dash-value { font-size: 1.2rem; font-weight: 800; color: var(--text-main); line-height: 1; }
+
     </style>
     <script>
         window.onpageshow = function(event) { if (event.persisted) window.location.reload(); };
@@ -518,6 +537,10 @@ checkAuth();
         // === 2. ROUTER HALAMAN ===
         function loadPage(page) {
             const content = document.getElementById('content-area');
+            // Hancurkan instance chart lama jika ada sebelum memuat halaman baru
+            if (window.dashboardChart instanceof Chart) {
+                window.dashboardChart.destroy();
+            }
             content.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Memuat data...</p></div>'; 
 
             switch(page) {
@@ -537,6 +560,193 @@ checkAuth();
                 case 'log': loadLog(); break;
                 default: content.innerHTML = '<div class="alert alert-warning">Halaman tidak ditemukan.</div>';
             }
+        }
+
+        // ==========================================
+        // === DASHBOARD (MODERN CLEAN REDESIGN) ===
+        // ==========================================
+
+        function loadBeranda() {
+            document.getElementById('page-title-text').innerText = 'Dashboard Overview';
+            
+            // Fetch Semua Data Secara Paralel
+            Promise.all([
+                fetch('api/booking.php').then(r => r.json()).catch(() => ({data: []})),       // Booking
+                fetch('api/news_service.php').then(r => r.json()).catch(() => ({data: []})),  // News Request
+                fetch('api/berita.php').then(r => r.json()).catch(() => ({data: []})),        // Berita
+                fetch('api/kontak.php').then(r => r.json()).catch(() => ({data: []})),        // Pesan
+                fetch('api/galeri.php').then(r => r.json()).catch(() => ({data: []})),        // Galeri (Baru ditambahkan untuk chart)
+                fetch('api/log.php?action=list').then(r => r.json()).catch(() => ({data: []})) // Log Aktivitas
+            ]).then(([bookingRes, newsRes, beritaRes, kontakRes, galeriRes, logRes]) => {
+
+                // Hitung Statistik Real-time
+                const pendingBooking = (bookingRes.data || []).filter(b => b.status === 'Pending').length;
+                const pendingNews = (newsRes.data || []).length;
+                const totalBerita = (beritaRes.data || []).length;
+                const totalGaleri = (galeriRes.data || []).length;
+                const unreadPesan = (kontakRes.data || []).filter(k => k.is_read == 0).length;
+                
+                // Ambil 5 Log Terakhir
+                const logs = (logRes.data || []).slice(0, 5);
+
+                // Data untuk Chart (Total Item per Kategori)
+                const chartDataCounts = [totalBerita, totalGaleri, (bookingRes.data || []).length, (kontakRes.data || []).length];
+
+                // Nama Admin Saat Ini (Contoh untuk widget admin)
+                const currentAdminName = "<?php echo htmlspecialchars($_SESSION['nama'] ?? 'Administrator'); ?>";
+                const currentAdminRole = "Administrator Utama"; // Bisa disesuaikan jika ada role di session
+
+                const html = `
+                <div class="fade-in">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="dash-stat-item">
+                                <div class="dash-icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-calendar-check"></i></div>
+                                <div><div class="dash-value">${pendingBooking}</div><div class="dash-label">Booking Pending</div></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="dash-stat-item">
+                                <div class="dash-icon bg-warning bg-opacity-10 text-warning"><i class="fas fa-newspaper"></i></div>
+                                <div><div class="dash-value">${pendingNews}</div><div class="dash-label">News Request</div></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="dash-stat-item">
+                                <div class="dash-icon bg-success bg-opacity-10 text-success"><i class="fas fa-file-alt"></i></div>
+                                <div><div class="dash-value">${totalBerita}</div><div class="dash-label">Total Berita</div></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="dash-stat-item">
+                                <div class="dash-icon bg-danger bg-opacity-10 text-danger"><i class="fas fa-envelope"></i></div>
+                                <div><div class="dash-value">${unreadPesan}</div><div class="dash-label">Pesan Baru</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-8">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white border-0 pt-4 ps-4 pe-4">
+                                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-history me-2"></i>Aktivitas Terbaru</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="timeline">
+                                        ${logs.length > 0 ? logs.map((log, index) => `
+                                            <div class="d-flex pb-4 position-relative">
+                                                ${index !== logs.length - 1 ? `<div class="position-absolute top-0 start-0 h-100 border-start border-2 border-light ms-3" style="z-index: 0; margin-top: 10px;"></div>` : ''}
+                                                <div class="flex-shrink-0 position-relative z-1">
+                                                    <div class="bg-white border border-2 border-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                                        <i class="fas fa-dot-circle text-primary small"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="ms-3 w-100">
+                                                    <div class="d-flex align-items-center mb-1 justify-content-between">
+                                                        <div>
+                                                            <span class="fw-bold text-dark me-2">${log.nama}</span>
+                                                            <span class="badge bg-light text-secondary border small" style="font-size: 0.7rem;">${log.aktivitas}</span>
+                                                        </div>
+                                                        <small class="text-muted" style="font-size: 0.75rem;">${log.waktu}</small>
+                                                    </div>
+                                                    <p class="text-muted small mb-0 bg-light p-2 rounded mt-1">${log.deskripsi}</p>
+                                                </div>
+                                            </div>
+                                        `).join('') : '<div class="text-center py-5 text-muted"><i class="fas fa-history fa-3x mb-3 opacity-25"></i><p>Belum ada aktivitas tercatat.</p></div>'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-header bg-white border-0 pt-4 ps-4 pe-4">
+                                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-pie me-2"></i>Distribusi Konten</h5>
+                                </div>
+                                <div class="card-body p-4 d-flex justify-content-center align-items-center" style="min-height: 250px;">
+                                    <canvas id="contentDistributionChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-0 pt-4 ps-4 pe-4 d-flex justify-content-between">
+                                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-users-cog me-2"></i>Tim Administrator</h5>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary small">Online</span>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center p-3 bg-light rounded-3 border">
+                                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(currentAdminName)}&background=4361ee&color=fff" class="rounded-circle me-3" width="45" height="45" alt="Admin Avatar">
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0">${currentAdminName} (Anda)</h6>
+                                            <small class="text-muted">${currentAdminRole}</small>
+                                        </div>
+                                    </div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+
+                document.getElementById('content-area').innerHTML = html;
+
+                // --- RENDER CHART.JS SETELAH HTML DIMUAT ---
+                const ctx = document.getElementById('contentDistributionChart').getContext('2d');
+                window.dashboardChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Berita', 'Foto Galeri', 'Total Booking', 'Pesan Masuk'],
+                        datasets: [{
+                            data: chartDataCounts,
+                            backgroundColor: [
+                                '#4361ee', // Primary
+                                '#3f37c9', // Secondary
+                                '#f72585', // Pink/Magenta
+                                '#4cc9f0'  // Light Blue
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#ffffff',
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    font: {
+                                        family: "'Nunito', sans-serif",
+                                        size: 11
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += context.parsed + ' Item';
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '65%', // Membuat lingkaran tengah lebih besar (donat)
+                        layout: {
+                            padding: 10
+                        }
+                    }
+                });
+
+            }).catch(err => {
+                console.error(err);
+                document.getElementById('content-area').innerHTML = `<div class="alert alert-danger">Gagal memuat dashboard. Periksa koneksi API.</div>`;
+            });
         }
 
         // ==========================================
@@ -606,12 +816,8 @@ checkAuth();
             
             tbody.innerHTML = data.map(i => {
                 let displayImage = fixImagePath(i.file_path);
-                
-                // Author logic
                 const uploaderName = i.nama_pengupload || i.uploaded_by || 'Admin';
                 const roleName = i.role_pengupload || 'Administrator';
-
-                // --- MODIFIKASI WAKTU BERITA ---
                 let dateDisplay = i.tanggal_upload ? i.tanggal_upload.split(' ')[0] : '-';
                 let timeDisplay = '00:00';
                 if (i.updated_at) {
@@ -650,7 +856,6 @@ checkAuth();
             }).join('');
         }
 
-        // === FUNGSI HAPUS BERITA KHUSUS (Updated SweetAlert2) ===
         function deleteBerita(id, btn) {
             Swal.fire({
                 title: 'Apakah Anda yakin?',
@@ -666,41 +871,16 @@ checkAuth();
                     const formData = new FormData();
                     formData.append('action', 'delete');
                     formData.append('id', id);
-
-                    const originalContent = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                    btn.disabled = true;
-
-                    fetch('api/berita.php', {
-                        method: 'POST',
-                        body: formData
-                    })
+                    fetch('api/berita.php', { method: 'POST', body: formData })
                     .then(response => response.json())
                     .then(res => {
                         if (res.success) {
-                            const row = btn.closest('tr');
-                            row.style.transition = 'all 0.5s';
-                            row.style.opacity = '0';
-                            setTimeout(() => {
-                                row.remove();
-                                allBeritaData = allBeritaData.filter(b => b.id_artikel != id);
-                                if(allBeritaData.length === 0) renderBeritaTable([]);
-                                Swal.fire(
-                                    'Terhapus!',
-                                    'Berita berhasil dihapus.',
-                                    'success'
-                                );
-                            }, 500);
+                            allBeritaData = allBeritaData.filter(b => b.id_artikel != id);
+                            renderBeritaTable(allBeritaData);
+                            Swal.fire('Terhapus!', 'Berita berhasil dihapus.', 'success');
                         } else {
                             Swal.fire('Gagal!', res.message, 'error');
-                            btn.innerHTML = originalContent;
-                            btn.disabled = false;
                         }
-                    })
-                    .catch(err => {
-                        Swal.fire('Error!', 'Terjadi kesalahan koneksi.', 'error');
-                        btn.innerHTML = originalContent;
-                        btn.disabled = false;
                     });
                 }
             });
@@ -724,12 +904,9 @@ checkAuth();
         function renderBeritaFormHTML(data) {
             const isEdit = data !== null;
             const hasImage = isEdit && data.file_path && data.file_path !== '';
-            
             const previewSrc = hasImage ? fixImagePath(data.file_path) : '';
             const tglVal = isEdit && data.tanggal_upload ? data.tanggal_upload.split(' ')[0] : new Date().toISOString().split('T')[0];
-
             document.getElementById('page-title-text').innerText = isEdit ? 'Edit Berita' : 'Buat Berita Baru';
-
             const html = `
                 <div class="form-container-view fade-in">
                     <form id="formBerita">
@@ -806,12 +983,11 @@ checkAuth();
         let allGaleriData = [];
 
         function getGaleriBadge(category) {
-            // Update warna badge sesuai kategori baru
             switch ((category || '').toLowerCase()) {
-                case 'kategori 1': return 'badge-news-latest'; // Biru
-                case 'kategori 2': return 'badge-prestasi';    // Hijau
-                case 'kategori 3': return 'badge-announcement';// Oranye
-                case 'kategori 4': return 'badge-kegiatan';    // Ungu
+                case 'kategori 1': return 'badge-news-latest';
+                case 'kategori 2': return 'badge-prestasi';
+                case 'kategori 3': return 'badge-announcement';
+                case 'kategori 4': return 'badge-kegiatan';
                 default: return 'badge-default';
             }
         }
@@ -819,7 +995,7 @@ checkAuth();
         function loadGaleri() {
             document.getElementById('page-title-text').innerText = 'Manajemen Galeri';
             fetch('api/galeri.php').then(r => r.json()).then(result => {
-                allGaleriData = result.success ? result.data : []; // Sesuaikan API response
+                allGaleriData = result.success ? result.data : [];
                 const html = `
                     <div class="fade-in">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -870,8 +1046,6 @@ checkAuth();
             
             tbody.innerHTML = data.map(i => {
                 let displayImage = fixImagePath(i.file_path);
-
-                // --- MODIFIKASI WAKTU GALERI ---
                 let dateDisplay = i.tanggal_upload ? i.tanggal_upload.split(' ')[0] : '-';
                 let timeDisplay = '00:00';
                 if (i.updated_at) {
@@ -880,8 +1054,6 @@ checkAuth();
                         timeDisplay = parts[1].substring(0, 5); 
                     }
                 }
-                
-                // MODIFIKASI: Mengambil nama & role pengupload dari View
                 const uploaderName = i.nama_pengupload || '-';
                 const roleName = i.role_pengupload || '-';
 
@@ -917,7 +1089,6 @@ checkAuth();
             }).join('');
         }
 
-        // === FUNGSI HAPUS GALERI KHUSUS (Updated SweetAlert2) ===
         function deleteGaleri(id, btn) {
             Swal.fire({
                 title: 'Apakah Anda yakin?',
@@ -933,42 +1104,16 @@ checkAuth();
                     const formData = new FormData();
                     formData.append('action', 'delete');
                     formData.append('id', id);
-
-                    // Visual feedback
-                    const originalContent = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                    btn.disabled = true;
-
-                    fetch('api/galeri.php', {
-                        method: 'POST',
-                        body: formData
-                    })
+                    fetch('api/galeri.php', { method: 'POST', body: formData })
                     .then(response => response.json())
                     .then(res => {
                         if (res.success) {
-                            const row = btn.closest('tr');
-                            row.style.transition = 'all 0.5s';
-                            row.style.opacity = '0';
-                            setTimeout(() => {
-                                row.remove();
-                                allGaleriData = allGaleriData.filter(g => g.id_galeri != id);
-                                if(allGaleriData.length === 0) renderGaleriTable([]);
-                                Swal.fire(
-                                    'Terhapus!',
-                                    'Foto berhasil dihapus.',
-                                    'success'
-                                );
-                            }, 500);
+                            allGaleriData = allGaleriData.filter(g => g.id_galeri != id);
+                            renderGaleriTable(allGaleriData);
+                            Swal.fire('Terhapus!', 'Foto berhasil dihapus.', 'success');
                         } else {
                             Swal.fire('Gagal!', res.message, 'error');
-                            btn.innerHTML = originalContent;
-                            btn.disabled = false;
                         }
-                    })
-                    .catch(err => {
-                        Swal.fire('Error!', 'Terjadi kesalahan koneksi.', 'error');
-                        btn.innerHTML = originalContent;
-                        btn.disabled = false;
                     });
                 }
             });
@@ -978,7 +1123,6 @@ checkAuth();
             const cat = document.getElementById('filterKategoriGaleri').value;
             const search = document.getElementById('searchGaleri').value.toLowerCase();
             const filtered = allGaleriData.filter(i => {
-                // Modifikasi search agar bisa cari nama author juga
                 const uploader = i.nama_pengupload || '';
                 return (cat === 'all' || i.kategori === cat) && (i.judul.toLowerCase().includes(search) || uploader.toLowerCase().includes(search));
             });
@@ -993,19 +1137,15 @@ checkAuth();
         function renderGaleriFormHTML(data=null){
             const isEdit = data !== null;
             const hasImage = isEdit && data.file_path && data.file_path !== '';
-
             document.getElementById('page-title-text').innerText = isEdit ? 'Edit Galeri' : 'Tambah Foto Galeri';
-
             const html = `
             <div class="form-container-view fade-in">
                 <form id="formGaleri">
                     <input type="hidden" name="id_galeri" value="${isEdit?data.id_galeri:''}">
-                    
                     <div class="d-flex justify-content-between align-items-center mb-3">
                          <button type="button" class="btn btn-link text-decoration-none text-muted ps-0" onclick="loadGaleri()"><i class="fas fa-arrow-left me-2"></i>Kembali ke Daftar</button>
                          <button type="submit" class="btn btn-primary-custom px-5 rounded-pill"><i class="fas fa-save me-2"></i> ${isEdit ? 'Simpan Foto' : 'Upload Foto'}</button>
                     </div>
-
                     <div class="row g-4">
                         <div class="col-lg-8">
                             <div class="card h-100">
@@ -1022,7 +1162,6 @@ checkAuth();
                                 </div>
                             </div>
                         </div>
-
                         <div class="col-lg-4">
                             <div class="card mb-4">
                                 <div class="card-body">
@@ -1038,7 +1177,6 @@ checkAuth();
                                     </div>
                                 </div>
                             </div>
-
                             <div class="card">
                                 <div class="card-body">
                                     <h6 class="fw-bold text-primary mb-3 text-uppercase small ls-1">File Foto</h6>
@@ -1513,7 +1651,85 @@ checkAuth();
         
         function escapeHtml(s){ return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''; }
         
-        function loadBeranda() { document.getElementById('page-title-text').innerText = 'Dashboard'; document.getElementById('content-area').innerHTML = `<div class="row g-4 fade-in"><div class="col-md-3"><div class="card p-4 text-center"><h2 class="fw-bold text-primary">12</h2><small class="text-muted">Booking Pending</small></div></div><div class="col-md-3"><div class="card p-4 text-center"><h2 class="fw-bold text-success">5</h2><small class="text-muted">News Request</small></div></div><div class="col-md-3"><div class="card p-4 text-center"><h2 class="fw-bold text-warning">24</h2><small class="text-muted">Total Berita</small></div></div><div class="col-md-3"><div class="card p-4 text-center"><h2 class="fw-bold text-danger">8</h2><small class="text-muted">Pesan Masuk</small></div></div></div>`; }
+        function loadKontak() {
+            document.getElementById('page-title-text').innerText = 'Pesan Masuk';
+            fetch('api/kontak.php').then(r => r.json()).then(result => {
+                const data = result.data || [];
+                const unreadCount = data.filter(item => item.is_read == 0).length;
+                const html = `
+                    <div class="fade-in">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="fw-bold mb-1 text-dark">Inbox Pesan</h5>
+                                    <p class="text-muted small mb-0">Daftar pertanyaan dan pesan dari pengunjung website.</p>
+                                </div>
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fs-6 border border-primary border-opacity-25">
+                                    <i class="fas fa-envelope me-2"></i> ${unreadCount} Belum Dibaca
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-modern align-middle mb-0">
+                                        <thead class="bg-white">
+                                            <tr>
+                                                <th class="ps-4">Pengirim</th>
+                                                <th>Subjek</th>
+                                                <th class="text-center">Tanggal</th>
+                                                <th class="text-center">Status</th>
+                                                <th class="text-end pe-4">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="kontakTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                document.getElementById('content-area').innerHTML = html;
+                renderKontakTable(data);
+            }).catch(err => {
+                document.getElementById('content-area').innerHTML = `<div class="alert alert-danger">Gagal memuat data: ${err}</div>`;
+            });
+        }
+
+        function renderKontakTable(data) {
+            const tbody = document.getElementById('kontakTableBody');
+            if (!data.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-inbox fa-3x mb-3 text-light-emphasis"></i><p>Belum ada pesan masuk.</p></div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => {
+                const isRead = item.is_read == 1;
+                const rowClass = isRead ? '' : 'bg-light'; 
+                const badgeStatus = isRead 
+                    ? '<span class="badge bg-light text-secondary border border-secondary border-opacity-25 rounded-pill"><i class="fas fa-check-double me-1"></i> Dibaca</span>' 
+                    : '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill"><i class="fas fa-circle me-1" style="font-size:8px;"></i> Baru</span>';
+                let dateDisplay = item.created_at;
+                return `<tr class="${rowClass}">
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark">${item.nama}</div>
+                        <div class="small text-muted">${item.email}</div>
+                    </td>
+                    <td>
+                        <div class="text-truncate" style="max-width: 300px; ${!isRead ? 'font-weight:700; color:var(--primary);' : ''}">${item.subjek}</div>
+                        <div class="small text-muted text-truncate" style="max-width: 300px;">${item.pesan}</div>
+                    </td>
+                    <td class="text-center small text-muted">${dateDisplay}</td>
+                    <td class="text-center">${badgeStatus}</td>
+                    <td class="text-end pe-4">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-light text-primary bg-white shadow-sm border me-1 rounded-2" onclick='viewPesan(${JSON.stringify(item)})' title="Lihat"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-light text-danger bg-white shadow-sm border rounded-2" onclick="deletePesan(${item.id_kontak})" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
         
         function previewFile(input) {
             const file = input.files[0];
