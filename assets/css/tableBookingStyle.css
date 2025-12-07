@@ -443,6 +443,7 @@ body {
 .booking-table td {
   border: 1px solid #e0e0e0;
   text-align: center;
+  height: 50px;
   vertical-align: middle;
 }
 
@@ -455,15 +456,17 @@ body {
 }
 
 .time-header {
-  background-color: #f9f9f9;
-  font-weight: 600;
-  width: 80px;
-  padding: 8px 4px !important;
-  font-size: 12px;
-  color: #666;
-  position: sticky;
-  left: 0;
-  z-index: 2;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    width: 70px;      /* UBAH DARI 80px KE 70px AGAR LEBIH FIT */
+    min-width: 70px;  /* UBAH DARI 80px KE 70px */
+    z-index: 20;
+    padding: 0 !important;
+    vertical-align: top;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.02); /* Bayangan halus */
+}
+.time-header div[style*="position: relative"] {
+  width: 100%; /* Height diset oleh JS */
 }
 
 .day-header {
@@ -474,6 +477,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
+  border-bottom: 2px solid #e0e0e0; /* Pemisah header yang lebih jelas */
+  padding-bottom: 15px !important;
 }
 
 .today {
@@ -538,6 +543,7 @@ body {
   height: 840px; /* 14 jam × 60px */
   padding: 0;
   width: 100%;
+  margin: 0 1px; /* Memberi nafas 1px kiri kanan */
 }
 
 /* Sel tabel untuk hari - DIBUAT TINGGI TETAP */
@@ -549,6 +555,11 @@ body {
   background-color: transparent;
   cursor: default;
   vertical-align: top !important;
+  transition: background-color 0.2s ease;
+}
+
+.day-cell:hover {
+    background-color: rgba(43, 149, 253, 0.03); /* Highlight biru sangat tipis saat hover */
 }
 
 /* Row untuk waktu - DIBUAT INVISIBLE */
@@ -582,22 +593,48 @@ body {
 }
 
 .time-line {
-  position: absolute;
-  width: 100%;
-  height: 1px;
-  background-color: rgba(0, 0, 0, 0.1);
-  left: 0;
+    position: absolute;
+    width: 100%;
+    left: 0;
+    z-index: 1;
+}
+/* Garis Jam - Solid Tipis */
+.time-line.line-hour {
+    height: 1px;
+    background-color: #e0e0e0; /* Abu-abu solid */
+    border-top: none;
+}
+
+/* Garis Setengah Jam - Putus-putus Halus */
+.time-line.line-half {
+    height: 1px;
+    background-color: transparent;
+    border-top: 2px dashed #ebebeb; /* Putus-putus sangat halus */
 }
 
 .time-label {
-  position: absolute;
-  left: -85px;
-  top: -8px;
-  font-size: 11px;
-  color: #666;
-  background-color: #f9f9f9;
-  padding: 2px 5px;
-  border-radius: 3px;
+   position: absolute;
+    left: 0;
+    width: 100%;
+    text-align: center; /* KUNCI: Agar angka pas di tengah kolom */
+    transform: translateY(-50%); /* Posisi vertikal pas di garis */
+    border: none;
+    line-height: 1;
+    padding: 0; /* Hapus padding agar benar-benar di tengah */
+}
+
+/* Jam Tepat (07:00, 08:00) - Lebih Gelap & Tegas */
+.time-label.is-hour {
+    font-size: 12px;
+    font-weight: 700;
+    color: #444; 
+}
+
+/* Setengah Jam (07:30) - Lebih Kecil & Tipis */
+.time-label.is-half {
+    font-size: 11px;
+    font-weight: 500;
+    color: #999; /* Warna abu-abu soft */
 }
 
 /* Modal Styling */
@@ -824,6 +861,10 @@ body {
   .booking-table th {
     font-size: 12px;
     padding: 6px 4px !important;
+    vertical-align: middle;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 0.5px;
   }
 
   .time-header {

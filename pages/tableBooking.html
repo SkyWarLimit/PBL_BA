@@ -507,18 +507,16 @@
         const tableHead = document.querySelector('.booking-table thead tr');
         const tableBody = document.querySelector('.booking-table tbody');
 
-        // Reset rendered bookings
         renderedBookings.clear();
 
-        // Kosongkan tabel
+        // Bersihkan header & body lama
         while (tableHead.children.length > 1) {
             tableHead.removeChild(tableHead.lastChild);
         }
         tableBody.innerHTML = '';
 
-        // Hitung tanggal Senin-Jumat
+        // --- Logika Tanggal (Tidak Berubah) ---
         const mondayDate = new Date(currentDate);
-        // Pastikan kita mulai dari Senin
         const dayOfWeek = mondayDate.getDay();
         const diff = dayOfWeek === 0 ? 1 : (dayOfWeek === 6 ? 2 : 1 - dayOfWeek);
         mondayDate.setDate(mondayDate.getDate() + diff);
@@ -526,80 +524,90 @@
         const fridayDate = new Date(mondayDate);
         fridayDate.setDate(fridayDate.getDate() + 4);
 
-        // Update teks rentang tanggal
         document.getElementById('date-range').textContent =
             `${getShortMonthName(mondayDate.getMonth())} ${mondayDate.getDate()} - ${fridayDate.getDate()}, ${fridayDate.getFullYear()}`;
 
-        // Buat header untuk 5 hari kerja (Senin-Jumat)
+        // Render Header Hari (Senin - Jumat)
         for (let i = 0; i < 5; i++) {
             const date = new Date(mondayDate);
             date.setDate(date.getDate() + i);
-
             const th = document.createElement('th');
             th.classList.add('day-header');
-
-            // Tambahkan kelas today jika hari ini
+            
             const today = new Date();
             if (date.toDateString() === today.toDateString()) {
                 th.classList.add('today');
             }
 
-            // Format: Mon 12/1
             th.textContent = `${getShortDayName(date.getDay())} ${date.getDate()}/${date.getMonth() + 1}`;
             th.setAttribute('data-date', formatDate(date));
             tableHead.appendChild(th);
         }
 
-        // Buat satu baris untuk container hari (bukan banyak baris per jam)
+        // --- Render Body Tabel ---
         const containerRow = document.createElement('tr');
 
-        // Kolom waktu (hanya satu sel untuk waktu)
+        // 1. KOLOM WAKTU (Kiri)
         const timeCell = document.createElement('td');
         timeCell.classList.add('time-header');
 
-        // Buat daftar waktu di kolom kiri (07:00 - 21:00)
         const timeList = document.createElement('div');
         timeList.style.position = 'relative';
         timeList.style.height = `${TOTAL_HEIGHT}px`;
 
-        // Tambahkan label waktu setiap jam dari 07:00 sampai 21:00
         for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
-            const timeLabel = document.createElement('div');
-            timeLabel.className = 'time-label';
-            timeLabel.textContent = `${String(hour).padStart(2, '0')}:00`;
-            timeLabel.style.top = `${(hour - START_HOUR) * PIXELS_PER_HOUR}px`;
-            timeList.appendChild(timeLabel);
+            let minuteSteps = (hour === END_HOUR) ? [0] : [0, 30];
+
+            minuteSteps.forEach(minute => {
+                const timeLabel = document.createElement('div');
+                // LOGIKA BARU: Tambah class pembeda jam tepat (is-hour) vs setengah jam (is-half)
+                const isHour = minute === 0;
+                timeLabel.className = `time-label ${isHour ? 'is-hour' : 'is-half'}`;
+                
+                // Format teks: 07:00, 07:30
+                timeLabel.textContent = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                
+                const topPos = ((hour - START_HOUR) + (minute / 60)) * PIXELS_PER_HOUR;
+                timeLabel.style.top = `${topPos}px`;
+                
+                timeList.appendChild(timeLabel);
+            });
         }
 
         timeCell.appendChild(timeList);
-        timeCell.rowSpan = 1; // Hanya satu baris
+        timeCell.rowSpan = 1;
         containerRow.appendChild(timeCell);
 
-        // Kolom untuk setiap hari (SENIN-JUMAT)
+        // 2. KOLOM GRID HARI (Kanan)
         for (let day = 0; day < 5; day++) {
             const date = new Date(mondayDate);
             date.setDate(date.getDate() + day);
-            const dateStr = formatDate(date);
-
+            
             const cell = document.createElement('td');
-            cell.classList.add('day-cell', 'empty');
-            cell.setAttribute('data-date', dateStr);
+            cell.classList.add('day-cell');
+            cell.setAttribute('data-date', formatDate(date));
 
-            // Buat container untuk hari ini
             const container = document.createElement('div');
             container.className = 'day-container';
             container.style.height = `${TOTAL_HEIGHT}px`;
 
-            // Tambahkan grid lines untuk waktu (07:00 - 21:00)
             const timeGrid = document.createElement('div');
             timeGrid.className = 'time-grid';
 
-            // Tambahkan garis setiap jam dari 07:00 sampai 21:00
             for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
-                const timeLine = document.createElement('div');
-                timeLine.className = 'time-line';
-                timeLine.style.top = `${(hour - START_HOUR) * PIXELS_PER_HOUR}px`;
-                timeGrid.appendChild(timeLine);
+                let minuteSteps = (hour === END_HOUR) ? [0] : [0, 30];
+
+                minuteSteps.forEach(minute => {
+                    const timeLine = document.createElement('div');
+                    const isHour = minute === 0;
+                    // Class untuk garis (solid vs putus-putus)
+                    timeLine.className = `time-line ${isHour ? 'line-hour' : 'line-half'}`;
+                    
+                    const topPos = ((hour - START_HOUR) + (minute / 60)) * PIXELS_PER_HOUR;
+                    timeLine.style.top = `${topPos}px`;
+                    
+                    timeGrid.appendChild(timeLine);
+                });
             }
 
             container.appendChild(timeGrid);
@@ -608,11 +616,7 @@
         }
 
         tableBody.appendChild(containerRow);
-
-        // Render semua booking ke dalam tabel
         renderAllBookings();
-
-        // Update opsi tanggal di modal add booking
         updateBookingDateOptions();
     }
 
@@ -878,7 +882,11 @@
         // Set nilai default
         startHourSelect.value = '08';
         endHourSelect.value = '09';
+        
     }
+
+    
+    
 </script>
 </body>
 
