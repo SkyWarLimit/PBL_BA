@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorium Business Analytics</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts - Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
+        rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../assets/css/formBookingStyle.css">
+</head>
+
+<body>
+    <!-- Sticky Navigation Bar -->
+    <nav class="sticky-navbar">
+        <div class="logo-container">
+            <div class="logo">
+                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
+            </div>
+            <div class="lab-name-container">
+                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-tagline">Transforming Data into Decisions</div>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link" href="beranda.php">Beranda</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="profile.php">Profil</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#">
+                    Publikasi
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="berita.php">Berita</a></li>
+                    <li><a class="dropdown-item" href="galeri.php">Gallery</a></li>
+                    <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
+                </ul>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle active" href="#">
+                    Peminjaman Lab
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="infoPeminjaman.php">Informasi Laboratorium</a></li>
+                    <li><a class="dropdown-item" href="tableBooking.php">Table Peminjaman</a></li>
+                    <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="kontak.php">Kontak</a>
+            </li>
+        </ul>
+        
+        <button class="login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid main-content">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb-container">
+            <a href="#" class="breadcrumb-link">Beranda</a>
+            <span class="breadcrumb-separator">/</span>
+            <a href="infoPeminjaman.html" class="breadcrumb-link">Informasi Peminjaman</a>
+            <span class="breadcrumb-separator">/</span>
+            <a href="booking.html" class="breadcrumb-link">Booking</a>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-current">Review Your Booking</span>
+        </div>
+
+        <div class="row">
+            <!-- Left Column - Form Input -->
+            <div class="col-md-7">
+                <div class="form-container">
+                    <h1 class="page-title">Review Your Booking</h1>
+                    <h2 class="section-title">Contact Information :</h2>
+                    
+                    <form id="bookingForm">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" placeholder="Masukkan nama lengkap">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" placeholder="Masukkan alamat email">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status/Kategori Pemohon</label>
+                            <select class="form-select" id="status">
+                                <option selected disabled>Pilih status</option>
+                                <option value="mahasiswa">Mahasiswa</option>
+                                <option value="dosen">Dosen</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="nim-nip" class="form-label">NIM/NIP/Instansi</label>
+                            <input type="text" class="form-control" id="nim-nip" placeholder="Masukkan NIM/NIP/Instansi">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="program" class="form-label">Program Studi/Departemen</label>
+                            <input type="text" class="form-control" id="program" placeholder="Masukkan program studi/departemen">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">No. Handphone</label>
+                            <input type="tel" class="form-control" id="phone" placeholder="Masukkan nomor handphone">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="purpose" class="form-label">Tujuan Peminjaman</label>
+                            <textarea class="form-control" id="purpose" rows="3" placeholder="Jelaskan tujuan peminjaman laboratorium"></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary confirm-btn">Confirm Booking</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Right Column - Booking Summary -->
+            <div class="col-md-5">
+                <div class="booking-summary">
+                    <h3 class="summary-title">Booking Summary</h3>
+                    <div class="summary-content">
+                        <p class="summary-text">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                        </p>
+                        
+                        <div class="booking-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Tanggal:</span>
+                                <span class="detail-value">15 November 2023</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Waktu:</span>
+                                <span class="detail-value">10:00 - 12:00 WIB</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Laboratorium:</span>
+                                <span class="detail-value">Lab Business Analytics</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // JavaScript untuk Sticky Navbar
+        document.addEventListener('DOMContentLoaded', function () {
+            const allNavLinks = document.querySelectorAll('.nav-link');
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+            // Fungsi untuk set menu aktif
+            function setActiveMenu(clickedElement) {
+                // Remove active class dari semua menu
+                allNavLinks.forEach(link => link.classList.remove('active'));
+
+                // Add active class ke element yang diklik
+                if (clickedElement.classList.contains('dropdown-item')) {
+                    // Jika yang diklik adalah dropdown item, aktifkan parent dropdown
+                    const parentDropdown = clickedElement.closest('.dropdown');
+                    const dropdownToggle = parentDropdown.querySelector('.dropdown-toggle');
+                    dropdownToggle.classList.add('active');
+                } else {
+                    // Jika yang diklik adalah menu biasa
+                    clickedElement.classList.add('active');
+                }
+            }
+
+            // Event listeners untuk menu biasa
+            allNavLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // Jangan set active untuk dropdown toggle (karena sudah hover)
+                    if (!this.classList.contains('dropdown-toggle')) {
+                        setActiveMenu(this);
+                    }
+                });
+            });
+
+            // Event listeners untuk dropdown items
+            dropdownItems.forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    setActiveMenu(this);
+                });
+            });
+
+            // Untuk mobile devices, tetap gunakan Bootstrap dropdown
+            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function (e) {
+                    if (window.innerWidth <= 992) {
+                        e.preventDefault();
+                        const dropdownMenu = this.nextElementSibling;
+                        dropdownMenu.classList.toggle('show');
+                    }
+                });
+            });
+
+            // Tutup dropdown ketika klik di luar
+            document.addEventListener('click', function (e) {
+                if (window.innerWidth <= 992) {
+                    if (!e.target.closest('.dropdown')) {
+                        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                            menu.classList.remove('show');
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
