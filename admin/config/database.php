@@ -3,9 +3,9 @@
 
 class Database {
     private $host = "localhost";
-    private $db_name = "lab_ba";
+    private $db_name = "db_lba";
     private $username = "postgres";
-    private $password = "Anasaurizky0705";
+    private $password = "12345678";
     private $port = "5432";
     public $conn;
 
@@ -75,5 +75,26 @@ function deleteFile($file_path) {
         return unlink($full_path);
     }
     return false;
+}
+
+// ===== FUNGSI GET CLIENT IP (BARU DITAMBAHKAN) =====
+// Fungsi ini mendeteksi IP asli user meskipun lewat proxy/Cloudflare
+function getClientIP() {
+    $ipaddress = '';
+    if (isset($_SERVER['HTTP_CLIENT_IP']))
+        $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+    else if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+        $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    else if(isset($_SERVER['HTTP_X_FORWARDED']))
+        $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+    else if(isset($_SERVER['FORWARDED_FOR']))
+        $ipaddress = $_SERVER['FORWARDED_FOR'];
+    else if(isset($_SERVER['FORWARDED']))
+        $ipaddress = $_SERVER['FORWARDED'];
+    else if(isset($_SERVER['REMOTE_ADDR']))
+        $ipaddress = $_SERVER['REMOTE_ADDR'];
+    else
+        $ipaddress = 'UNKNOWN';
+    return $ipaddress;
 }
 ?>

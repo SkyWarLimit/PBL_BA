@@ -335,7 +335,12 @@
                                         <th scope="col" class="text-end pe-4">Profile Links</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="anggotaTableBody">
+                                    <tr>
+                                        <td colspan="3" class="text-center py-5 text-muted">Memuat data anggota...</td>
+                                    </tr>
+                                </tbody>
+                                <!-- <tbody>
                                     <tr>
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
@@ -504,7 +509,7 @@
                                         </td>
                                     </tr>
 
-                                </tbody>
+                                </tbody> -->
                             </table>
                         </div>
                     </div>
@@ -1178,7 +1183,7 @@
         /* ========================================= */
         if (!('scrollBehavior' in document.documentElement.style)) {
             document.querySelectorAll('.section-nav-link').forEach(link => {
-                link.addEventListener('click', function (e) {
+                link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const targetId = this.getAttribute('href').substring(1);
                     const targetSection = document.getElementById(targetId);
@@ -1194,6 +1199,71 @@
                     }
                 });
             });
+        }
+
+        /* ========================================= */
+        /* HELPER FUNCTION */
+        /* ========================================= */
+        function fixImagePath(path) {
+            if (!path) return '';
+            // Ganti 'admin/uploads/' menjadi '../uploads/'
+            if (path.startsWith('uploads/')) return `../${path}`;
+            return path;
+        }
+
+        /* ========================================= */
+        /* LOAD ANGGOTA FUNCTIONALITY */
+        /* ========================================= */
+        function loadAnggota() {
+            fetch('../api_public/anggota.php')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success && res.data.length > 0) {
+                        renderAnggotaTablePublic(res.data);
+                    } else {
+                        // Tampilkan pesan kosong jika tidak ada data
+                        document.getElementById('anggotaTableBody').innerHTML = `
+                            <tr><td colspan="3" class="text-center py-5 text-muted">Belum ada data anggota laboratorium.</td></tr>`;
+                    }
+                })
+                .catch(err => {
+                    console.error("Gagal memuat data anggota:", err);
+                    document.getElementById('anggotaTableBody').innerHTML = `
+                        <tr><td colspan="3" class="text-center py-5 text-danger">Gagal memuat data anggota.</td></tr>`;
+                });
+        }
+
+        function renderAnggotaTablePublic(data) {
+            const tbody = document.getElementById('anggotaTableBody');
+            tbody.innerHTML = data.map(anggota => {
+                const keahlianHtml = anggota.keahlian.map(k => `<span class="badge bg-light text-primary me-1">${k}</span>`).join('');
+
+                const linkHtml = anggota.links.map(link => `
+                    <a href="${link.link_url}" target="_blank" class="btn-link-custom">${link.platform}</a>
+                `).join('');
+
+                const fotoPath = anggota.foto ? fixImagePath(anggota.foto) : `https://ui-avatars.com/api/?name=${anggota.nama}&background=eef2f7&color=1f3a60&bold=true`;
+
+                return `
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <img src="${fotoPath}"
+                                    alt="${anggota.nama}" class="table-avatar me-3" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=${anggota.nama}&background=eef2f7&color=1f3a60&bold=true'">
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-dark">${anggota.nama}</h6>
+                                    <small class="text-muted">NIDN: ${anggota.nidn}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="align-middle text-dark fw-semibold">
+                            ${keahlianHtml}
+                        </td>
+                        <td class="align-middle text-end pe-4">
+                            ${linkHtml}
+                        </td>
+                    </tr>`;
+            }).join('');
         }
     </script>
 </body>
