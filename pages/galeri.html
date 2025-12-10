@@ -10,8 +10,7 @@
     <!-- Font Awesome untuk ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Google Fonts - Nunito -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="../assets/css/galeriStyle.css">
 </head>
@@ -29,41 +28,48 @@
             </div>
         </div>
 
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a class="nav-link" href="../index.html">Beranda</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="profile.html">Profil</a>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle active" href="#">
-                    Publikasi
-                    <i class="fas fa-chevron-down dropdown-icon"></i>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="berita.html">Berita</a></li>
-                    <li><a class="dropdown-item" href="galeri.html">Gallery</a></li>
-                    <li><a class="dropdown-item" href="newsInputService.html">News Input Service</a></li>
-                </ul>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#">
-                    Peminjaman Lab
-                    <i class="fas fa-chevron-down dropdown-icon"></i>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="infoPeminjaman.html">Informasi Laboratorium</a></li>
-                    <li><a class="dropdown-item" href="tableBooking.html">Table Peminjaman</a></li>
-                    <li><a class="dropdown-item" href="booking.html">Pemesanan Lab</a></li>
-                </ul>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="kontak.html">Kontak</a>
-            </li>
-        </ul>
+        <!-- Tombol Toggle untuk Mobile (Bootstrap) -->
+        <button class="btn d-lg-none ms-auto me-2" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNavbar" aria-expanded="false" aria-label="Toggle navigation">
+             <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="collapse d-lg-flex flex-grow-1 justify-content-end" id="mobileNavbar">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link" href="../index.html">Beranda</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="profile.html">Profil</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Publikasi
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="berita.html">Berita</a></li>
+                        <li><a class="dropdown-item" href="galeri.html">Gallery</a></li>
+                        <li><a class="dropdown-item" href="newsInputService.html">News Input Service</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Peminjaman Lab
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="infoPeminjaman.html">Informasi Laboratorium</a></li>
+                        <li><a class="dropdown-item" href="tableBooking.html">Table Peminjaman</a></li>
+                        <li><a class="dropdown-item" href="booking.html">Pemesanan Lab</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="kontak.html">Kontak</a>
+                </li>
+            </ul>
+        </div>
         
-        <button class="login-btn">Login</button>
+        <button class="login-btn d-none d-lg-block">Login</button>
     </nav>
 
     <!-- Hero Section -->
@@ -91,14 +97,12 @@
                         commodo consequat.
                         Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
                         pariatur.
-                        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-                        anim id est laborum.
                     </p>
-                    <!-- Tombol Register For Laboratory Booking -->
+                    <!-- Tombol Register -->
                     <div class="register-btn-container">
-                        <button class="register-btn">
-                            <span class="btn-text">
-                                news input service
+                        <button class="register-btn" onclick="location.href='newsInputService.html';">
+                            <span class="btn-text">`
+                                News input service
                                 <i class="fas fa-arrow-up arrow-icon"></i>
                             </span>
                         </button>
@@ -113,168 +117,174 @@
     <!-- Gallery Section -->
     <section class="gallery-section">
         <div class="container">
-            <div class="gallery-grid">
-                <!-- Column 1 -->
-                <div class="gallery-column">
-                    <div class="gallery-item">
-                        <img src="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg" alt="Gallery Image 1">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Business Analytics Workshop</h3>
-                                <p>Team collaboration in data analysis</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/480910804_18103876279490907_972057783880120162_n.jpg" alt="Gallery Image 3">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Team Meeting</h3>
-                                <p>Strategic planning session</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/Screenshot 2024-11-12 185000.png" alt="Gallery Image 6">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Lab Equipment</h3>
-                                <p>State-of-the-art analytics tools</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/Screenshot 2024-11-13 170727.png" alt="Gallery Image 10">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Project Discussion</h3>
-                                <p>Brainstorming solutions</p>
-                            </div>
+            <!-- Container Menggunakan Column Layout (Masonry) -->
+            <div class="gallery-masonry">
+                
+                <!-- Item 1 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg" alt="Gallery Image 1">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Business Analytics Workshop</h3>
+                            <p>Team collaboration in data analysis</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Column 2 -->
-                <div class="gallery-column">
-                    <div class="gallery-item">
-                        <img src="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg" alt="Gallery Image 2">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Data Visualization</h3>
-                                <p>Creating insightful dashboards</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/tes.jpg" alt="Gallery Image 4">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Research Presentation</h3>
-                                <p>Sharing findings with stakeholders</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/447818875_1131208337999032_3250855122718753030_n.jpg" alt="Gallery Image 8">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Training Session</h3>
-                                <p>Developing analytical skills</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/446216135_420436317625687_3921578090758238289_n.jpg" alt="Gallery Image 11">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Software Training</h3>
-                                <p>Learning new analytics tools</p>
-                            </div>
+                <!-- Item 2 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/480910804_18103876279490907_972057783880120162_n.jpg" alt="Gallery Image 3">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Team Meeting</h3>
+                            <p>Strategic planning session</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Column 3 -->
-                <div class="gallery-column">
-                    <div class="gallery-item">
-                        <img src="../assets/img/Indira.jpeg" alt="Gallery Image 5">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Data Analysis</h3>
-                                <p>Deep dive into business metrics</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/Screenshot 2024-11-13 170747.jpg" alt="Gallery Image 7">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Collaboration</h3>
-                                <p>Teamwork in action</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/Screenshot 2024-11-23 184503.png" alt="Gallery Image 9">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Data Processing</h3>
-                                <p>Analyzing large datasets</p>
-                            </div>
+                <!-- Item 3 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/Screenshot 2024-11-12 185000.png" alt="Gallery Image 6">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Lab Equipment</h3>
+                            <p>State-of-the-art analytics tools</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Column 4 -->
-                <div class="gallery-column">
-                    <div class="gallery-item">
-                        <img src="../assets/img/Screenshot 2024-11-24 162718.png" alt="Gallery Image 12">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Team Building</h3>
-                                <p>Strengthening collaboration</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/Screenshot 2025-01-14 173743.png" alt="Gallery Image 13">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Data Workshop</h3>
-                                <p>Hands-on data analysis session</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/Screenshot 2025-01-19 142221.png" alt="Gallery Image 14">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Analytics Tools</h3>
-                                <p>Exploring new software solutions</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item">
-                        <img src="../assets/img/Screenshot 2025-04-08 013614.png" alt="Gallery Image 15">
-                        <div class="gallery-overlay">
-                            <div class="gallery-text">
-                                <h3>Team Collaboration</h3>
-                                <p>Working together on projects</p>
-                            </div>
+                <!-- Item 4 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/Screenshot 2024-11-13 170727.png" alt="Gallery Image 10">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Project Discussion</h3>
+                            <p>Brainstorming solutions</p>
                         </div>
                     </div>
                 </div>
+
+                <!-- Item 5 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg" alt="Gallery Image 2">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Data Visualization</h3>
+                            <p>Creating insightful dashboards</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 6 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/tes.jpg" alt="Gallery Image 4">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Research Presentation</h3>
+                            <p>Sharing findings</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 7 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/447818875_1131208337999032_3250855122718753030_n.jpg" alt="Gallery Image 8">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Training Session</h3>
+                            <p>Developing analytical skills</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 8 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/446216135_420436317625687_3921578090758238289_n.jpg" alt="Gallery Image 11">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Software Training</h3>
+                            <p>Learning new analytics tools</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 9 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/Indira.jpeg" alt="Gallery Image 5">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Data Analysis</h3>
+                            <p>Deep dive into business metrics</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 10 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/Screenshot 2024-11-13 170747.jpg" alt="Gallery Image 7">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Collaboration</h3>
+                            <p>Teamwork in action</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 11 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/Screenshot 2024-11-23 184503.png" alt="Gallery Image 9">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Data Processing</h3>
+                            <p>Analyzing large datasets</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 12 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/Screenshot 2024-11-24 162718.png" alt="Gallery Image 12">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Team Building</h3>
+                            <p>Strengthening collaboration</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 13 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/Screenshot 2025-01-14 173743.png" alt="Gallery Image 13">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Data Workshop</h3>
+                            <p>Hands-on data analysis session</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 14 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/Screenshot 2025-01-19 142221.png" alt="Gallery Image 14">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Analytics Tools</h3>
+                            <p>Exploring new software solutions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 15 -->
+                <div class="gallery-item">
+                    <img src="../assets/img/Screenshot 2025-04-08 013614.png" alt="Gallery Image 15">
+                    <div class="gallery-overlay">
+                        <div class="gallery-text">
+                            <h3>Team Collaboration</h3>
+                            <p>Working together on projects</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -348,5 +358,4 @@
         });
     </script>
 </body>
-
 </html>

@@ -1319,6 +1319,213 @@ body {
 }
 
 /* ========================================= */
+/* STRUKTUR ORGANISASI MOBILE VIEW */
+/* ========================================= */
+
+.mobile-org-view {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(31, 58, 96, 0.1);
+    border: 1px solid #eef2f7;
+    margin-top: 20px;
+    display: none; /* Default hidden */
+}
+
+.mobile-org-container {
+    width: 100%;
+}
+
+.mobile-org-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mobile-org-item {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.mobile-org-item.level-1 {
+    margin-bottom: 20px;
+}
+
+.mobile-org-item.level-2 {
+    margin-left: 25px;
+    position: relative;
+}
+
+/* Garis vertikal untuk level 2 */
+.mobile-org-item.level-2::before {
+    content: '';
+    position: absolute;
+    left: -18px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #a8c0e0;
+}
+
+/* Bulatan untuk level 2 */
+.mobile-org-item.level-2::after {
+    content: '';
+    position: absolute;
+    left: -19px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #1f3a60;
+}
+
+.mobile-org-content {
+    background-color: #f4f6f8;
+    border: 1px solid #eef2f7;
+    border-radius: 8px;
+    padding: 16px 20px;
+    transition: all 0.3s ease;
+}
+
+.mobile-org-item.level-1 .mobile-org-content {
+    background-color: #dbe5f1;
+    border-color: #a8c0e0;
+    border-left: 6px solid #1f3a60;
+}
+
+.mobile-org-item.level-2 .mobile-org-content {
+    border-left: 4px solid #345482;
+}
+
+.mobile-org-item:hover .mobile-org-content {
+    background-color: #edf2f7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(31, 58, 96, 0.1);
+}
+
+.mobile-org-title {
+    color: #1f3a60;
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.mobile-org-item.level-1 .mobile-org-title {
+    font-size: 1.1rem;
+    color: #04163E;
+}
+
+/* ========================================= */
+/* RESPONSIVE DISPLAY SWITCHING */
+/* ========================================= */
+
+/* Desktop view (default) */
+.desktop-org-view {
+    display: block;
+}
+
+.mobile-org-view {
+    display: none;
+}
+
+/* Tablet view (switch to mobile at 992px) */
+@media (max-width: 992px) {
+    .desktop-org-view {
+        display: none !important;
+    }
+    
+    .mobile-org-view {
+        display: block !important;
+    }
+    
+    /* Sembunyikan tree container di mobile */
+    .tree-container {
+        display: none;
+    }
+}
+
+/* Desktop view (show desktop from 993px and above) */
+@media (min-width: 993px) {
+    .desktop-org-view {
+        display: block !important;
+    }
+    
+    .mobile-org-view {
+        display: none !important;
+    }
+}
+
+/* Responsive adjustments untuk mobile */
+@media (max-width: 768px) {
+    .mobile-org-view {
+        padding: 16px;
+    }
+    
+    .mobile-org-content {
+        padding: 14px 16px;
+    }
+    
+    .mobile-org-title {
+        font-size: 0.9rem;
+    }
+    
+    .mobile-org-item.level-1 .mobile-org-title {
+        font-size: 1rem;
+    }
+    
+    .mobile-org-item.level-2 {
+        margin-left: 20px;
+    }
+    
+    .mobile-org-item.level-2::before {
+        left: -15px;
+    }
+    
+    .mobile-org-item.level-2::after {
+        left: -16px;
+        width: 6px;
+        height: 6px;
+    }
+}
+
+@media (max-width: 576px) {
+    .mobile-org-view {
+        padding: 14px;
+    }
+    
+    .mobile-org-list {
+        gap: 10px;
+    }
+    
+    .mobile-org-content {
+        padding: 12px 14px;
+    }
+    
+    .mobile-org-title {
+        font-size: 0.85rem;
+    }
+    
+    .mobile-org-item.level-1 .mobile-org-title {
+        font-size: 0.95rem;
+    }
+    
+    .mobile-org-item.level-2 {
+        margin-left: 18px;
+    }
+    
+    .mobile-org-item.level-2::before {
+        left: -14px;
+    }
+    
+    .mobile-org-item.level-2::after {
+        left: -15px;
+        width: 5px;
+        height: 5px;
+    }
+}
+
+/* ========================================= */
 /* --- ANGGOTA --- */
 /* ========================================= */
 

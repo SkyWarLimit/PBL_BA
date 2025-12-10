@@ -253,59 +253,125 @@
 
         <div class="py-4"></div>
 
-        <!-- Struktur Organisasi Section -->
+        <!-- Struktur Organisasi Section - MODIFIED -->
         <div class="org-structure py-5" id="struktur-organisasi">
             <h2 class="section-title mb-3">Struktur Organisasi</h2>
             <p class="section-description mb-5">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-                dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                ex ea commodo consequat.
+                Berikut adalah bagan struktur organisasi laboratorium kami. Pada tampilan desktop bagian akan melebar,
+                namun pada tampilan Mobile bagan termuat rapi ke bawah.
             </p>
 
-            <div class="tree-container">
-                <div class="tree">
-                    <ul>
-                        <li>
-                            <div class="org-node main-node">
-                                <span>Kepala Laboratory</span>
-                            </div>
-                            <ul>
-                                <!-- Baris pertama: Sekretaris dan Bendahara -->
-                                <li class="support-row">
-                                    <div class="org-node child-node">
-                                        <span>Sekretaris</span>
-                                    </div>
-                                    <div class="org-node child-node">
-                                        <span>Bendahara</span>
-                                    </div>
-                                </li>
+            <!-- Desktop View - Tree Structure -->
+            <div class="desktop-org-view d-none d-lg-block">
+                <div class="tree-container">
+                    <div class="tree">
+                        <ul>
+                            <li>
+                                <div class="org-node main-node">
+                                    <span>Kepala Laboratory</span>
+                                </div>
+                                <ul>
+                                    <!-- Baris pertama: Sekretaris dan Bendahara -->
+                                    <li class="support-row">
+                                        <div class="org-node child-node">
+                                            <span>Sekretaris</span>
+                                        </div>
+                                        <div class="org-node child-node">
+                                            <span>Bendahara</span>
+                                        </div>
+                                    </li>
 
-                                <!-- Baris kedua: Semua Koordinator -->
-                                <li class="coordinator-row">
-                                    <div class="coordinator-container">
-                                        <div class="org-node child-node">
-                                            <span>Koor. Pengembangan Kelimuan</span>
+                                    <!-- Baris kedua: Semua Koordinator -->
+                                    <li class="coordinator-row">
+                                        <div class="coordinator-container">
+                                            <div class="org-node child-node">
+                                                <span>Koor. Pengembangan Kelimuan</span>
+                                            </div>
+                                            <div class="org-node child-node">
+                                                <span>Koor. Riset & PkM</span>
+                                            </div>
+                                            <div class="org-node child-node">
+                                                <span>Koor. Kemitraan</span>
+                                            </div>
+                                            <div class="org-node child-node">
+                                                <span>Koor. Sarana & Prasarana</span>
+                                            </div>
+                                            <div class="org-node child-node">
+                                                <span>Koor. Publikasi</span>
+                                            </div>
+                                            <div class="org-node child-node">
+                                                <span>Koor. Pengelolaan Tugas Akhir</span>
+                                            </div>
                                         </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Riset & PkM</span>
-                                        </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Kemitraan</span>
-                                        </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Sarana & Prasarana</span>
-                                        </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Publikasi</span>
-                                        </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Pengelolaan Tugas Akhir</span>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile View - Vertical List -->
+            <div class="mobile-org-view d-block d-lg-none">
+                <div class="mobile-org-container">
+                    <div class="mobile-org-list">
+                        <!-- Level 1: Kepala Laboratory -->
+                        <div class="mobile-org-item level-1">
+                            <div class="mobile-org-content">
+                                <div class="mobile-org-title">Kepala Laboratory</div>
+                            </div>
+                        </div>
+
+                        <!-- Level 2: Sekretaris dan Bendahara -->
+                        <div class="mobile-org-item level-2">
+                            <div class="mobile-org-content">
+                                <div class="mobile-org-title">Sekretaris</div>
+                            </div>
+                        </div>
+
+                        <div class="mobile-org-item level-2">
+                            <div class="mobile-org-content">
+                                <div class="mobile-org-title">Bendahara</div>
+                            </div>
+                        </div>
+
+                        <!-- Level 2: Semua Koordinator -->
+                        <div class="mobile-org-item level-2">
+                            <div class="mobile-org-content">
+                                <div class="mobile-org-title">Koor. Pengembangan Kelimuan</div>
+                            </div>
+                        </div>
+
+                        <div class="mobile-org-item level-2">
+                            <div class="mobile-org-content">
+                                <div class="mobile-org-title">Koor. Riset & PkM</div>
+                            </div>
+                        </div>
+
+                        <div class="mobile-org-item level-2">
+                            <div class="mobile-org-content">
+                                <div class="mobile-org-title">Koor. Kemitraan</div>
+                            </div>
+                        </div>
+
+                        <div class="mobile-org-item level-2">
+                            <div class="mobile-org-content">
+                                <div class="mobile-org-title">Koor. Sarana & Prasarana</div>
+                            </div>
+                        </div>
+
+                        <div class="mobile-org-item level-2">
+                            <div class="mobile-org-content">
+                                <div class="mobile-org-title">Koor. Publikasi</div>
+                            </div>
+                        </div>
+
+                        <div class="mobile-org-item level-2">
+                            <div class="mobile-org-content">
+                                <div class="mobile-org-title">Koor. Pengelolaan Tugas Akhir</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
