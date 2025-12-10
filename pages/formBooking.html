@@ -29,7 +29,11 @@
             </div>
         </div>
 
-        <ul class="nav-menu">
+        <div class="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <ul class="nav-menu ms-auto">
             <li class="nav-item">
                 <a class="nav-link" href="beranda.html">Beranda</a>
             </li>
@@ -47,6 +51,7 @@
                     <li><a class="dropdown-item" href="newsInputService.html">News Input Service</a></li>
                 </ul>
             </li>
+
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle active" href="#">
                     Peminjaman Lab
@@ -61,11 +66,14 @@
             <li class="nav-item">
                 <a class="nav-link" href="kontak.html">Kontak</a>
             </li>
-        </ul>
-        
-        <button class="login-btn">Login</button>
-    </nav>
 
+            <li class="nav-item">
+                <button class="login-btn">Login</button>
+            </li>
+        </ul>
+
+    </nav>
+<!-- 
     <!-- Main Content -->
     <div class="container-fluid main-content">
         <!-- Breadcrumb -->
@@ -77,7 +85,7 @@
             <a href="booking.html" class="breadcrumb-link">Booking</a>
             <span class="breadcrumb-separator">/</span>
             <span class="breadcrumb-current">Review Your Booking</span>
-        </div>
+        </div> -->
 
         <div class="row">
             <!-- Left Column - Form Input -->
@@ -167,68 +175,43 @@
 
     <!-- Custom JavaScript -->
     <script>
-        // JavaScript untuk Sticky Navbar
-        document.addEventListener('DOMContentLoaded', function () {
-            const allNavLinks = document.querySelectorAll('.nav-link');
-            const dropdownItems = document.querySelectorAll('.dropdown-item');
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileBtn = document.querySelector('.mobile-menu-btn');
+            const navMenu = document.querySelector('.nav-menu');
+            const icon = mobileBtn.querySelector('i');
 
-            // Fungsi untuk set menu aktif
-            function setActiveMenu(clickedElement) {
-                // Remove active class dari semua menu
-                allNavLinks.forEach(link => link.classList.remove('active'));
-
-                // Add active class ke element yang diklik
-                if (clickedElement.classList.contains('dropdown-item')) {
-                    // Jika yang diklik adalah dropdown item, aktifkan parent dropdown
-                    const parentDropdown = clickedElement.closest('.dropdown');
-                    const dropdownToggle = parentDropdown.querySelector('.dropdown-toggle');
-                    dropdownToggle.classList.add('active');
-                } else {
-                    // Jika yang diklik adalah menu biasa
-                    clickedElement.classList.add('active');
-                }
+            if(mobileBtn) {
+                mobileBtn.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                    
+                    if(navMenu.classList.contains('active')) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
             }
 
-            // Event listeners untuk menu biasa
-            allNavLinks.forEach(link => {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    // Jangan set active untuk dropdown toggle (karena sudah hover)
-                    if (!this.classList.contains('dropdown-toggle')) {
-                        setActiveMenu(this);
-                    }
-                });
-            });
-
-            // Event listeners untuk dropdown items
-            dropdownItems.forEach(item => {
-                item.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    setActiveMenu(this);
-                });
-            });
-
-            // Untuk mobile devices, tetap gunakan Bootstrap dropdown
-            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function (e) {
-                    if (window.innerWidth <= 992) {
+            // Dropdown Mobile Logic
+            const dropdowns = document.querySelectorAll('.dropdown-toggle');
+            dropdowns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if(window.innerWidth <= 991) {
                         e.preventDefault();
-                        const dropdownMenu = this.nextElementSibling;
-                        dropdownMenu.classList.toggle('show');
+                        const menu = this.nextElementSibling;
+                        menu.classList.toggle('show');
+                        
+                        // Putar icon
+                        const icon = this.querySelector('.dropdown-icon');
+                        if(menu.classList.contains('show')) {
+                            icon.style.transform = "rotate(180deg)";
+                        } else {
+                            icon.style.transform = "rotate(0deg)";
+                        }
                     }
                 });
-            });
-
-            // Tutup dropdown ketika klik di luar
-            document.addEventListener('click', function (e) {
-                if (window.innerWidth <= 992) {
-                    if (!e.target.closest('.dropdown')) {
-                        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                            menu.classList.remove('show');
-                        });
-                    }
-                }
             });
         });
     </script>

@@ -502,6 +502,8 @@ body {
     
     .hero-inner-rectangle {
         margin-left: 0;
+        margin-top: 0;
+        transform: translateY(-50px);
     }
     
     .hero-text-content {
@@ -1849,4 +1851,682 @@ a.btn-read-more:hover {
 .nav-btn:hover {
   background: var(--color-active);
   border-color: var(--color-active);
+}
+
+
+/* ========================================================== */
+/* ---  CSS RESPONSIF (NAVBAR RAMPING & DROPDOWN) ---   */
+/* ========================================================== */
+
+/* --- 1. Tombol Hamburger (Default) --- */
+.mobile-menu-btn {
+    display: none; 
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    padding: 5px;
+    z-index: 1002;
+}
+
+/* --- 2. Media Query Tablet & Mobile (Max 991px) --- */
+@media (max-width: 991px) {
+    
+    /* --- A. Navbar Header (FIXED DI ATAS) --- */
+    .sticky-navbar {
+        min-height: 70px; /* Tinggi Minimal Header */
+        height: auto; 
+        padding: 10px 20px; 
+        
+        display: flex;
+        flex-direction: row;
+        align-items: center; 
+        justify-content: space-between;
+        
+        background-color: #ffffff; /* Putih Solid */
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        border-bottom: 1px solid #eee;
+        
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1001; /* Layer Header Tinggi */
+    }
+
+    /* Layout Logo & Hamburger */
+    .logo-container {
+        order: 1; 
+        display: flex;
+        align-items: center; 
+        flex: 1; 
+        min-width: 0;
+        margin-right: 10px;
+    }
+
+    .mobile-menu-btn {
+        order: 2; 
+        display: block;
+        flex-shrink: 0;
+        margin-left: auto;
+        align-self: center; 
+    }
+
+    /* --- B. Style Logo & Teks (Wrapping Aktif) --- */
+    .logo {
+        width: 40px; 
+        height: 40px;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    
+    .logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    
+    .lab-name-container {
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+        overflow: visible; 
+    }
+    
+    .lab-name {
+        font-size: 14px; 
+        font-weight: 700;
+        line-height: 1.2;
+        color: #333;
+        white-space: normal; /* Izinkan turun baris */
+        word-wrap: break-word;
+    }
+    
+    .lab-tagline {
+        display: block !important;
+        font-size: 11px;
+        color: #666;
+        margin-top: 2px;
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    /* --- C. Menu Drawer (REVISI: ANIMASI DARI ATAS KE BAWAH) --- */
+    .nav-menu {
+        position: fixed;
+        top: 70px; /* Posisi start di bawah header */
+        left: 0;   /* Full width (kiri-kanan penuh) */
+        width: 100%;
+        height: calc(100vh - 70px); 
+        
+        background-color: #ffffff !important;
+        
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        
+        /* LOGIKA ANIMASI BARU (TOP-DOWN) */
+        /* Kita geser menu ke atas (-100%) agar sembunyi */
+        transform: translateY(-150%); 
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        overflow-y: auto;
+        
+        /* PENTING: Z-index harus di bawah header (Header biasanya 1001) */
+        /* Agar terlihat meluncur turun dari belakang header */
+        z-index: 999; 
+        border: none !important;
+    }
+
+    .nav-menu.active {
+        /* Kembalikan ke posisi semula (turun ke bawah) */
+        transform: translateY(0);
+    }
+
+    /* --- D. Item Menu (REVISI: JARAK LEBIH RAPAT) --- */
+    .nav-item {
+        width: 100%;
+        display: block;
+        /* Flex: none mencegah item melar tingginya */
+        flex: none; 
+        height: auto;
+        margin: 0 !important;
+        border-bottom: 1px solid #f0f0f0; 
+        background-color: #ffffff;
+    }
+
+    .nav-link {
+        width: 100%;
+        /* REVISI: Padding diperkecil dari 12px ke 8px agar lebih dekat */
+        padding: 12px 24px; 
+        font-size: 15px;
+        color: #333;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 0 !important;
+        height: auto !important;
+    }
+    
+    .nav-link:hover {
+        background-color: #f8f9fa;
+        color: #2b95fd;
+    }
+
+     .nav-item:last-child { border-bottom: none; }
+  
+    
+    .nav-link.active::after { display: none; }
+
+    /* Dropdown */
+    .nav-item.dropdown:hover .dropdown-menu { display: none; }
+    
+    .dropdown-menu {
+        position: static;
+        width: 100%;
+        background-color: #fcfcfc !important; 
+        border: none !important;
+        padding: 0; 
+        display: none;
+    }
+
+    .dropdown-menu.show { display: block !important; }
+
+    .dropdown-item {
+        /* REVISI: Padding dropdown juga diperkecil agar konsisten rapatnya */
+        padding: 10px 24px 10px 45px; 
+        color: #555;
+        font-size: 14px;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+    .nav-link.show .dropdown-icon { transform: rotate(180deg); }
+
+    /* Tombol Login */
+    .login-btn {
+        margin: 30px auto 15px auto; /* Margin juga sedikit diperkecil */
+        width: 90%;
+        display: block;
+        height: 40px; /* Tinggi tombol disesuaikan sedikit */
+        background-color: #2b95fd;
+        color: white;
+        border: none;
+        border-radius: 6px;
+
+        flex: none;
+    }
+   
+    /* --- E. Hero Section Fix --- */
+    .hero-section {
+        /* Tambah padding karena header fixed */
+        padding-top: 100px !important; 
+    }
+}
+
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================================================= */
+/* === RESPONSIVE FIXES & MOBILE OPTIMIZATION (ADD TO BOTTOM OF FILE) === */
+/* ========================================================================= */
+
+/* 1. Mencegah White Screen / Horizontal Scroll pada Body */
+html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    position: relative;
+}
+
+/* 2. Perbaikan Section Navbar (Menu Visi Misi, dll) agar bisa discroll horizontal di HP */
+@media (max-width: 991px) {
+    .section-navbar {
+        top: 70px !important; /* Sesuaikan dengan tinggi navbar mobile */
+    }
+    
+    .section-nav-container {
+        overflow-x: auto; /* Izinkan scroll horizontal */
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox: sembunyikan scrollbar */
+    }
+    
+    .section-nav-container::-webkit-scrollbar {
+        display: none; /* Chrome/Safari: sembunyikan scrollbar */
+    }
+
+    .section-nav-menu {
+        width: max-content; /* Agar menu memanjang ke samping */
+        min-width: 100%;
+    }
+
+    .section-nav-item {
+        flex: 0 0 auto; /* Mencegah item mengecil */
+        width: auto;
+        padding: 0;
+    }
+
+    .section-nav-link {
+        padding: 0 15px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+}
+
+/* 3. Perbaikan Hero Section di Mobile/Tablet */
+@media (max-width: 991px) {
+    .hero-section {
+        height: auto;
+        min-height: auto;
+        padding-top: 120px !important; /* Jarak dari fixed navbar */
+        padding-bottom: 60px;
+    }
+
+    .hero-container {
+        flex-direction: column;
+        padding: 0 20px;
+        gap: 30px;
+    }
+
+    /* Kotak putih di Hero */
+    .hero-inner-rectangle {
+        width: 100%;
+        max-width: 320px;
+        height: 250px; /* Tinggi disesuaikan */
+        margin: 0 auto;
+    }
+
+    .hero-text-content {
+        width: 100%;
+        text-align: center;
+        padding: 0;
+    }
+
+    /* Teks 'About' background */
+    .about-overlay {
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        text-align: center;
+    }
+
+    .about-text {
+        font-size: 60px; /* Perkecil ukuran font */
+    }
+
+    .title-line {
+        font-size: 32px; /* Perkecil judul */
+    }
+
+    .hero-detailed-description {
+        font-size: 0.9rem;
+        text-align: center;
+    }
+}
+
+/* 4. Perbaikan Roadmap Section (Agar tidak overflow ke kanan) */
+@media (max-width: 768px) {
+    .roadmap-container {
+        height: 480px; /* Tambah tinggi sedikit */
+        overflow: hidden; /* Pastikan tidak bocor ke samping */
+    }
+
+    .roadmap-card {
+        width: 280px; /* Perkecil lebar kartu */
+        height: auto;
+        min-height: 380px;
+        padding: 25px;
+    }
+
+    /* Sesuaikan posisi kartu prev/next agar tidak terlalu jauh ke samping */
+    .roadmap-card.prev {
+        transform: translateX(-150%) scale(0.8);
+        opacity: 0; /* Sembunyikan total di mobile agar rapi */
+    }
+
+    .roadmap-card.next {
+        transform: translateX(150%) scale(0.8);
+        opacity: 0; /* Sembunyikan total di mobile agar rapi */
+    }
+    
+    .roadmap-card.active {
+        left: 50%;
+        transform: translateX(-50%) scale(1); /* Pastikan kartu aktif di tengah */
+    }
+    
+    /* Pastikan track ada di tengah */
+    .roadmap-track {
+        justify-content: center; 
+    }
+}
+
+/* 5. Perbaikan Struktur Organisasi (Scrollable Area) */
+@media (max-width: 991px) {
+    .org-structure {
+        width: 100%;
+        overflow: hidden; /* Container luar hidden */
+    }
+    
+    .tree-container {
+        width: 100%;
+        overflow-x: auto; /* Container dalam scrollable */
+        padding-bottom: 20px;
+        /* Tambahkan padding agar shadow tidak terpotong */
+        padding-left: 10px; 
+        padding-right: 10px;
+    }
+}
+
+/* 6. Perbaikan Research Focus (Infinite Loop) - BAGIAN KRUSIAL */
+/* Masalah utama white screen ada di sini karena hardcoded left: 465px */
+
+@media (max-width: 1200px) {
+    .profile-carousel-section {
+        padding: 40px 0;
+        height: auto;
+        min-height: 500px;
+    }
+
+    .custom-container-relative {
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Sembunyikan kotak abu-abu besar background di mobile/tablet agar rapi */
+    .gray-backdrop-box {
+        position: absolute;
+        width: 90%;
+        height: 300px;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 20px;
+        z-index: 0;
+        opacity: 0.5; /* Kurangi opacity */
+    }
+
+    .carousel-wrapper {
+        position: relative; /* Ubah dari absolute ke relative */
+        top: auto;
+        left: auto;
+        transform: none;
+        width: 100%;
+        margin-top: 50px; /* Beri jarak dari atas */
+        padding: 20px 0;
+        overflow: visible; /* Biarkan terlihat */
+        display: flex;
+        justify-content: center;
+    }
+
+    .carousel-track {
+        justify-content: center;
+    }
+
+    /* Reset posisi kartu untuk mobile */
+    .custom-card {
+        flex: 0 0 280px; /* Ukuran kartu mobile */
+        height: 320px;
+    }
+
+    /* Tombol Navigasi */
+    .carousel-nav {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        margin-top: 30px;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Optimasi khusus HP Kecil */
+    .gray-backdrop-box {
+        display: none; /* Hilangkan background abu di HP kecil */
+    }
+
+    .custom-card {
+        flex: 0 0 100%; /* Satu kartu penuh */
+        max-width: 300px;
+    }
+    
+    /* Font size penyesuaian */
+    .section-title {
+        font-size: 1.75rem;
+    }
+    
+    .vision-mission-card {
+        padding: 20px;
+    }
+}
+
+/* 7. Perbaikan Makna Logo & Maskot */
+@media (max-width: 991px) {
+    .logo-section, .mascot-section {
+        height: auto; /* Biarkan tinggi menyesuaikan konten */
+    }
+    
+    .symbol-placeholder-large {
+        height: 200px; /* Perkecil tinggi placeholder gambar */
+    }
+}
+
+/* 8. Utility tambahan untuk padding container */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .section-description {
+        font-size: 0.95rem;
+        text-align: justify; /* Opsional: agar teks paragraf lebih rapi */
+    }
+}
+
+/* ========================================================== */
+/* FIX TOTAL: RESEARCH FOCUS MOBILE (Strict Override)         */
+/* Copy Paste di baris PALING BAWAH profileStyle.css          */
+/* ========================================================== */
+
+@media (max-width: 1200px) {
+
+    /* 1. RESET CONTAINER UTAMA AGAR VERTIKAL */
+    .profile-carousel-section {
+        padding: 40px 0 80px 0 !important;
+        height: auto !important;
+        min-height: auto !important;
+        background-color: #ffffff;
+
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        overflow: hidden !important;
+
+    }
+
+    .custom-container-relative {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        position: relative !important;
+        padding: 0 !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    /* 2. PAKSA GAMBAR BACKDROP MUNCUL (POSISI ATAS) */
+    .gray-backdrop-box {
+        position: relative !important; /* Reset dari absolute */
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        
+        display: block !important; /* Pastikan tidak hidden */
+        
+        /* Ukuran Pasti agar gambar punya ruang */
+        width: 100% !important;
+        max-width: 450px !important;
+        height: 480px !important; 
+        
+        background-color: #ffffff !important; /* Fallback warna jika gambar gagal load */
+        border-radius: 15px !important;
+        overflow: hidden !important;
+        margin-bottom: 0 !important;
+        z-index: 0 !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
+    }
+
+    .backdrop-img-content {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover!important;
+
+        opacity: 1 !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+
+    }
+
+    /* 3. POSISI CARD (TUMPUK/OVERLAP KE ATAS GAMBAR) */
+    .carousel-wrapper {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        
+        overflow: hidden !important;
+        z-index: 10 !important; /* Harus lebih tinggi dari backdrop */
+        
+        /* OVERLAP LOGIC (Sama persis Index) */
+        margin-top: -200px !important; 
+        
+        /* Centering Card Logic */
+        padding-left: 16vw !important; 
+        padding-right: 0 !important;
+        box-sizing: border-box !important;
+        display: block !important;
+    }
+
+    .carousel-track {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 20px !important;
+        width: max-content !important;
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        padding-right: 15vw !important; /* Agar card tidak mepet ke kanan */
+    }
+
+    /* 4. STYLE CARD (SAMA PERSIS INDEX) */
+    .custom-card {
+        flex: 0 0 70vw !important; /* Lebar 70% layar HP */
+        max-width: 350px !important;
+        height: 340px !important;
+        
+        background-color: #ffffff !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.0.08) !important;
+        
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 30px 20px !important;
+        
+        /* Reset posisi desktop aneh */
+        opacity: 1 !important;
+        transform: none !important;
+        margin: 0 !important;
+    }
+
+    /* Highlight Card Aktif */
+    .custom-card.active {
+        background-color: #d5e0ec !important;
+        z-index: 20 !important;
+    }
+    
+    .card-content h3 {
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 10px !important;
+        color: #333 !important;
+    }
+    
+    .card-content p {
+        font-size: 0.9rem !important;
+        color: #666 !important;
+    }
+
+    /* 5. NAVIGASI (DI BAWAH TENGAH) */
+    .carousel-nav {
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        margin-top: 30px !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        gap: 20px !important;
+        z-index: 10 !important;
+    }
+    
+    .nav-btn {
+        width: 50px; height: 50px;
+        background: white;
+        border: 1px solid #333;
+        border-radius: 0px; /* Kotak sedikit rounded sesuai index */
+        color: #333;
+        font-size: 1.2rem;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.3s;
+    }
+}
+
+/* Fix untuk layar sangat kecil */
+@media (max-width: 400px) {
+    .gray-backdrop-box { height: 400px !important; }
+    .custom-card { height: 320px !important; }
+    .carousel-wrapper { margin-top: -200px !important; margin-right: 45px !important; }
+}
+
+/* ========================================================== */
+/* FIX LAYOUT: MASKOT BOX PINDAH KE ATAS (SEPERTI LOGO)       */
+/* Copy Paste ini di baris PALING BAWAH profileStyle.css      */
+/* ========================================================== */
+
+@media (max-width: 1200px) {
+    
+    /* 1. Pastikan Section Maskot menggunakan Flexbox Column */
+    .mascot-section {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 2. Pindahkan Kotak Gambar Maskot ke Urutan Pertama (Paling Atas) */
+    .mascot-section .symbol-preview-large {
+        /* order: -1 akan memaksa elemen ini naik ke urutan pertama dalam flex container */
+        order: -1 !important; 
+        
+        /* Tambahkan jarak bawah karena di HTML maskot tidak punya class mb-4 */
+        margin-bottom: 1.5rem !important; 
+    }
+
+    /* 3. Penyesuaian Tombol Read More (Opsional: Agar margin rapi) */
+    .mascot-section .text-start {
+        margin-bottom: 0 !important; /* Reset margin tombol jika perlu */
+    }
 }

@@ -17,7 +17,7 @@
 <body>
 
     <!-- Sticky Navigation Bar -->
-    <nav class="sticky-navbar">
+    <nav class="sticky-navbar" id="mainNavbar">
         <div class="logo-container">
             <div class="logo">
                 <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
@@ -28,7 +28,11 @@
             </div>
         </div>
 
-        <ul class="nav-menu">
+        <div class="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <ul class="nav-menu ms-auto">
             <li class="nav-item">
                 <a class="nav-link" href="../index.html">Beranda</a>
             </li>
@@ -60,9 +64,10 @@
             <li class="nav-item">
                 <a class="nav-link" href="kontak.html">Kontak</a>
             </li>
+            <li class="nav-item">
+                <button class="login-btn">Login</button>
+            </li>
         </ul>
-
-        <button class="login-btn">Login</button>
     </nav>
 
     <!-- Hero Section -->
@@ -766,127 +771,116 @@
         /* ========================================= */
         /* RESEARCH FOCUS CAROUSEL FUNCTIONALITY */
         /* ========================================= */
-        class ResearchFocusCarousel {
-            constructor() {
-                this.track = document.getElementById('track');
-                this.prevBtn = document.getElementById('prevBtn');
-                this.nextBtn = document.getElementById('nextBtn');
-                this.backdropImage = document.getElementById('backdrop-image');
-                this.isAnimating = false;
+        /* ========================================= */
+/* RESEARCH FOCUS CAROUSEL (LOGIKA INDEX)    */
+/* ========================================= */
+class ResearchFocusCarousel {
+    constructor() {
+        this.track = document.getElementById('track');
+        this.prevBtn = document.getElementById('prevBtn');
+        this.nextBtn = document.getElementById('nextBtn');
+        this.backdropImage = document.getElementById('backdrop-image');
+        this.isAnimating = false;
 
-                this.init();
-            }
+        if (this.track) {
+            this.init();
+        }
+    }
 
-            /* ========================================= */
-            /* INITIALIZE RESEARCH FOCUS CAROUSEL */
-            /* ========================================= */
-            init() {
-                // Add event listeners for navigation buttons
-                this.nextBtn.addEventListener('click', () => this.moveNext());
-                this.prevBtn.addEventListener('click', () => this.movePrev());
+    init() {
+        this.nextBtn.addEventListener('click', () => this.moveNext());
+        this.prevBtn.addEventListener('click', () => this.movePrev());
+        this.updateActiveState();
+    }
 
-                // Initialize active state
-                this.updateActiveState();
-            }
+    getCards() {
+        return document.querySelectorAll('.custom-card');
+    }
 
-            /* ========================================= */
-            /* GET ALL CARDS IN CAROUSEL */
-            /* ========================================= */
-            getCards() {
-                return document.querySelectorAll('.custom-card');
-            }
+    updateActiveState() {
+        const cards = this.getCards();
+        
+        // Reset semua class active
+        cards.forEach(c => c.classList.remove('active'));
 
-            /* ========================================= */
-            /* UPDATE ACTIVE CARD STATE AND BACKGROUND */
-            /* ========================================= */
-            updateActiveState() {
-                const cards = this.getCards();
-
-                // Reset all cards to inactive
-                cards.forEach(c => c.classList.remove('active'));
-
-                // First card in DOM is the active one
-                const activeCard = cards[0];
-                activeCard.classList.add('active');
-
-                // Get background image URL from active card
-                const newImageSrc = activeCard.getAttribute('data-bg-img');
-
-                // Smooth transition effect for background image
+        // Kartu PERTAMA di DOM selalu menjadi yang 'Active' (tengah)
+        const activeCard = cards[0];
+        if (activeCard) {
+            activeCard.classList.add('active');
+            
+            // Update Gambar Background
+            const newImageSrc = activeCard.getAttribute('data-bg-img');
+            if (this.backdropImage && newImageSrc) {
                 this.backdropImage.classList.add('fade-out');
-
                 setTimeout(() => {
                     this.backdropImage.src = newImageSrc;
                     this.backdropImage.classList.remove('fade-out');
-                }, 300); // Match CSS opacity duration
-            }
-
-            /* ========================================= */
-            /* MOVE CAROUSEL TO NEXT CARD */
-            /* ========================================= */
-            moveNext() {
-                if (this.isAnimating) return;
-                this.isAnimating = true;
-
-                const cards = this.getCards();
-                const cardWidth = cards[0].offsetWidth;
-                const gap = 24; // CSS gap value
-                const moveDistance = cardWidth + gap;
-
-                // 1. Move track to the left
-                this.track.style.transition = 'transform 0.5s ease-in-out';
-                this.track.style.transform = `translateX(-${moveDistance}px)`;
-
-                // 2. After animation completes, move DOM elements
-                setTimeout(() => {
-                    this.track.style.transition = 'none'; // Disable animation temporarily
-
-                    // Move first card to the end
-                    this.track.appendChild(cards[0]);
-
-                    // Reset track position to 0
-                    this.track.style.transform = 'translateX(0)';
-
-                    // Update active state and background image
-                    this.updateActiveState();
-
-                    this.isAnimating = false;
-                }, 500); // Match CSS transition duration
-            }
-
-            /* ========================================= */
-            /* MOVE CAROUSEL TO PREVIOUS CARD */
-            /* ========================================= */
-            movePrev() {
-                if (this.isAnimating) return;
-                this.isAnimating = true;
-
-                const cards = this.getCards();
-                const lastCard = cards[cards.length - 1];
-                const cardWidth = cards[0].offsetWidth;
-                const gap = 24;
-                const moveDistance = cardWidth + gap;
-
-                // 1. Move last card to the front first (instantly)
-                this.track.style.transition = 'none';
-                this.track.prepend(lastCard);
-
-                // 2. Move track to negative position (as if not moved yet)
-                this.track.style.transform = `translateX(-${moveDistance}px)`;
-
-                // 3. Force Reflow (make browser aware of position change)
-                void this.track.offsetWidth;
-
-                // 4. Animate back to 0
-                this.track.style.transition = 'transform 0.5s ease-in-out';
-                this.track.style.transform = 'translateX(0)';
-
-                setTimeout(() => {
-                    this.updateActiveState();
-                    this.isAnimating = false;
-                }, 500);
+                }, 300);
             }
         }
+    }
+
+    moveNext() {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+
+        const cards = this.getCards();
+        if (cards.length === 0) return;
+
+        const cardWidth = cards[0].offsetWidth;
+        // PENTING: Gap harus sama dengan CSS (24px)
+        const gap = 24; 
+        const moveDistance = cardWidth + gap;
+
+        // 1. Geser Track ke Kiri
+        this.track.style.transition = 'transform 0.5s ease-in-out';
+        this.track.style.transform = `translateX(-${moveDistance}px)`;
+
+        // 2. Setelah animasi, pindahkan DOM
+        setTimeout(() => {
+            this.track.style.transition = 'none';
+            // Pindahkan kartu pertama ke belakang
+            this.track.appendChild(cards[0]);
+            // Reset posisi track
+            this.track.style.transform = 'translateX(0)';
+            
+            this.updateActiveState();
+            this.isAnimating = false;
+        }, 500);
+    }
+
+    movePrev() {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+
+        const cards = this.getCards();
+        if (cards.length === 0) return;
+
+        const lastCard = cards[cards.length - 1];
+        const cardWidth = cards[0].offsetWidth;
+        const gap = 24;
+        const moveDistance = cardWidth + gap;
+
+        // 1. Pindahkan kartu terakhir ke depan (Instan)
+        this.track.style.transition = 'none';
+        this.track.prepend(lastCard);
+        
+        // 2. Geser track ke posisi minus (seolah belum pindah)
+        this.track.style.transform = `translateX(-${moveDistance}px)`;
+
+        // 3. Force Reflow
+        void this.track.offsetWidth;
+
+        // 4. Animasi kembali ke 0
+        this.track.style.transition = 'transform 0.5s ease-in-out';
+        this.track.style.transform = 'translateX(0)';
+
+        setTimeout(() => {
+            this.updateActiveState();
+            this.isAnimating = false;
+        }, 500);
+    }
+}
 
         /* ========================================= */
         /* SECTION NAVIGATION FUNCTIONALITY */
@@ -1195,6 +1189,45 @@
                 });
             });
         }
+    </script>
+
+    <script>
+            document.addEventListener('DOMContentLoaded', function() {
+            const mobileBtn = document.querySelector('.mobile-menu-btn');
+            const navMenu = document.querySelector('.nav-menu');
+            
+            if(mobileBtn) {
+                mobileBtn.addEventListener('click', function() {
+                    // Toggle Menu
+                    navMenu.classList.toggle('active');
+                    
+                    // Toggle Icon (Bars <-> Times)
+                    const icon = this.querySelector('i');
+                    if(navMenu.classList.contains('active')) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+            }
+
+            // Logic Dropdown (Klik untuk membuka)
+            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 991) {
+                        e.preventDefault();
+                        const dropdownMenu = this.nextElementSibling;
+                        if(dropdownMenu) {
+                            dropdownMenu.classList.toggle('show');
+                            this.classList.toggle('show');
+                        }
+                    }
+                });
+            });
+        });
     </script>
 </body>
 
