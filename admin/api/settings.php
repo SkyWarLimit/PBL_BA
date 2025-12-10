@@ -7,20 +7,28 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 checkAuth();
+// Matikan error display HTML agar JSON tidak rusak
+ini_set('display_errors', 0);
+error_reporting(E_ALL); 
 header('Content-Type: application/json');
 
 $db = (new Database())->getConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 
 // --- Helper Function: Upload File ---
-function uploadSettingFile($file, $subfolder) {
+// Parameter $key ditambahkan untuk menentukan subfolder (logo/maskot)
+function uploadSettingFile($file, $key) {
+    // Tentukan subfolder berdasarkan key
+    $subfolder = ($key === 'logo') ? 'logo' : (($key === 'maskot') ? 'maskot' : 'general');
+    
     // Target Path: ../../admin/uploads/{subfolder}/
-    // Folder fisik server
     $targetDir = "../../admin/uploads/" . $subfolder . "/";
     
     // Buat folder jika belum ada
     if (!is_dir($targetDir)) {
-        mkdir($targetDir, 0777, true);
+        if (!mkdir($targetDir, 0777, true)) {
+            return ['success' => false, 'message' => "Gagal membuat folder: $subfolder"];
+        }
     }
 
     $extension = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
@@ -30,13 +38,14 @@ function uploadSettingFile($file, $subfolder) {
         return ['success' => false, 'message' => 'Format file tidak didukung (hanya jpg, png, gif, svg).'];
     }
 
-    // Nama file unik dengan timestamp
-    $fileName = $subfolder . '_' . time() . '_' . rand(100,999) . '.' . $extension;
+    // Nama file unik
+    $fileName = $key . '_' . time() . '_' . rand(100,999) . '.' . $extension;
     $targetFile = $targetDir . $fileName;
 
     if (move_uploaded_file($file["tmp_name"], $targetFile)) {
-        // Return path relative untuk disimpan di database (admin/uploads/...)
-        return ['success' => true, 'path' => "admin/uploads/" . $subfolder . "/" . $fileName];
+        // Return path relative untuk disimpan di database (uploads/...)
+        // Sesuaikan dengan struktur folder admin Anda
+        return ['success' => true, 'path' => "uploads/" . $subfolder . "/" . $fileName];
     }
     
     return ['success' => false, 'message' => 'Gagal memindahkan file ke server.'];
@@ -47,12 +56,10 @@ function uploadSettingFile($file, $subfolder) {
 // ==================================================================
 if ($method == 'GET') {
     try {
-        // Menggunakan "key" (double quotes) untuk kompatibilitas PostgreSQL
         $stmt = $db->query('SELECT * FROM settings');
         $rawData = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $settings = [];
         
-        // Reformat array agar index-nya adalah nama key (logo, maskot, dll)
         foreach($rawData as $row) {
             $settings[$row['key']] = $row;
         }
@@ -74,7 +81,6 @@ elseif ($method == 'POST') {
         $allowed_keys = ['nama_lab', 'email', 'no_telp', 'alamat', 'visi', 'misi', 'logo', 'maskot'];
         
         // --- SKENARIO 1: Update Single Item (Logo/Maskot via openSetForm) ---
-        // Frontend mengirim: name="key" value="logo", name="value" value="Deskripsi...", name="logo" (file)
         if (isset($_POST['key']) && in_array($_POST['key'], $allowed_keys)) {
             $key = $_POST['key'];
             
@@ -82,7 +88,6 @@ elseif ($method == 'POST') {
             if (isset($_POST['value'])) {
                 $val = $_POST['value'];
                 
-                // Cek apakah row sudah ada (Gunakan "key" dengan tanda kutip dua)
                 $check = $db->prepare('SELECT 1 FROM settings WHERE "key" = ?');
                 $check->execute([$key]);
                 
@@ -96,33 +101,47 @@ elseif ($method == 'POST') {
                 }
             }
 
-            // 2. Update File Gambar (jika ada file yang diupload dengan name sesuai key)
+            // 2. Update File Gambar (Logo / Maskot)
             if (isset($_FILES[$key]) && $_FILES[$key]['error'] == 0) {
-                $subfolder = 'identitas'; // Simpan logo & maskot di folder identitas
-                
-                $uploadResult = uploadSettingFile($_FILES[$key], $subfolder);
+                // Upload file baru ke folder spesifik
+                $uploadResult = uploadSettingFile($_FILES[$key], $key);
                 
                 if ($uploadResult['success']) {
-                    // Update kolom file_path di database
+                    $newPath = $uploadResult['path'];
+
+                    // A. Ambil path file lama dari database
+                    $stmtGetOld = $db->prepare('SELECT file_path FROM settings WHERE "key" = ?');
+                    $stmtGetOld->execute([$key]);
+                    $oldData = $stmtGetOld->fetch(PDO::FETCH_ASSOC);
+
+                    // B. Hapus file lama jika ada secara fisik
+                    if ($oldData && !empty($oldData['file_path'])) {
+                        // Path fisik relatif dari file api/settings.php ke admin/
+                        $oldFilePhysicalPath = "../../admin/" . $oldData['file_path'];
+                        
+                        if (file_exists($oldFilePhysicalPath)) {
+                            unlink($oldFilePhysicalPath);
+                        }
+                    }
+
+                    // C. Update database dengan path baru
                     $stmtFile = $db->prepare('UPDATE settings SET file_path = ?, updated_at = CURRENT_TIMESTAMP WHERE "key" = ?');
-                    $stmtFile->execute([$uploadResult['path'], $key]);
+                    $stmtFile->execute([$newPath, $key]);
+
                 } else {
                     throw new Exception($uploadResult['message']);
                 }
             }
         }
         
-        // --- SKENARIO 2: Bulk Update (Form Identitas/Kontak biasa) ---
-        // Frontend mengirim: name="nama_lab", name="email", dst.
+        // --- SKENARIO 2: Bulk Update (Identitas/Kontak) ---
         else {
             foreach ($allowed_keys as $key) {
-                // Lewati jika ini adalah parameter kontrol
                 if ($key == 'key') continue;
 
                 if (isset($_POST[$key])) {
                     $val = $_POST[$key];
                     
-                    // Cek existensi data
                     $check = $db->prepare('SELECT 1 FROM settings WHERE "key" = ?');
                     $check->execute([$key]);
                     
@@ -130,7 +149,6 @@ elseif ($method == 'POST') {
                         $stmt = $db->prepare('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE "key" = ?');
                         $stmt->execute([$val, $key]);
                     } else {
-                        // Insert data baru jika belum ada
                         $cat = 'umum';
                         if (in_array($key, ['visi', 'misi'])) $cat = 'profil';
                         
@@ -146,7 +164,7 @@ elseif ($method == 'POST') {
 
     } catch (Exception $e) {
         if ($db->inTransaction()) $db->rollBack();
-        http_response_code(400);
+        http_response_code(400); // Bad Request
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
 }

@@ -18,7 +18,7 @@ switch ($action) {
         $stmt->execute();
         jsonResponse(true, '', $stmt->fetchAll());
         break;
-        
+
     case 'recent':
         $limit = $_GET['limit'] ?? 10;
         $query = "SELECT l.*, u.nama FROM log l LEFT JOIN users u ON l.id_user = u.id_user ORDER BY l.waktu DESC LIMIT :limit";
