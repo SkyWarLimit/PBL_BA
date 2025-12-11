@@ -1367,201 +1367,137 @@ body {
     border-color: #a8c0e0;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-    .tree {
-        min-width: 1000px;
-    }
-    
-    .support-row {
-        gap: 180px;
-    }
-    
-    .support-row::before {
-        width: 360px;
-    }
-    
-    .coordinator-container {
-        max-width: 950px;
-        gap: 18px;
-    }
-    
-    .org-node {
-        min-width: 150px;
-        padding: 14px 18px;
-        font-size: 0.82rem;
-    }
-    
-    .coordinator-container::before {
-        width: 96%;
-    }
-    
-    .tree > ul > li > ul::before {
-        height: 120px;
-    }
-}
+/* ========================================================================== */
+/* KHUSUS RESPONSIF - KOTAK KOORDINATOR GESER KIRI (FITUR BARU) */
+/* ========================================================================== */
 
-@media (max-width: 992px) {
-    .tree {
-        min-width: 900px;
+@media (max-width: 991px) {
+    /* 1. RESET DASAR */
+    .tree { min-width: 100%; padding: 0 15px; }
+    .tree-container { overflow-x: hidden; }
+
+    /* Sembunyikan elemen lama */
+    .tree > ul > li > ul::before,
+    .support-row::before, .support-row .org-node::before,
+    .coordinator-container::before, .coordinator-container .org-node::before,
+    .child-node::after {
+        display: none !important;
     }
-    
-    .support-row {
-        gap: 150px;
-        margin-bottom: 50px;
+
+    .support-row, .coordinator-container {
+        display: block !important;
+        gap: 0; margin: 0; width: 100%;
     }
+
+    /* 2. MEMBUAT 2 JALUR GARIS VERTIKAL (TRACK) */
     
-    .support-row::before {
-        width: 300px;
+    .tree > ul > li > ul {
+        padding: 0 !important; margin: 0 !important;
+        border: none !important;
+        position: relative;
+        min-height: 500px;
     }
-    
-    .coordinator-container {
-        max-width: 850px;
-        gap: 15px;
+
+    /* GARIS 1 (Jalur Luar/Paling Kiri): Untuk Koordinator */
+    /* Posisi di 15px */
+    .tree > ul > li > ul::before {
+        content: '';
+        position: absolute;
+        top: -40px;
+        left: 15px; 
+        height: 616px; 
+        width: 2px;
+        background-color: #1f3a60;
+        display: block !important;
+        z-index: 0;
     }
-    
+
+    /* GARIS 2 (Jalur Dalam/Tengah): Untuk Sekretaris */
+    /* Posisi di 35px */
+    .tree > ul > li > ul::after {
+        content: '';
+        position: absolute;
+        top: -40px;
+        left: 35px;
+        height: 142px; 
+        width: 2px;
+        background-color: #1f3a60;
+        display: block !important;
+        z-index: 0;
+    }
+
+    /* 3. POSISI KOTAK JABATAN (DEFAULT / SEKRETARIS) */
+
+    .tree li { padding: 0 !important; margin-bottom: 15px; width: 100%; }
+
+    /* Style umum (Dipakai oleh Sekretaris & Bendahara) */
     .org-node {
-        min-width: 130px;
-        padding: 12px 15px;
-        font-size: 0.78rem;
+        display: block;
+        min-width: unset;
+        text-align: left;
+        margin: 0 !important;
+        box-sizing: border-box;
+        position: relative;
+        z-index: 2;
+        
+        /* Posisi Default (Sekretaris): 75px dari kiri */
+        margin-left: 75px !important; 
+        margin-bottom: 20px !important;
+        width: calc(100% - 95px) !important;
+        border: 2px solid #1f3a60;
     }
-    
+
     .main-node {
-        padding: 18px 25px;
-        font-size: 0.9rem;
-        min-width: 160px;
+        margin-left: 0 !important;
+        width: 100% !important;
+        margin-bottom: 40px !important;
+        text-align: center;
     }
-    
-    .coordinator-container::before {
-        width: 94%;
-    }
-    
-    .tree > ul > li > ul::before {
-        height: 110px;
-    }
-    
-    .coordinator-row::before {
-        height: 35px;
-    }
-}
 
-@media (max-width: 768px) {
-    .tree {
-        min-width: 800px;
-        padding: 50px 0;
-    }
-    
-    .support-row {
-        gap: 120px;
-        margin-bottom: 40px;
-    }
-    
-    .support-row::before {
-        width: 240px;
-    }
-    
-    .coordinator-container {
-        max-width: 750px;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-    
-    .org-node {
-        min-width: 110px;
-        padding: 10px 12px;
-        font-size: 0.75rem;
-    }
-    
-    .main-node {
-        padding: 15px 20px;
-        font-size: 0.85rem;
-        min-width: 140px;
-    }
-    
-    .tree > ul > li > ul::before {
-        height: 90px;
-    }
-    
-    .coordinator-container::before {
-        width: 92%;
-        top: -15px;
-    }
-    
-    .coordinator-row {
-        padding-top: 30px;
-    }
-    
-    .coordinator-row::before {
-        height: 30px;
-    }
-}
+    /* 4. POSISI KOTAK KOORDINATOR (GESER KIRI) - BAGIAN INI YANG DIRUBAH */
 
-@media (max-width: 576px) {
-    .tree {
-        min-width: 700px;
-    }
-    
-    .support-row {
-        gap: 100px;
-        margin-bottom: 30px;
-    }
-    
-    .support-row::before {
-        width: 200px;
-    }
-    
-    .coordinator-container {
-        max-width: 650px;
-        gap: 10px;
-    }
-    
-    .org-node {
-        min-width: 100px;
-        padding: 8px 10px;
-        font-size: 0.7rem;
-    }
-    
-    .main-node {
-        padding: 12px 18px;
-        font-size: 0.8rem;
-        min-width: 120px;
-    }
-    
-    .coordinator-container::before {
-        top: -10px;
-        width: 90%;
-    }
-    
-    .coordinator-row {
-        padding-top: 25px;
-    }
-    
-    .coordinator-row::before {
-        height: 25px;
-    }
-    
-    .tree > ul > li > ul::before {
-        height: 80px;
-    }
-}
+    .coordinator-container { margin-top: 50px !important; }
 
-/* Scrollbar Styling */
-.tree-container::-webkit-scrollbar {
-    height: 8px;
-}
+    /* Override khusus kotak Koordinator agar lebih ke kiri */
+    .coordinator-container .org-node {
+        /* Kita geser mendekati garis luar (15px) */
+        /* Jarak 35px cukup (Garis 15px + Spasi 20px) */
+        margin-left: 35px !important; 
+        
+        /* Lebar diperbesar karena margin kiri mengecil */
+        width: calc(100% - 50px) !important; 
+    }
 
-.tree-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
+    /* 5. MEMBUAT PENYAMBUNG (KONEKTOR HORIZONTAL) */
 
-.tree-container::-webkit-scrollbar-thumb {
-    background: #a8c0e0;
-    border-radius: 4px;
-}
+    /* A. Konektor Sekretaris (Tetap) */
+    .support-row .org-node::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -40px; 
+        width: 40px; 
+        height: 2px;
+        background-color: #1f3a60;
+        transform: translateY(-50%);
+        display: block !important;
+        z-index: 1;
+    }
 
-.tree-container::-webkit-scrollbar-thumb:hover {
-    background: #1f3a60;
+    /* B. Konektor Koordinator (Disesuaikan dengan posisi baru) */
+    .coordinator-container .org-node::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        /* Konektor pendek karena kotaknya sudah dekat */
+        left: -20px; 
+        width: 20px; 
+        height: 2px;
+        background-color: #1f3a60;
+        transform: translateY(-50%);
+        display: block !important;
+        z-index: 1;
+    }
 }
 
 /* ========================================= */
