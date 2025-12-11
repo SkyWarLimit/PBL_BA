@@ -2057,3 +2057,161 @@ a.btn-read-more:hover {
   background: var(--color-active);
   border-color: var(--color-active);
 }
+
+/* ========================================= */
+/* --- HILANGKAN GARIS KOTAK KOSONG --- */
+/* ========================================= */
+
+.table-responsive {
+    /* Menghilangkan border default */
+    border: none !important; 
+    /* Menghilangkan shadow pada kotak kosong */
+    box-shadow: none !important; 
+}
+
+/* Mengembalikan shadow hanya jika di dalam layar besar (Desktop) */
+@media (min-width: 992px) {
+    .table-responsive.shadow-sm {
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important;
+        border: 1px solid #eef2f7 !important; /* Kembalikan border hanya di desktop jika perlu */
+    }
+}
+
+/* ========================================= */
+/* --- MOBILE & TABLET CARD VIEW STYLING --- */
+/* ========================================= */
+
+.member-card {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 15px 10px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+
+.member-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(31, 58, 96, 0.1);
+    border-color: #345482;
+    transition: all 0.3s ease;
+}
+
+/* Wrapper Foto (Lingkaran) */
+.member-img-wrapper {
+    width: 75px; 
+    height: 75px;
+    margin: 0 auto 10px auto;
+    position: relative;
+}
+
+/* FOTO BULAT SEMPURNA */
+.member-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%; /* Kunci untuk foto bulat */
+    object-fit: cover;
+    border: 2px solid #eef2f7;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+/* --- Penyesuaian Khusus Tablet/iPad (768px - 991px) --- */
+@media (min-width: 768px) and (max-width: 991px) {
+    .member-img-wrapper {
+        width: 90px; /* Foto lebih besar di Tablet */
+        height: 90px;
+    }
+    
+    .member-card {
+        padding: 20px 15px; /* Padding lebih lega di Tablet */
+    }
+}
+
+/* Info Text Styling */
+.member-info {
+    width: 100%;
+    margin-bottom: 12px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.member-name {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #1f3a60;
+    margin-bottom: 2px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em; 
+}
+
+/* Font sedikit lebih besar di Tablet */
+@media (min-width: 768px) and (max-width: 991px) {
+    .member-name {
+        font-size: 1rem;
+    }
+}
+
+.member-nidn {
+    font-size: 0.7rem;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.member-divider {
+    width: 20px;
+    height: 2px;
+    background-color: #345482;
+    margin: 0 auto 8px auto;
+    border: none;
+    opacity: 0.5;
+}
+
+.member-role {
+    font-size: 0.75rem;
+    color: #345482;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Tombol Link */
+.member-links {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    width: 100%;
+    margin-top: auto;
+}
+
+.btn-link-sm {
+    display: inline-block;
+    text-decoration: none;
+    color: #1f3a60;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 20px;
+    border: 1px solid #dbe2ef;
+    background-color: #fff;
+    transition: all 0.2s;
+}
+
+.btn-link-sm:hover {
+    background-color: #1f3a60;
+    color: #fff;
+    border-color: #1f3a60;
+}
