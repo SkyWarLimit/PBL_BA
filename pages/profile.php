@@ -1,3 +1,13 @@
+<?php
+session_start();
+
+// --- LOGIKA SESSION ---
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+// Role default jika tidak ada session
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -8,7 +18,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome untuk ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/profileStyle.css">
+    <link rel="stylesheet" href="../assets/css/profileStyle.css?v=<?php echo time(); ?>">
     <link
         href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&display=swap"
         rel="stylesheet">
@@ -16,7 +26,6 @@
 
 <body>
 
-    <!-- Sticky Navigation Bar -->
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
@@ -28,16 +37,18 @@
             </div>
         </div>
 
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a class="nav-link" href="../index.php">Beranda</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="profile.php">Profil</a>
-            </li>
+        <div class="hamburger" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <ul class="nav-menu" id="navMenu">
+            <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
+
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#">
-                    Publikasi
+                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <span>Publikasi</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
@@ -46,9 +57,11 @@
                     <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
                 </ul>
             </li>
+
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#">
-                    Peminjaman Lab
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <span>Peminjaman Lab</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
@@ -57,12 +70,63 @@
                     <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
                 </ul>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="kontak.php">Kontak</a>
+
+            <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
+
+            <li class="nav-item mobile-auth-section">
+                <?php if ($isLoggedIn): ?>
+                <div class="mobile-user-profile-modern">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1">
+                        <div class="mobile-avatar-modern">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128"
+                                alt="User Avatar">
+                        </div>
+                        <div class="mobile-info-modern">
+                            <span class="greeting-text">Halo,</span>
+                            <span class="username-text">
+                                <?php echo htmlspecialchars($userName); ?>
+                            </span>
+                        </div>
+                    </div>
+                    <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+                <?php else: ?>
+                <div class="mobile-login-btn">
+                    <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                </div>
+                <?php endif; ?>
             </li>
         </ul>
 
-        <button class="login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php if ($isLoggedIn): ?>
+        <div class="desktop-user-action">
+
+            <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
+                <div class="text-end me-2">
+                    <div class="user-name-label">
+                        <?php echo htmlspecialchars($userName); ?>
+                    </div>
+                    <div class="user-role-label">
+                        <?php echo htmlspecialchars($userRole); ?>
+                    </div>
+                </div>
+                <div class="avatar-circle">
+                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128"
+                        alt="User Avatar">
+                </div>
+            </a>
+
+            <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+
+        </div>
+        <?php else: ?>
+        <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php endif; ?>
+
     </nav>
 
     <!-- Hero Section -->
@@ -335,12 +399,7 @@
                                         <th scope="col" class="text-end pe-4">Profile Links</th>
                                     </tr>
                                 </thead>
-                                <tbody id="anggotaTableBody">
-                                    <tr>
-                                        <td colspan="3" class="text-center py-5 text-muted">Memuat data anggota...</td>
-                                    </tr>
-                                </tbody>
-                                <!-- <tbody>
+                                <tbody>
                                     <tr>
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
@@ -509,7 +568,7 @@
                                         </td>
                                     </tr>
 
-                                </tbody> -->
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -608,30 +667,32 @@
                 <section class="profile-carousel-section">
                     <div class="custom-container-relative">
                         <div class="gray-backdrop-box">
-                            <img id="backdrop-image" src="../assets/imgAdek/Kotak.jpg" alt="Research Project Image"
-                                class="backdrop-img-content">
+                            <img id="backdrop-image"
+                                src="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg"
+                                alt="Research Project Image" class="backdrop-img-content">
                         </div>
                         <div class="carousel-wrapper">
                             <div class="carousel-track" id="track">
-                                <div class="custom-card" data-bg-img="../assets/imgAdek/Kotak.jpg">
+                                <div class="custom-card"
+                                    data-bg-img="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg">
                                     <div class="card-content">
                                         <h3>Data Analytics Platform</h3>
                                         <p>Platform analisis data terintegrasi untuk bisnis intelligence</p>
                                     </div>
                                 </div>
-                                <div class="custom-card" data-bg-img="../assets/imgAdek/Kotak1.jpg">
+                                <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-03-24 124657.png">
                                     <div class="card-content">
                                         <h3>Machine Learning Research</h3>
                                         <p>Pengembangan model machine learning untuk prediksi bisnis</p>
                                     </div>
                                 </div>
-                                <div class="custom-card" data-bg-img="../assets/imgAdek/Kotak2.JPG">
+                                <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-04-08 013511.png">
                                     <div class="card-content">
                                         <h3>Visualization Dashboard</h3>
                                         <p>Dashboard interaktif untuk visualisasi data real-time</p>
                                     </div>
                                 </div>
-                                <div class="custom-card" data-bg-img="../assets/imgAdek/Kecil.jpg">
+                                <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-03-20 102632.png">
                                     <div class="card-content">
                                         <h3>Business Intelligence</h3>
                                         <p>Solusi BI untuk pengambilan keputusan berbasis data</p>
@@ -771,6 +832,7 @@
         /* ========================================= */
         /* RESEARCH FOCUS CAROUSEL FUNCTIONALITY */
         /* ========================================= */
+
         class ResearchFocusCarousel {
             constructor() {
                 this.track = document.getElementById('track');
@@ -779,110 +841,96 @@
                 this.backdropImage = document.getElementById('backdrop-image');
                 this.isAnimating = false;
 
-                this.init();
+                if (this.track) {
+                    this.init();
+                }
             }
 
-            /* ========================================= */
-            /* INITIALIZE RESEARCH FOCUS CAROUSEL */
-            /* ========================================= */
             init() {
-                // Add event listeners for navigation buttons
                 this.nextBtn.addEventListener('click', () => this.moveNext());
                 this.prevBtn.addEventListener('click', () => this.movePrev());
-
-                // Initialize active state
                 this.updateActiveState();
             }
 
-            /* ========================================= */
-            /* GET ALL CARDS IN CAROUSEL */
-            /* ========================================= */
             getCards() {
                 return document.querySelectorAll('.custom-card');
             }
 
-            /* ========================================= */
-            /* UPDATE ACTIVE CARD STATE AND BACKGROUND */
-            /* ========================================= */
             updateActiveState() {
                 const cards = this.getCards();
 
-                // Reset all cards to inactive
+                // Reset semua class active
                 cards.forEach(c => c.classList.remove('active'));
 
-                // First card in DOM is the active one
+                // Kartu PERTAMA di DOM selalu menjadi yang 'Active' (tengah)
                 const activeCard = cards[0];
-                activeCard.classList.add('active');
+                if (activeCard) {
+                    activeCard.classList.add('active');
 
-                // Get background image URL from active card
-                const newImageSrc = activeCard.getAttribute('data-bg-img');
-
-                // Smooth transition effect for background image
-                this.backdropImage.classList.add('fade-out');
-
-                setTimeout(() => {
-                    this.backdropImage.src = newImageSrc;
-                    this.backdropImage.classList.remove('fade-out');
-                }, 300); // Match CSS opacity duration
+                    // Update Gambar Background
+                    const newImageSrc = activeCard.getAttribute('data-bg-img');
+                    if (this.backdropImage && newImageSrc) {
+                        this.backdropImage.classList.add('fade-out');
+                        setTimeout(() => {
+                            this.backdropImage.src = newImageSrc;
+                            this.backdropImage.classList.remove('fade-out');
+                        }, 300);
+                    }
+                }
             }
 
-            /* ========================================= */
-            /* MOVE CAROUSEL TO NEXT CARD */
-            /* ========================================= */
             moveNext() {
                 if (this.isAnimating) return;
                 this.isAnimating = true;
 
                 const cards = this.getCards();
+                if (cards.length === 0) return;
+
                 const cardWidth = cards[0].offsetWidth;
-                const gap = 24; // CSS gap value
+                // PENTING: Gap harus sama dengan CSS (24px)
+                const gap = 24;
                 const moveDistance = cardWidth + gap;
 
-                // 1. Move track to the left
+                // 1. Geser Track ke Kiri
                 this.track.style.transition = 'transform 0.5s ease-in-out';
                 this.track.style.transform = `translateX(-${moveDistance}px)`;
 
-                // 2. After animation completes, move DOM elements
+                // 2. Setelah animasi, pindahkan DOM
                 setTimeout(() => {
-                    this.track.style.transition = 'none'; // Disable animation temporarily
-
-                    // Move first card to the end
+                    this.track.style.transition = 'none';
+                    // Pindahkan kartu pertama ke belakang
                     this.track.appendChild(cards[0]);
-
-                    // Reset track position to 0
+                    // Reset posisi track
                     this.track.style.transform = 'translateX(0)';
 
-                    // Update active state and background image
                     this.updateActiveState();
-
                     this.isAnimating = false;
-                }, 500); // Match CSS transition duration
+                }, 500);
             }
 
-            /* ========================================= */
-            /* MOVE CAROUSEL TO PREVIOUS CARD */
-            /* ========================================= */
             movePrev() {
                 if (this.isAnimating) return;
                 this.isAnimating = true;
 
                 const cards = this.getCards();
+                if (cards.length === 0) return;
+
                 const lastCard = cards[cards.length - 1];
                 const cardWidth = cards[0].offsetWidth;
                 const gap = 24;
                 const moveDistance = cardWidth + gap;
 
-                // 1. Move last card to the front first (instantly)
+                // 1. Pindahkan kartu terakhir ke depan (Instan)
                 this.track.style.transition = 'none';
                 this.track.prepend(lastCard);
 
-                // 2. Move track to negative position (as if not moved yet)
+                // 2. Geser track ke posisi minus (seolah belum pindah)
                 this.track.style.transform = `translateX(-${moveDistance}px)`;
 
-                // 3. Force Reflow (make browser aware of position change)
+                // 3. Force Reflow
                 void this.track.offsetWidth;
 
-                // 4. Animate back to 0
+                // 4. Animasi kembali ke 0
                 this.track.style.transition = 'transform 0.5s ease-in-out';
                 this.track.style.transform = 'translateX(0)';
 
@@ -1183,7 +1231,7 @@
         /* ========================================= */
         if (!('scrollBehavior' in document.documentElement.style)) {
             document.querySelectorAll('.section-nav-link').forEach(link => {
-                link.addEventListener('click', function(e) {
+                link.addEventListener('click', function (e) {
                     e.preventDefault();
                     const targetId = this.getAttribute('href').substring(1);
                     const targetSection = document.getElementById(targetId);
@@ -1200,71 +1248,42 @@
                 });
             });
         }
+    </script>
 
-        /* ========================================= */
-        /* HELPER FUNCTION */
-        /* ========================================= */
-        function fixImagePath(path) {
-            if (!path) return '';
-            // Ganti 'admin/uploads/' menjadi '../uploads/'
-            if (path.startsWith('uploads/')) return `../${path}`;
-            return path;
+    <script>
+        
+    // --- 0. NAV MENU LOGIC (HAMBURGER) ---
+        function toggleMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const hamburgerIcon = document.querySelector('.hamburger i');
+            navMenu.classList.toggle('active');
+            
+            if (navMenu.classList.contains('active')) {
+                hamburgerIcon.classList.remove('fa-bars');
+                hamburgerIcon.classList.add('fa-times');
+            } else {
+                hamburgerIcon.classList.remove('fa-times');
+                hamburgerIcon.classList.add('fa-bars');
+            }
         }
 
-        /* ========================================= */
-        /* LOAD ANGGOTA FUNCTIONALITY */
-        /* ========================================= */
-        function loadAnggota() {
-            fetch('../api_public/anggota.php')
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success && res.data.length > 0) {
-                        renderAnggotaTablePublic(res.data);
-                    } else {
-                        // Tampilkan pesan kosong jika tidak ada data
-                        document.getElementById('anggotaTableBody').innerHTML = `
-                            <tr><td colspan="3" class="text-center py-5 text-muted">Belum ada data anggota laboratorium.</td></tr>`;
-                    }
-                })
-                .catch(err => {
-                    console.error("Gagal memuat data anggota:", err);
-                    document.getElementById('anggotaTableBody').innerHTML = `
-                        <tr><td colspan="3" class="text-center py-5 text-danger">Gagal memuat data anggota.</td></tr>`;
-                });
-        }
+        // --- 1. Cek Login Status ---
+        const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
-        function renderAnggotaTablePublic(data) {
-            const tbody = document.getElementById('anggotaTableBody');
-            tbody.innerHTML = data.map(anggota => {
-                const keahlianHtml = anggota.keahlian.map(k => `<span class="badge bg-light text-primary me-1">${k}</span>`).join('');
+        function toggleMenu() {
+    const navMenu = document.getElementById('navMenu');
+    const icon = document.querySelector('.hamburger i');
 
-                const linkHtml = anggota.links.map(link => `
-                    <a href="${link.link_url}" target="_blank" class="btn-link-custom">${link.platform}</a>
-                `).join('');
+    navMenu.classList.toggle('active');
 
-                const fotoPath = anggota.foto ? fixImagePath(anggota.foto) : `https://ui-avatars.com/api/?name=${anggota.nama}&background=eef2f7&color=1f3a60&bold=true`;
-
-                return `
-                    <tr>
-                        <td class="ps-4">
-                            <div class="d-flex align-items-center">
-                                <img src="${fotoPath}"
-                                    alt="${anggota.nama}" class="table-avatar me-3" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=${anggota.nama}&background=eef2f7&color=1f3a60&bold=true'">
-                                <div>
-                                    <h6 class="mb-0 fw-bold text-dark">${anggota.nama}</h6>
-                                    <small class="text-muted">NIDN: ${anggota.nidn}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="align-middle text-dark fw-semibold">
-                            ${keahlianHtml}
-                        </td>
-                        <td class="align-middle text-end pe-4">
-                            ${linkHtml}
-                        </td>
-                    </tr>`;
-            }).join('');
-        }
+    if (navMenu.classList.contains('active')) {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+    } else {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+    }
+}
     </script>
 </body>
 
