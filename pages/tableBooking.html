@@ -29,6 +29,10 @@
             </div>
         </div>
 
+        <div class="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </div>
+
         <ul class="nav-menu">
             <li class="nav-item">
                 <a class="nav-link" href="../index.html">Beranda</a>
@@ -61,9 +65,11 @@
             <li class="nav-item">
                 <a class="nav-link" href="../pages/kontak.html">Kontak</a>
             </li>
+
+            <li class="nav-item">
+                <button class="login-btn">Login</button>
+            </li>
         </ul>
-        
-        <button class="login-btn">Login</button>
     </nav>
 
     <!-- Table Booking Section -->
@@ -190,6 +196,71 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileBtn = document.querySelector('.mobile-menu-btn');
+            const navMenu = document.querySelector('.nav-menu');
+            
+            if(mobileBtn) {
+                mobileBtn.addEventListener('click', function() {
+                    // Toggle Menu
+                    navMenu.classList.toggle('active');
+                    
+                    // Toggle Icon (Bars <-> Times)
+                    const icon = this.querySelector('i');
+                    if(navMenu.classList.contains('active')) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+            }
+
+            // Logic Dropdown Mobile (Updated)
+            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+            
+            dropdownToggles.forEach(toggle => {
+                // Hapus event listener lama (clone node) agar tidak double
+                const newToggle = toggle.cloneNode(true);
+                toggle.parentNode.replaceChild(newToggle, toggle);
+                
+                newToggle.addEventListener('click', function(e) {
+                    // Hanya aktifkan klik di mode mobile/tablet
+                    if (window.innerWidth <= 991) {
+                        e.preventDefault();
+                        e.stopPropagation(); // Mencegah event bubbling
+                        
+                        // Cari elemen dropdown-menu yang sejajar
+                        // Cara paling aman: cari parent .nav-item, lalu cari .dropdown-menu di dalamnya
+                        const parentItem = this.closest('.nav-item');
+                        const dropdownMenu = parentItem.querySelector('.dropdown-menu');
+                        const icon = this.querySelector('.dropdown-icon');
+
+                        if(dropdownMenu) {
+                            // Toggle class 'show' pada menu
+                            if (dropdownMenu.classList.contains('show')) {
+                                dropdownMenu.classList.remove('show');
+                                this.classList.remove('show'); // Untuk putar icon
+                            } else {
+                                // Opsional: Tutup dropdown lain sebelum membuka yang ini (Accordion effect)
+                                document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
+                                    openMenu.classList.remove('show');
+                                });
+                                document.querySelectorAll('.dropdown-toggle.show').forEach(openToggle => {
+                                    openToggle.classList.remove('show');
+                                });
+
+                                dropdownMenu.classList.add('show');
+                                this.classList.add('show');
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 <script>
     // Data contoh booking (Senin 1 Desember 2025 jam 07:00-10:30)
     const sampleBookings = [
@@ -502,20 +573,20 @@
         return endPos - startPos;
     }
 
-    // Fungsi untuk menghasilkan data tabel
+    // Fungsi untuk menghasilkan data tabel 
     function generateTableData() {
         const tableHead = document.querySelector('.booking-table thead tr');
         const tableBody = document.querySelector('.booking-table tbody');
 
         renderedBookings.clear();
 
-        // Bersihkan header & body lama
+        // Bersihkan konten lama
         while (tableHead.children.length > 1) {
             tableHead.removeChild(tableHead.lastChild);
         }
         tableBody.innerHTML = '';
 
-        // --- Logika Tanggal (Tidak Berubah) ---
+        // --- Logika Tanggal ---
         const mondayDate = new Date(currentDate);
         const dayOfWeek = mondayDate.getDay();
         const diff = dayOfWeek === 0 ? 1 : (dayOfWeek === 6 ? 2 : 1 - dayOfWeek);
@@ -527,7 +598,7 @@
         document.getElementById('date-range').textContent =
             `${getShortMonthName(mondayDate.getMonth())} ${mondayDate.getDate()} - ${fridayDate.getDate()}, ${fridayDate.getFullYear()}`;
 
-        // Render Header Hari (Senin - Jumat)
+        // Header Hari
         for (let i = 0; i < 5; i++) {
             const date = new Date(mondayDate);
             date.setDate(date.getDate() + i);
@@ -544,33 +615,54 @@
             tableHead.appendChild(th);
         }
 
-        // --- Render Body Tabel ---
+        // --- Config Padding ---
+        const TOP_PADDING = 0; 
+        const BOTTOM_PADDING = 20; 
+        
+        // MODIFIKASI HEIGHT: Ditambah 30px lagi agar garis 21:30 masuk area
+        const FINAL_HEIGHT = TOTAL_HEIGHT + 30 + TOP_PADDING + BOTTOM_PADDING;
+
+        // --- Render Body ---
         const containerRow = document.createElement('tr');
 
-        // 1. KOLOM WAKTU (Kiri)
+        // 1. KOLOM WAKTU
         const timeCell = document.createElement('td');
         timeCell.classList.add('time-header');
 
         const timeList = document.createElement('div');
         timeList.style.position = 'relative';
-        timeList.style.height = `${TOTAL_HEIGHT}px`;
+        timeList.style.height = `${FINAL_HEIGHT}px`;
 
         for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
-            let minuteSteps = (hour === END_HOUR) ? [0] : [0, 30];
+            // MODIFIKASI UTAMA DI SINI:
+            // Sebelumnya: let minuteSteps = (hour === END_HOUR) ? [0] : [0, 30];
+            // Sekarang: Selalu [0, 30] agar 21:30 (garis putus) tetap dibuat.
+            let minuteSteps = [0, 30];
 
             minuteSteps.forEach(minute => {
-                const timeLabel = document.createElement('div');
-                // LOGIKA BARU: Tambah class pembeda jam tepat (is-hour) vs setengah jam (is-half)
+                const topPos = ((hour - START_HOUR) + (minute / 60)) * PIXELS_PER_HOUR + TOP_PADDING;
                 const isHour = minute === 0;
-                timeLabel.className = `time-label ${isHour ? 'is-hour' : 'is-half'}`;
-                
-                // Format teks: 07:00, 07:30
-                timeLabel.textContent = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-                
-                const topPos = ((hour - START_HOUR) + (minute / 60)) * PIXELS_PER_HOUR;
-                timeLabel.style.top = `${topPos}px`;
-                
-                timeList.appendChild(timeLabel);
+
+                // A. BUAT GARIS (Line)
+                // - Skip garis 07:00 (paling atas)
+                // - Garis 21:30 sekarang AKAN dibuat karena minuteSteps mengizinkannya
+                if (!(hour === START_HOUR && minute === 0)) {
+                    const lineDiv = document.createElement('div');
+                    lineDiv.className = `time-header-line ${isHour ? 'line-hour' : 'line-half'}`;
+                    lineDiv.style.top = `${topPos}px`;
+                    timeList.appendChild(lineDiv);
+                }
+
+                // B. BUAT LABEL TEKS 
+                // - Hanya jam tepat (00) yang ada teksnya
+                // - 21:30 tidak akan muncul teksnya karena minute != 0
+                if (isHour) {
+                    const timeLabel = document.createElement('div');
+                    timeLabel.className = 'time-label is-hour'; 
+                    timeLabel.textContent = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    timeLabel.style.top = `${topPos}px`;
+                    timeList.appendChild(timeLabel);
+                }
             });
         }
 
@@ -578,7 +670,7 @@
         timeCell.rowSpan = 1;
         containerRow.appendChild(timeCell);
 
-        // 2. KOLOM GRID HARI (Kanan)
+        // 2. KOLOM GRID HARI
         for (let day = 0; day < 5; day++) {
             const date = new Date(mondayDate);
             date.setDate(date.getDate() + day);
@@ -589,24 +681,25 @@
 
             const container = document.createElement('div');
             container.className = 'day-container';
-            container.style.height = `${TOTAL_HEIGHT}px`;
+            container.style.height = `${FINAL_HEIGHT}px`;
 
             const timeGrid = document.createElement('div');
             timeGrid.className = 'time-grid';
 
             for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
-                let minuteSteps = (hour === END_HOUR) ? [0] : [0, 30];
+                // SAMA: Izinkan grid 21:30 tergambar di kolom hari
+                let minuteSteps = [0, 30];
 
                 minuteSteps.forEach(minute => {
-                    const timeLine = document.createElement('div');
+                    const topPos = ((hour - START_HOUR) + (minute / 60)) * PIXELS_PER_HOUR + TOP_PADDING;
                     const isHour = minute === 0;
-                    // Class untuk garis (solid vs putus-putus)
-                    timeLine.className = `time-line ${isHour ? 'line-hour' : 'line-half'}`;
                     
-                    const topPos = ((hour - START_HOUR) + (minute / 60)) * PIXELS_PER_HOUR;
-                    timeLine.style.top = `${topPos}px`;
-                    
-                    timeGrid.appendChild(timeLine);
+                    if (!(hour === START_HOUR && minute === 0)) {
+                        const timeLine = document.createElement('div');
+                        timeLine.className = `time-line ${isHour ? 'line-hour' : 'line-half'}`;
+                        timeLine.style.top = `${topPos}px`;
+                        timeGrid.appendChild(timeLine);
+                    }
                 });
             }
 
@@ -616,10 +709,11 @@
         }
 
         tableBody.appendChild(containerRow);
+        
         renderAllBookings();
         updateBookingDateOptions();
     }
-
+    
     // Fungsi untuk merender semua booking
     function renderAllBookings() {
         // Hapus semua booking rectangle yang ada
@@ -644,26 +738,26 @@
         const diff = dayOfWeek === 0 ? 1 : (dayOfWeek === 6 ? 2 : 1 - dayOfWeek);
         mondayDate.setDate(mondayDate.getDate() + diff);
 
-        // Hitung indeks hari (0-4 untuk Senin-Jumat)
         const dayIndex = Math.floor((date - mondayDate) / (1000 * 60 * 60 * 24));
 
-        // Cek apakah booking dalam rentang hari Senin-Jumat
         if (dayIndex < 0 || dayIndex > 4) return;
 
-        // Hitung posisi dan tinggi rectangle
-        const topPosition = calculatePosition(booking.startTime);
+        // --- UPDATE: Padding jadi 0 ---
+        const TOP_PADDING = 0; 
+        
+        const rawTop = calculatePosition(booking.startTime);
+        const topPosition = rawTop + TOP_PADDING; 
+        
         const height = calculateHeight(booking.startTime, booking.endTime);
+        const SAFE_TOTAL_HEIGHT = TOTAL_HEIGHT + 30 + 20; // + Bottom padding
 
-        // Cek jika posisi di luar rentang 07:00-21:00
-        if (topPosition < 0 || topPosition + height > TOTAL_HEIGHT) return;
+        if (rawTop < 0 || rawTop + height > SAFE_TOTAL_HEIGHT) return;
 
-        // Cari container untuk hari ini (kolom ke dayIndex + 1 karena kolom 0 adalah waktu)
         const containers = document.querySelectorAll('.day-container');
         if (containers.length <= dayIndex) return;
 
         const targetContainer = containers[dayIndex];
 
-        // Buat rectangle untuk booking
         const rectangle = document.createElement('div');
         rectangle.className = 'booking-rectangle';
         rectangle.innerHTML = `
@@ -672,7 +766,6 @@
         <div class="booking-desc">${booking.purpose}</div>
     `;
 
-        // Set posisi dan ukuran
         rectangle.style.position = 'absolute';
         rectangle.style.top = `${topPosition}px`;
         rectangle.style.height = `${height}px`;
@@ -680,15 +773,12 @@
         rectangle.style.borderColor = booking.borderColor || 'rgba(66, 133, 244, 0.5)';
         rectangle.setAttribute('data-booking-id', booking.id);
 
-        // Tambahkan event listener untuk detail booking
         rectangle.addEventListener('click', function (e) {
             e.stopPropagation();
             showBookingDetail(booking);
         });
 
-        // Tambahkan ke dalam container
         targetContainer.appendChild(rectangle);
-
         renderedBookings.add(booking.id);
     }
 
