@@ -34,24 +34,22 @@ try {
 
     if (!$conn) throw new Exception("Gagal terhubung ke database.");
 
-    // Auth Check
-    if (!isset($_SESSION['user_id'])) {
-        throw new Exception("Unauthorized: Silakan login terlebih dahulu.");
-    }
-    $userId = $_SESSION['user_id'];
-
+    // Mendefinisikan userId, mungkin null jika belum login.
+    $userId = $_SESSION['user_id'] ?? null;
+    
     $method = $_SERVER['REQUEST_METHOD'];
 
-    // === GET: READ DATA ===
+    // === GET: READ DATA (DIPERBOLEHKAN UNTUK PUBLIK/NON-LOGIN) ===
     if ($method === 'GET') {
-        // Ambil data untuk Admin (Menggunakan View jika ada, atau JOIN manual)
-        // Disarankan menggunakan view_peminjaman jika sudah dibuat
+        // Ambil data (Filter hanya status yang sudah diizinkan untuk ditampilkan ke publik)
         $sql = "SELECT p.*, dp.waktu_mulai AS check_in, dp.waktu_selesai AS check_out, 
-                       u.nama AS nama_akun, u.email AS email_akun
-                FROM peminjaman p
-                JOIN detail_peminjaman dp ON p.id_peminjaman = dp.id_peminjaman
-                JOIN users u ON p.id_user = u.id_user
-                ORDER BY p.created_at DESC";
+                         u.nama AS nama_akun, u.email AS email_akun
+                  FROM peminjaman p
+                  JOIN detail_peminjaman dp ON p.id_peminjaman = dp.id_peminjaman
+                  JOIN users u ON p.id_user = u.id_user
+                  -- HANYA TAMPILKAN BOOKING YANG SUDAH DISETUJUI DI TABLE PUBLIK
+                  WHERE p.status IN ('Approved', 'Confirmed') 
+                  ORDER BY p.created_at DESC";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute();
@@ -60,8 +58,14 @@ try {
         sendJson(true, "Data loaded", $data);
     }
 
-    // === POST: CREATE / UPDATE / DELETE ===
+    // === POST: CREATE / UPDATE / DELETE (MEMERLUKAN LOGIN) ===
     if ($method === 'POST') {
+        // Pengecekan Auth DITERAPKAN DI SINI untuk operasi POST
+        if (!$userId) { 
+            // Tambahkan pengecualian yang lebih jelas jika mencoba POST tanpa login
+            throw new Exception("Unauthorized: Silakan login terlebih dahulu untuk melakukan Pemesanan Lab.");
+        }
+        
         $action = $_POST['action'] ?? 'create';
 
         // --- CREATE BOOKING (USER) ---
@@ -108,7 +112,7 @@ try {
                 $stmtDetail->execute([$lastId, $checkIn, $checkOut]);
 
                 $conn->commit();
-                sendJson(true, "Booking berhasil disimpan!");
+                sendJson(true, "Booking berhasil disimpan! Menunggu konfirmasi Admin.");
 
             } catch (Exception $ex) {
                 $conn->rollBack();
@@ -119,6 +123,9 @@ try {
         // --- UPDATE STATUS (ADMIN) ---
         // Trigger peminjaman_update_log akan otomatis aktif
         if ($action === 'update_status') {
+             // Opsional: Cek role admin di sini jika Anda memilikinya
+             // if ($_SESSION['role'] !== 'admin') throw new Exception("Akses ditolak.");
+
             $id = $_POST['id'];
             $status = $_POST['status'];
             $alasan = $_POST['alasan_batal'] ?? null;
@@ -136,6 +143,9 @@ try {
         // --- DELETE (ADMIN) ---
         // Trigger peminjaman_delete_log akan otomatis aktif
         if ($action === 'delete') {
+             // Opsional: Cek role admin di sini jika Anda memilikinya
+             // if ($_SESSION['role'] !== 'admin') throw new Exception("Akses ditolak.");
+             
             $id = $_POST['id'];
             
             // Hapus detail dulu (manual jika foreign key tdk cascade)
@@ -151,6 +161,7 @@ try {
     }
 
 } catch (Exception $e) {
+    // Jika GET gagal karena database, atau POST gagal karena auth/logic
     sendJson(false, $e->getMessage());
 }
 ?>

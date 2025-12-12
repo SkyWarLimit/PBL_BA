@@ -25,32 +25,42 @@ try {
     // Start Session
     if (session_status() == PHP_SESSION_NONE) session_start();
     
-    // Auth Check
-    if (!isset($_SESSION['user_id'])) {
-        throw new Exception("Unauthorized access.");
-    }
-
     // Adaptasi Koneksi
     if (isset($pdo) && $pdo) { $conn = $pdo; } 
     elseif (class_exists('Database')) { $db = new Database(); $conn = $db->getConnection(); } 
     else { throw new Exception("Koneksi database gagal."); }
 
-    // =================================================================
-    // [PENTING] INJEKSI SESSION DATABASE
-    // Kode ini TIDAK mencatat log. Ini hanya "memperkenalkan" User ID ke Database.
-    // Pencatatan Log dilakukan sepenuhnya otomatis oleh TRIGGER di Database.
-    // =================================================================
-    $currentUid = (int)$_SESSION['user_id'];
-    $currentIp  = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-    
-    $conn->exec("SET app.current_user_id = '$currentUid'");
-    $conn->exec("SET app.current_ip = '$currentIp'");
-    // =================================================================
-
     $method = $_SERVER['REQUEST_METHOD'];
-    $user_id = $_SESSION['user_id'];
+    
+    // =================================================================
+    // MODIFIKASI DIMULAI DI SINI
+    // =================================================================
 
-    // === GET DATA ===
+    // Cek Login HANYA jika metodenya BUKAN GET (yaitu POST, yang digunakan untuk Insert/Update/Delete)
+    if ($method !== 'GET') {
+        if (!isset($_SESSION['user_id'])) {
+            // Jika POST tanpa login, tolak akses
+            throw new Exception("Unauthorized access. Anda harus login untuk mengubah data.");
+        }
+
+        // Jika user login, siapkan variabel session untuk log/trigger
+        $currentUid = (int)$_SESSION['user_id'];
+        $currentIp  = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        
+        $conn->exec("SET app.current_user_id = '$currentUid'");
+        $conn->exec("SET app.current_ip = '$currentIp'");
+        
+        $user_id = $_SESSION['user_id']; // Definisikan user_id hanya jika login
+    } else {
+        // Jika metode GET (publik), set user_id default atau ambil dari session jika ada
+        $user_id = $_SESSION['user_id'] ?? null;
+    }
+    
+    // =================================================================
+    // MODIFIKASI SELESAI
+    // =================================================================
+
+    // === GET DATA === (Sekarang bisa diakses publik karena pengecekan sudah dipindahkan)
     if ($method === 'GET') {
         if (isset($_GET['id'])) {
             // Ambil 1 data untuk Edit
@@ -66,7 +76,7 @@ try {
         }
     }
 
-    // === POST DATA ===
+    // === POST DATA === (Tetap memerlukan login karena pengecekan sudah dilakukan di atas)
     if ($method === 'POST') {
         $action = $_POST['action'] ?? 'save';
 
