@@ -1,12 +1,3 @@
-<?php
-session_start();
-
-// --- LOGIKA SESSION ---
-$isLoggedIn = isset($_SESSION['user_id']);
-$userName = $isLoggedIn ? $_SESSION['nama'] : '';
-// Role default jika tidak ada session
-$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
-?>
 
 <!DOCTYPE html>
 <html lang="id">
@@ -43,10 +34,10 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
         <ul class="nav-menu" id="navMenu">
             <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
-            <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
+            <li class="nav-item"><a class="nav-link active" href="profile.php">Profil</a></li>
 
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                     aria-expanded="false">
                     <span>Publikasi</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
@@ -374,7 +365,6 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
             </div>
         </div>
 
-        <!-- Anggota Laboratory -->
         <div class="researcher-section py-4" id="anggota-laboratory">
             <div class="container">
                 <div class="row mb-4">
@@ -390,6 +380,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
                 <div class="row">
                     <div class="col-12">
+                        
                         <div class="table-responsive shadow-sm rounded-3">
                             <table class="table table-hover custom-table mb-0">
                                 <thead>
@@ -571,8 +562,133 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                        <div class="mobile-researcher-grid">
+                            
+                            <div class="res-card">
+                                <div class="res-card-img-wrapper">
+                                    <img src="https://ui-avatars.com/api/?name=Rakhmat+Arianto&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Rakhmat Arianto">
+                                </div>
+                                <h3 class="res-card-name">Rakhmat Arianto</h3>
+                                <span class="res-card-nidn">NIDN: 12345</span>
+                                <p class="res-card-role">Natural Language Processing, Data Science</p>
+                                <div class="res-card-links">
+                                    <a href="#" class="btn-link-custom">Scholar</a>
+                                    <a href="#" class="btn-link-custom">Sinta</a>
+                                </div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-img-wrapper">
+                                    <img src="https://ui-avatars.com/api/?name=Rudy+Ariyanto&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Rudy Ariyanto">
+                                </div>
+                                <h3 class="res-card-name">Rudy Ariyanto</h3>
+                                <span class="res-card-nidn">NIDN: 12345</span>
+                                <p class="res-card-role">Data Analytics</p>
+                                <div class="res-card-links">
+                                    <a href="#" class="btn-link-custom">Scholar</a>
+                                    <a href="#" class="btn-link-custom">Sinta</a>
+                                </div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-img-wrapper">
+                                    <img src="https://ui-avatars.com/api/?name=Ahmadi+Yuli+Ananta&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Ahmadi Yuli Ananta">
+                                </div>
+                                <h3 class="res-card-name">Ahmadi Yuli Ananta</h3>
+                                <span class="res-card-nidn">NIDN: 12345</span>
+                                <p class="res-card-role">Enterprise System, Business Process Reengineering</p>
+                                <div class="res-card-links">
+                                    <a href="#" class="btn-link-custom">Scholar</a>
+                                    <a href="#" class="btn-link-custom">Sinta</a>
+                                </div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-img-wrapper">
+                                    <img src="https://ui-avatars.com/api/?name=Candra+Bella+Vista&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Candra Bella Vista">
+                                </div>
+                                <h3 class="res-card-name">Candra Bella Vista</h3>
+                                <span class="res-card-nidn">NIDN: 12345</span>
+                                <p class="res-card-role">Natural Language Processing, Business Intelligence</p>
+                                <div class="res-card-links">
+                                    <a href="#" class="btn-link-custom">Scholar</a>
+                                    <a href="#" class="btn-link-custom">Sinta</a>
+                                </div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-img-wrapper">
+                                    <img src="https://ui-avatars.com/api/?name=Endah+Septa+Sintiya&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Endah Septa Sintiya">
+                                </div>
+                                <h3 class="res-card-name">Endah Septa Sintiya</h3>
+                                <span class="res-card-nidn">NIDN: 12345</span>
+                                <p class="res-card-role">Data Driven Decision Making</p>
+                                <div class="res-card-links">
+                                    <a href="#" class="btn-link-custom">Scholar</a>
+                                    <a href="#" class="btn-link-custom">Sinta</a>
+                                </div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-img-wrapper">
+                                    <img src="https://ui-avatars.com/api/?name=Dhebys+Suryani+Hormansyah&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Dhebys Suryani Hormansyah">
+                                </div>
+                                <h3 class="res-card-name">Dhebys Suryani Hormansyah</h3>
+                                <span class="res-card-nidn">NIDN: 12345</span>
+                                <p class="res-card-role">Digital Marketing Analysis</p>
+                                <div class="res-card-links">
+                                    <a href="#" class="btn-link-custom">Scholar</a>
+                                    <a href="#" class="btn-link-custom">Sinta</a>
+                                </div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-img-wrapper">
+                                    <img src="https://ui-avatars.com/api/?name=Farid+Angga+Pribadi&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Farid Angga Pribadi">
+                                </div>
+                                <h3 class="res-card-name">Farid Angga Pribadi</h3>
+                                <span class="res-card-nidn">NIDN: 12345</span>
+                                <p class="res-card-role">Business Analytics</p>
+                                <div class="res-card-links">
+                                    <a href="#" class="btn-link-custom">Scholar</a>
+                                    <a href="#" class="btn-link-custom">Sinta</a>
+                                </div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-img-wrapper">
+                                    <img src="https://ui-avatars.com/api/?name=Hendra+Pradibta&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Hendra Pradibta">
+                                </div>
+                                <h3 class="res-card-name">Hendra Pradibta</h3>
+                                <span class="res-card-nidn">NIDN: 12345</span>
+                                <p class="res-card-role">Manajemen Bisnis</p>
+                                <div class="res-card-links">
+                                    <a href="#" class="btn-link-custom">Scholar</a>
+                                    <a href="#" class="btn-link-custom">Sinta</a>
+                                </div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-img-wrapper">
+                                    <img src="https://ui-avatars.com/api/?name=Rokhimatul+Wakhidah&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Rokhimatul Wakhidah">
+                                </div>
+                                <h3 class="res-card-name">Rokhimatul Wakhidah</h3>
+                                <span class="res-card-nidn">NIDN: 12345</span>
+                                <p class="res-card-role">IT Governance, Business Intelligence</p>
+                                <div class="res-card-links">
+                                    <a href="#" class="btn-link-custom">Scholar</a>
+                                    <a href="#" class="btn-link-custom">Sinta</a>
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <div class="mobile-pagination mt-4" id="mobilePagination">
+                           </div>
+                        </div>
                 </div>
+            </div>
+        </div>
             </div>
         </div>
 
@@ -1220,7 +1336,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
             // Initialize navigation components
             new SectionNavigation();
-            new NavbarScrollBehavior();
+                // new NavbarScrollBehavior();
             new CompactNavbar();
 
             console.log('All JavaScript components initialized successfully');
@@ -1248,6 +1364,145 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                 });
             });
         }
+
+        /* ========================================= */
+        /* MOBILE PAGINATION LOGIC                   */
+        /* ========================================= */
+            document.addEventListener('DOMContentLoaded', function() {
+        const gridContainer = document.querySelector('.mobile-researcher-grid');
+        const cards = document.querySelectorAll('.mobile-researcher-grid .res-card');
+        const paginationContainer = document.getElementById('mobilePagination');
+        
+        let currentPage = 1;
+        let itemsPerPage = 3; 
+        let totalPages = 1;
+        let isAnimating = false;
+
+        function updateConfig() {
+            const width = window.innerWidth;
+            if (width <= 576) {
+                itemsPerPage = 2; // HP: 2 Kartu
+            } else {
+                itemsPerPage = 3; // Tablet: 3 Kartu
+            }
+            
+            totalPages = Math.ceil(cards.length / itemsPerPage);
+            if (currentPage > totalPages) currentPage = 1;
+            
+            renderPagination();
+            // Load awal langsung tanpa animasi exit, tapi tetap stagger masuk
+            swapCards(currentPage, true); 
+        }
+
+        // FUNGSI UTAMA: EXIT -> SWAP -> STAGGER ENTER
+        function showPage(page) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            // 1. Fase Exit: Container menghilang (Fade Out)
+            gridContainer.classList.add('is-exiting');
+
+            // 2. Tunggu 200ms (sesuai CSS transition opacity)
+            setTimeout(() => {
+                
+                // 3. Fase Swap & Enter
+                swapCards(page, true); // true = aktifkan animasi masuk
+                
+                // Kembalikan Opacity Container
+                gridContainer.classList.remove('is-exiting');
+
+                // Kunci animasi sebentar sampai efek selesai semua
+                setTimeout(() => {
+                    isAnimating = false;
+                }, 600); // Buffer aman
+
+            }, 200);
+        }
+
+        function swapCards(page, triggerAnimation = false) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            
+            let visibleIndex = 0; // Counter untuk urutan animasi (0, 1, 2...)
+
+            cards.forEach((card, index) => {
+                // Reset animasi lama dulu
+                card.classList.remove('card-animate-enter');
+                card.style.animationDelay = '0s';
+                card.style.opacity = ''; // Reset opacity inline
+
+                if (index >= start && index < end) {
+                    card.style.display = 'flex';
+                    
+                    if (triggerAnimation) {
+                        // Trik Force Reflow agar animasi bisa restart
+                        void card.offsetWidth; 
+                        
+                        // Tambah class animasi
+                        card.classList.add('card-animate-enter');
+                        
+                        // LOGIKA "KIRI KE KANAN":
+                        // Beri delay bertingkat: 0ms, 100ms, 200ms...
+                        card.style.animationDelay = `${visibleIndex * 0.1}s`;
+                        visibleIndex++;
+                    }
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // --- Bagian Pagination (Tetap Sama) ---
+        function renderPagination() {
+            paginationContainer.innerHTML = ''; 
+            if (totalPages > 1) {
+                // Prev
+                const prevBtn = createBtn('<i class="fas fa-chevron-left"></i>', () => {
+                    let nextPage = currentPage > 1 ? currentPage - 1 : totalPages;
+                    changePage(nextPage);
+                });
+                paginationContainer.appendChild(prevBtn);
+
+                // Angka
+                for (let i = 1; i <= totalPages; i++) {
+                    const link = createBtn(i, () => changePage(i));
+                    if (i === currentPage) link.classList.add('active');
+                    paginationContainer.appendChild(link);
+                }
+
+                // Next
+                const nextBtn = createBtn('<i class="fas fa-chevron-right"></i>', () => {
+                    let nextPage = currentPage < totalPages ? currentPage + 1 : 1;
+                    changePage(nextPage);
+                });
+                paginationContainer.appendChild(nextBtn);
+            }
+        }
+
+        function createBtn(content, onClick) {
+            const btn = document.createElement('a');
+            btn.href = 'javascript:void(0)';
+            btn.className = 'page-link-custom';
+            btn.innerHTML = content;
+            btn.addEventListener('click', onClick);
+            return btn;
+        }
+
+        function changePage(newPage) {
+            if (newPage !== currentPage) {
+                currentPage = newPage;
+                showPage(currentPage);
+                renderPagination();
+            }
+        }
+
+        updateConfig();
+
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(updateConfig, 100);
+        });
+    });
     </script>
 
     <script>
@@ -1268,7 +1523,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
         }
 
         // --- 1. Cek Login Status ---
-        const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
+        // const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
         function toggleMenu() {
     const navMenu = document.getElementById('navMenu');

@@ -1,3 +1,13 @@
+<?php
+session_start();
+
+// --- LOGIKA SESSION ---
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+// Role default jika tidak ada session
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -13,11 +23,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
         rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="../assets/css/headerStyle.css">
+    <link rel="stylesheet" href="../assets/css/headerStyle.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
-    <!-- Sticky Navigation Bar -->
+
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
@@ -29,16 +39,18 @@
             </div>
         </div>
 
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a class="nav-link" href="../index.php">Beranda</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="profile.php">Profil</a>
-            </li>
+        <div class="hamburger" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <ul class="nav-menu" id="navMenu">
+            <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
+
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle active" href="#">
-                    Publikasi
+                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <span>Publikasi</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
@@ -47,9 +59,11 @@
                     <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
                 </ul>
             </li>
+
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#">
-                    Peminjaman Lab
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <span>Peminjaman Lab</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
@@ -58,12 +72,63 @@
                     <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
                 </ul>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="kontak.php">Kontak</a>
+
+            <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
+
+            <li class="nav-item mobile-auth-section">
+                <?php if ($isLoggedIn): ?>
+                <div class="mobile-user-profile-modern">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1">
+                        <div class="mobile-avatar-modern">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128"
+                                alt="User Avatar">
+                        </div>
+                        <div class="mobile-info-modern">
+                            <span class="greeting-text">Halo,</span>
+                            <span class="username-text">
+                                <?php echo htmlspecialchars($userName); ?>
+                            </span>
+                        </div>
+                    </div>
+                    <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+                <?php else: ?>
+                <div class="mobile-login-btn">
+                    <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                </div>
+                <?php endif; ?>
             </li>
         </ul>
-        
-        <button class="login-btn">Login</button>
+
+        <?php if ($isLoggedIn): ?>
+        <div class="desktop-user-action">
+
+            <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
+                <div class="text-end me-2">
+                    <div class="user-name-label">
+                        <?php echo htmlspecialchars($userName); ?>
+                    </div>
+                    <div class="user-role-label">
+                        <?php echo htmlspecialchars($userRole); ?>
+                    </div>
+                </div>
+                <div class="avatar-circle">
+                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128"
+                        alt="User Avatar">
+                </div>
+            </a>
+
+            <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+
+        </div>
+        <?php else: ?>
+        <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php endif; ?>
+
     </nav>
 
     <!-- Bootstrap JS -->
@@ -71,117 +136,40 @@
 
     <!-- Custom JavaScript -->
     <script>
-        // Sticky Navigation Script
-document.addEventListener('DOMContentLoaded', function() {
-    const navbar = document.querySelector('.sticky-navbar');
-    const navLinks = document.querySelectorAll('.nav-link');
-    const dropdownItems = document.querySelectorAll('.dropdown-item');
-    
-    // Add scroll event listener
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    });
-    
-    // Add active class to current page link
-    function setActiveLink() {
-        const currentPath = window.location.pathname;
-        
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            
-            // Exact match
-            if (link.getAttribute('href') === currentPath) {
-                link.classList.add('active');
-            }
-            
-            // Handle parent pages
-            if (currentPath.includes('pages/') && link.getAttribute('href') === './pages/' + currentPath.split('/').pop()) {
-                link.classList.add('active');
-            }
-            
-            // Handle index.php
-            if (currentPath.endsWith('/') || currentPath.endsWith('index.php')) {
-                if (link.getAttribute('href') === 'index.php') {
-                    link.classList.add('active');
-                }
-            }
-        });
-        
-        // Also check dropdown items
-        dropdownItems.forEach(item => {
-            if (item.getAttribute('href') === currentPath) {
-                // Find parent dropdown and mark it as active
-                const parentLink = item.closest('.nav-item.dropdown').querySelector('.nav-link');
-                if (parentLink) {
-                    parentLink.classList.add('active');
-                }
-            }
-        });
-    }
-    
-    // Initialize
-    setActiveLink();
-    
-    // Login button functionality
-    const loginBtn = document.querySelector('.login-btn');
-    if (loginBtn) {
-        loginBtn.addEventListener('click', function() {
-            // You can change this to your login page URL
-            window.location.href = './pages/login.php';
-        });
-    }
-    
-    // Mobile menu toggle (optional - add if needed)
-    function initMobileMenu() {
-        const mobileMenuBtn = document.createElement('button');
-        mobileMenuBtn.className = 'mobile-menu-toggle';
-        mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-        mobileMenuBtn.style.cssText = `
-            display: none;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-        `;
-        
-        navbar.appendChild(mobileMenuBtn);
-        
-        mobileMenuBtn.addEventListener('click', function() {
-            const navMenu = document.querySelector('.nav-menu');
-            navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
-        });
-        
-        // Responsive behavior
-        function handleResize() {
-            const navMenu = document.querySelector('.nav-menu');
-            if (window.innerWidth <= 992) {
-                mobileMenuBtn.style.display = 'block';
-                navMenu.style.display = 'none';
-                navMenu.style.flexDirection = 'column';
-                navMenu.style.width = '100%';
-                navMenu.style.marginTop = '20px';
+
+        // --- 0. NAV MENU LOGIC (HAMBURGER) ---
+        function toggleMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const hamburgerIcon = document.querySelector('.hamburger i');
+            navMenu.classList.toggle('active');
+
+            if (navMenu.classList.contains('active')) {
+                hamburgerIcon.classList.remove('fa-bars');
+                hamburgerIcon.classList.add('fa-times');
             } else {
-                mobileMenuBtn.style.display = 'none';
-                navMenu.style.display = 'flex';
+                hamburgerIcon.classList.remove('fa-times');
+                hamburgerIcon.classList.add('fa-bars');
             }
         }
-        
-        window.addEventListener('resize', handleResize);
-        handleResize();
-    }
-    
-    // Initialize mobile menu if needed
-    // initMobileMenu();
-});
+
+        // --- 1. Cek Login Status ---
+        const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
+
+        function toggleMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const icon = document.querySelector('.hamburger i');
+
+            navMenu.classList.toggle('active');
+
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+
     </script>
 </body>
 

@@ -1,3 +1,13 @@
+<?php
+session_start();
+
+// --- LOGIKA SESSION ---
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+// Role default jika tidak ada session
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -5,23 +15,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laboratorium Business Analytics</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome untuk ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Google Fonts - Nunito -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
-        rel="stylesheet">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="../assets/css/kontakStyle.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="../assets/css/kontakStyle.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
-    <!-- Sticky Navigation Bar -->
+
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="../assets/images/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
                 <div class="lab-name">Laboratorium Business Analytics</div>
@@ -29,61 +35,113 @@
             </div>
         </div>
 
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a class="nav-link" href="../index.php">Beranda</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="../pages/profile.php">Profil</a>
-            </li>
+        <div class="hamburger" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <ul class="nav-menu" id="navMenu">
+            <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
+
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#">
-                    Publikasi
+                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <span>Publikasi</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="../pages/berita.php">Berita</a></li>
-                    <li><a class="dropdown-item" href="../pages/galeri.php">Gallery</a></li>
-                    <li><a class="dropdown-item" href="../pages/newsInputService.php">News Input Service</a></li>
+                    <li><a class="dropdown-item" href="berita.php">Berita</a></li>
+                    <li><a class="dropdown-item" href="galeri.php">Gallery</a></li>
+                    <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
                 </ul>
             </li>
+
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#">
-                    Peminjaman Lab
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <span>Peminjaman Lab</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="../pages/infoPeminjaman.php">Informasi Laboratorium</a></li>
-                    <li><a class="dropdown-item" href="../pages/tableBooking.php">Table Peminjaman</a></li>
-                    <li><a class="dropdown-item" href="../pages/booking.php">Pemesanan Lab</a></li>
+                    <li><a class="dropdown-item" href="infoPeminjaman.php">Informasi Laboratorium</a></li>
+                    <li><a class="dropdown-item" href="tableBooking.php">Table Peminjaman</a></li>
+                    <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
                 </ul>
             </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="../pages/kontak.php">Kontak</a>
+
+            <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
+
+            <li class="nav-item mobile-auth-section">
+                <?php if ($isLoggedIn): ?>
+                <div class="mobile-user-profile-modern">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1">
+                        <div class="mobile-avatar-modern">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128"
+                                alt="User Avatar">
+                        </div>
+                        <div class="mobile-info-modern">
+                            <span class="greeting-text">Halo,</span>
+                            <span class="username-text">
+                                <?php echo htmlspecialchars($userName); ?>
+                            </span>
+                        </div>
+                    </div>
+                    <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+                <?php else: ?>
+                <div class="mobile-login-btn">
+                    <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                </div>
+                <?php endif; ?>
             </li>
         </ul>
 
-        <button class="login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php if ($isLoggedIn): ?>
+        <div class="desktop-user-action">
+
+            <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
+                <div class="text-end me-2">
+                    <div class="user-name-label">
+                        <?php echo htmlspecialchars($userName); ?>
+                    </div>
+                    <div class="user-role-label">
+                        <?php echo htmlspecialchars($userRole); ?>
+                    </div>
+                </div>
+                <div class="avatar-circle">
+                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128"
+                        alt="User Avatar">
+                </div>
+            </a>
+
+            <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+
+        </div>
+        <?php else: ?>
+        <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php endif; ?>
+
     </nav>
 
-    <!-- Contact Us Section -->
     <section class="contact-hero">
         <div class="contact-hero-bg"></div>
         <div class="contact-hero-content">
             <h1>Contact Us</h1>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
         </div>
     </section>
 
-    <!-- Main Contact Section -->
     <section class="contact-main-section">
         <div class="contact-container">
-            <!-- Contact Info Section (Left) -->
             <div class="contact-info-section">
                 <div class="contact-header">
                     <h2>Contact</h2>
                     <h3>Get In Touch</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.</p>
+                    <p>Jangan ragu untuk menghubungi kami jika Anda memiliki pertanyaan atau ingin berkolaborasi.</p>
                 </div>
 
                 <div class="contact-details">
@@ -93,7 +151,7 @@
                         </div>
                         <div class="contact-text">
                             <h4>Address</h4>
-                            <p>Getting Ideas Set U.S. J. Sodanno Nata No 3, Jatemiya, Koc Luwakwara, Kota Makina, Jana Trustt 65141</p>
+                            <p>Gedung Kuliah Bersama, Laboratorium Business Analytics, Kampus Utama.</p>
                         </div>
                     </div>
 
@@ -113,7 +171,7 @@
                         </div>
                         <div class="contact-text">
                             <h4>Email</h4>
-                            <a href="mailto:email@gmail.com">email@gmail.com</a>
+                            <a href="mailto:admin@lab.com">admin@lab.com</a>
                         </div>
                     </div>
 
@@ -123,235 +181,135 @@
                         </div>
                         <div class="contact-text">
                             <h4>Instagram</h4>
-                            <a href="https://instagram.com/bidau.fansemyu" target="_blank">@bidau.fansemyu</a>
+                            <a href="https://instagram.com/lab_business_analytics" target="_blank">@lab_business_analytics</a>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Contact Form Section (Right) -->
             <div class="contact-form-section">
                 <div class="contact-form-header">
                     <h3>ready to get started?</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    <p>Kirimkan pesan Anda, kami akan membalas secepatnya.</p>
                 </div>
 
-                <form class="contact-form">
+                <form class="contact-form" id="contactForm">
                     <div class="form-group">
                         <label for="name">Name</label>
-                        <input type="text" id="name" class="form-control" placeholder="Your Name">
+                        <input type="text" id="name" name="name" class="form-control" placeholder="Your Name" required>
                     </div>
 
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" id="email" class="form-control" placeholder="Your Email">
+                        <input type="email" id="email" name="email" class="form-control" placeholder="Your Email" required>
                     </div>
 
                     <div class="form-group">
                         <label for="phone">Phone</label>
-                        <input type="tel" id="phone" class="form-control" placeholder="Your Phone Number">
+                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="Your Phone Number (Optional)">
                     </div>
 
                     <div class="form-group">
                         <label for="message">Message</label>
-                        <textarea id="message" class="form-control" placeholder="Your Message"></textarea>
+                        <textarea id="message" name="message" class="form-control" placeholder="Your Message" required></textarea>
                     </div>
 
-                    <button type="submit" class="submit-btn">Send Message</button>
+                    <button type="submit" class="submit-btn" id="btnSubmit">Send Message</button>
                 </form>
             </div>
         </div>
     </section>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Custom JavaScript -->
     <script>
-        // Perbaikan untuk navigasi section
-        document.addEventListener('DOMContentLoaded', function () {
-            const sectionLinks = document.querySelectorAll('.section-nav-link');
+        // --- 0. NAV MENU LOGIC (HAMBURGER) ---
+        function toggleMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const hamburgerIcon = document.querySelector('.hamburger i');
+            navMenu.classList.toggle('active');
 
-            sectionLinks.forEach(link => {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault();
+            if (navMenu.classList.contains('active')) {
+                hamburgerIcon.classList.remove('fa-bars');
+                hamburgerIcon.classList.add('fa-times');
+            } else {
+                hamburgerIcon.classList.remove('fa-times');
+                hamburgerIcon.classList.add('fa-bars');
+            }
+        }
 
-                    // Hapus kelas active dari semua link
-                    sectionLinks.forEach(l => l.classList.remove('active'));
+        // --- 1. Cek Login Status ---
+        const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
-                    // Tambah kelas active ke link yang diklik
-                    this.classList.add('active');
+        function toggleMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const icon = document.querySelector('.hamburger i');
 
-                    // Dapatkan target section
-                    const targetId = this.getAttribute('href').substring(1);
-                    const targetSection = document.getElementById(targetId);
+            navMenu.classList.toggle('active');
 
-                    if (targetSection) {
-                        // Hitung offset dengan mempertimbangkan tinggi navbar
-                        const navbarHeight = document.querySelector('.sticky-navbar').offsetHeight;
-                        const sectionNavHeight = document.querySelector('.section-navbar').offsetHeight;
-                        const offsetTop = targetSection.offsetTop - navbarHeight - sectionNavHeight;
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
 
-                        // Scroll ke section
-                        window.scrollTo({
-                            top: Math.max(0, offsetTop),
-                            behavior: 'smooth'
+        document.addEventListener('DOMContentLoaded', function() {
+            const contactForm = document.getElementById('contactForm');
+            const btnSubmit = document.getElementById('btnSubmit');
+
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // 1. Ubah tombol jadi loading
+                const originalText = btnSubmit.innerHTML;
+                btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                btnSubmit.disabled = true;
+
+                // 2. Ambil data form
+                const formData = new FormData(contactForm);
+
+                // 3. Kirim ke API (Sesuaikan path API jika perlu)
+                // Asumsi: File ini ada di folder /pages/, maka mundur satu folder (../) lalu masuk ke admin/api/
+                fetch('../admin/api/public_kontak.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Terima Kasih!',
+                            text: 'Pesan Anda berhasil dikirim. Kami akan segera menghubungi Anda.',
+                            confirmButtonColor: '#4361ee'
+                        });
+                        contactForm.reset();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: data.message || 'Terjadi kesalahan saat mengirim pesan.',
                         });
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Terjadi kesalahan koneksi. Silakan coba lagi nanti.',
+                    });
+                })
+                .finally(() => {
+                    // 4. Kembalikan tombol seperti semula
+                    btnSubmit.innerHTML = originalText;
+                    btnSubmit.disabled = false;
                 });
             });
-
-            // Update active section saat scroll
-            window.addEventListener('scroll', function () {
-                const sections = document.querySelectorAll('section[id], div[id]');
-                const scrollPos = window.scrollY + 200; // Offset untuk menentukan section aktif
-
-                sections.forEach(section => {
-                    const sectionTop = section.offsetTop;
-                    const sectionHeight = section.offsetHeight;
-                    const sectionId = section.getAttribute('id');
-
-                    if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
-                        sectionLinks.forEach(link => {
-                            link.classList.remove('active');
-                            if (link.getAttribute('href') === `#${sectionId}`) {
-                                link.classList.add('active');
-                            }
-                        });
-                    }
-                });
-            });
-        });
-
-        // Fallback untuk smooth scroll di browser lama
-        if (!('scrollBehavior' in document.documentElement.style)) {
-            document.querySelectorAll('.section-nav-link').forEach(link => {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('href').substring(1);
-                    const targetSection = document.getElementById(targetId);
-
-                    if (targetSection) {
-                        const navbar = document.querySelector('.sticky-navbar');
-                        const sectionNav = document.querySelector('.section-navbar');
-                        const offsetTop = targetSection.offsetTop -
-                            (navbar ? navbar.offsetHeight : 0) -
-                            (sectionNav ? sectionNav.offsetHeight : 0) - 10;
-
-                        window.scrollTo(0, Math.max(0, offsetTop));
-                    }
-                });
-            });
-        }
-
-        // Scroll Behavior untuk Navbar
-        class NavbarScrollBehavior {
-            constructor() {
-                this.mainNavbar = document.getElementById('mainNavbar');
-                this.sectionNavbar = document.getElementById('sectionNavbar');
-                this.lastScrollY = window.scrollY;
-                this.scrollThreshold = 100; // Scroll berapa pixel sebelum navbar utama hilang
-                this.isMainNavHidden = false;
-
-                this.init();
-            }
-
-            init() {
-                window.addEventListener('scroll', () => {
-                    this.handleScroll();
-                });
-
-                // Initial check
-                this.handleScroll();
-            }
-
-            handleScroll() {
-                const currentScrollY = window.scrollY;
-                const scrollDirection = currentScrollY > this.lastScrollY ? 'down' : 'up';
-
-                // Jika scroll ke bawah melebihi threshold, sembunyikan navbar utama
-                if (scrollDirection === 'down' && currentScrollY > this.scrollThreshold && !this.isMainNavHidden) {
-                    this.hideMainNavbar();
-                }
-                // Jika scroll ke atas, tampilkan navbar utama
-                else if (scrollDirection === 'up' && this.isMainNavHidden) {
-                    this.showMainNavbar();
-                }
-                // Jika di paling atas, pastikan navbar utama visible
-                else if (currentScrollY <= this.scrollThreshold && this.isMainNavHidden) {
-                    this.showMainNavbar();
-                }
-
-                this.lastScrollY = currentScrollY;
-            }
-
-            hideMainNavbar() {
-                this.mainNavbar.classList.add('hidden');
-                this.sectionNavbar.classList.add('main-sticky');
-                document.body.classList.add('nav-main-hidden');
-                this.isMainNavHidden = true;
-            }
-
-            showMainNavbar() {
-                this.mainNavbar.classList.remove('hidden');
-                this.sectionNavbar.classList.remove('main-sticky');
-                document.body.classList.remove('nav-main-hidden');
-                this.isMainNavHidden = false;
-            }
-        }
-
-        // Compact navbar saat scroll
-        class CompactNavbar {
-            constructor() {
-                this.mainNavbar = document.getElementById('mainNavbar');
-                this.compactThreshold = 50;
-
-                this.init();
-            }
-
-            init() {
-                window.addEventListener('scroll', () => {
-                    this.toggleCompact();
-                });
-            }
-
-            toggleCompact() {
-                if (window.scrollY > this.compactThreshold) {
-                    this.mainNavbar.classList.add('compact');
-                } else {
-                    this.mainNavbar.classList.remove('compact');
-                }
-            }
-        }
-
-        // Initialize semua behavior ketika DOM ready
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize scroll behavior
-            new NavbarScrollBehavior();
-            new CompactNavbar();
-
-            // Initialize roadmap carousel jika ada
-            const roadmapCards = document.querySelectorAll('.roadmap-card');
-            if (roadmapCards.length > 0) {
-                new RoadmapCarousel();
-            }
-
-            // Initialize section navigation
-            new SectionNavigation();
-        });
-
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            new RoadmapCarousel();
-            new SectionNavigation();
-        });
-
-        // Initialize section navigation when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            new RoadmapCarousel();
-            new SectionNavigation();
         });
     </script>
 </body>
-
 </html>

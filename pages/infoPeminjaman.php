@@ -1,3 +1,13 @@
+<?php
+session_start();
+
+// --- LOGIKA SESSION ---
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+// Role default jika tidak ada session
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -5,18 +15,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laboratory Business Analytics</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/infoPeminjamanStyle.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../assets/css/infoPeminjamanStyle.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
 
-    <!-- Sticky Navigation Bar -->
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
@@ -28,41 +37,86 @@
             </div>
         </div>
 
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a class="nav-link" href="../index.php">Beranda</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="../pages/profile.php">Profil</a>
-            </li>
+        <div class="hamburger" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <ul class="nav-menu" id="navMenu">
+            <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
+            
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#">
-                    Publikasi
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span>Publikasi</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="../pages/berita.php">Berita</a></li>
-                    <li><a class="dropdown-item" href="../pages/galeri.php">Gallery</a></li>
-                    <li><a class="dropdown-item" href="../pages/newsInputService.php">News Input Service</a></li>
+                    <li><a class="dropdown-item" href="berita.php">Berita</a></li>
+                    <li><a class="dropdown-item" href="galeri.php">Gallery</a></li>
+                    <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
                 </ul>
             </li>
+
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle active" href="#">
-                    Peminjaman Lab
+                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span>Peminjaman Lab</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="../pages/infoPeminjaman.php">Informasi Laboratorium</a></li>
-                    <li><a class="dropdown-item" href="../pages/tableBooking.php">Table Peminjaman</a></li>
-                    <li><a class="dropdown-item" href="./booking.php">Pemesanan Lab</a></li>
+                    <li><a class="dropdown-item" href="infoPeminjaman.php">Informasi Laboratorium</a></li>
+                    <li><a class="dropdown-item" href="tableBooking.php">Table Peminjaman</a></li>
+                    <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
                 </ul>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="../pages/kontak.php">Kontak</a>
+
+            <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
+            
+            <li class="nav-item mobile-auth-section">
+                <?php if ($isLoggedIn): ?>
+                    <div class="mobile-user-profile-modern">
+                        <div class="d-flex align-items-center gap-3 flex-grow-1">
+                            <div class="mobile-avatar-modern">
+                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128" alt="User Avatar">
+                            </div>
+                            <div class="mobile-info-modern">
+                                <span class="greeting-text">Halo,</span>
+                                <span class="username-text"><?php echo htmlspecialchars($userName); ?></span>
+                            </div>
+                        </div>
+                        <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="mobile-login-btn">
+                        <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                    </div>
+                <?php endif; ?>
             </li>
         </ul>
         
-        <button class="login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php if ($isLoggedIn): ?>
+            <div class="desktop-user-action">
+                
+                <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
+                    <div class="text-end me-2">
+                        <div class="user-name-label"><?php echo htmlspecialchars($userName); ?></div>
+                        <div class="user-role-label"><?php echo htmlspecialchars($userRole); ?></div>
+                    </div>
+                    <div class="avatar-circle">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128" alt="User Avatar">
+                    </div>
+                </a>
+
+                <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+
+            </div>
+        <?php else: ?>
+            <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php endif; ?>
+
     </nav>
 
     <!-- Hero Section -->
@@ -185,256 +239,191 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-    // JavaScript untuk carousel fasilitas dengan animasi yang sangat smooth
-    document.addEventListener('DOMContentLoaded', function() {
-        const carousel = document.getElementById('facilitiesCarousel');
-        const prevBtn = document.querySelector('.carousel-prev');
-        const nextBtn = document.querySelector('.carousel-next');
-        
-        const facilities = [
-            { name: "WiFi", icon: "fa-wifi" },
-            { name: "AC", icon: "fa-snowflake" },
-            { name: "Room", icon: "fa-door-open" },
-            { name: "Proyektor", icon: "fa-video" },
-            { name: "Whiteboard", icon: "fa-chalkboard" }
-        ];
-        
-        let currentIndex = 2; // Mulai dari tengah
-        let isAnimating = false;
-        let autoPlayInterval;
-        
-        // Buat progress indicator
-        function createProgressIndicator() {
-            const progressContainer = document.createElement('div');
-            progressContainer.className = 'carousel-progress';
-            
-            facilities.forEach((_, index) => {
-                const dot = document.createElement('div');
-                dot.className = `progress-dot ${index === currentIndex ? 'active' : ''}`;
-                dot.setAttribute('data-index', index);
-                
-                dot.addEventListener('click', function() {
-                    if (!isAnimating) {
-                        const targetIndex = parseInt(this.getAttribute('data-index'));
-                        goToSlide(targetIndex);
-                    }
-                });
-                
-                progressContainer.appendChild(dot);
-            });
-            
-            document.querySelector('.facilities-carousel-container').appendChild(progressContainer);
-        }
-        
-        // Buat elemen untuk setiap fasilitas
-        function createFacilityItems() {
-            carousel.innerHTML = '';
-            
-            facilities.forEach((facility, index) => {
-                const facilityItem = document.createElement('div');
-                facilityItem.className = 'facility-item';
-                facilityItem.setAttribute('data-index', index);
-                
-                facilityItem.innerHTML = `
-                    <i class="fas ${facility.icon} facility-icon"></i>
-                    <div class="facility-name">${facility.name}</div>
-                `;
-                
-                carousel.appendChild(facilityItem);
-            });
-            
-            updateCarousel(true); // Initial setup tanpa animasi
-        }
-        
-        // Update posisi dan kelas setiap item dengan animasi smooth
-        function updateCarousel(instant = false) {
-            if (instant) {
-                // Setup awal tanpa animasi
-                const items = carousel.querySelectorAll('.facility-item');
-                items.forEach((item, index) => {
-                    item.style.transition = 'none';
-                    applyPositionClasses(item, index);
-                    setTimeout(() => {
-                        item.style.transition = '';
-                    }, 50);
-                });
+function toggleMenu() {
+    const navMenu = document.getElementById('navMenu');
+    const hamburgerIcon = document.querySelector('.hamburger i');
+    navMenu.classList.toggle('active');
+    
+    if (navMenu.classList.contains('active')) {
+        hamburgerIcon.classList.remove('fa-bars');
+        hamburgerIcon.classList.add('fa-times');
+    } else {
+        hamburgerIcon.classList.remove('fa-times');
+        hamburgerIcon.classList.add('fa-bars');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // --- KONFIGURASI API ---
+    const API_URL = '/PBL_BA/admin/api/fasilitas.php'; 
+
+    const carousel = document.getElementById('facilitiesCarousel');
+    const carouselContainer = document.querySelector('.facilities-carousel-container');
+    
+    let facilities = [];
+    let currentIndex = 0;
+    let isAnimating = false;
+    let autoPlayInterval;
+
+    // --- FETCH DATA ---
+    fetch(API_URL)
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+            return response.json();
+        })
+        .then(result => {
+            if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+                // Mapping Data
+                facilities = result.data.map(item => ({
+                    name: item.nama_fasilitas,
+                    icon: item.icon ? item.icon.trim() : 'bi bi-box' // Trim spasi & default icon
+                }));
+
+                currentIndex = Math.floor(facilities.length / 2);
+                initCarousel();
             } else {
-                // Dengan animasi smooth
-                const items = carousel.querySelectorAll('.facility-item');
-                
-                // Apply leaving state untuk item yang akan keluar
-                items.forEach((item, index) => {
-                    const relativePos = (index - currentIndex + facilities.length) % facilities.length;
-                    
-                    if (relativePos === facilities.length - 1) {
-                        item.classList.add('leaving');
-                        item.classList.remove('entering', 'active');
-                    }
-                });
-                
-                // Set timeout untuk memulai animasi masuk
-                setTimeout(() => {
-                    items.forEach((item, index) => {
-                        applyPositionClasses(item, index);
-                    });
-                    
-                    // Update progress indicator
-                    updateProgressIndicator();
-                    
-                    // Reset animating flag setelah animasi selesai
-                    setTimeout(() => {
-                        isAnimating = false;
-                    }, 800);
-                }, 50);
+                showEmptyState("Belum ada data fasilitas.");
             }
-        }
-        
-        // Terapkan kelas posisi berdasarkan index relatif
-        function applyPositionClasses(item, index) {
-            const relativePos = (index - currentIndex + facilities.length) % facilities.length;
-            
-            // Reset semua kelas posisi
-            item.classList.remove('center', 'side', 'outer', 'left-side', 'right-side', 'far-left', 'far-right', 'entering', 'leaving', 'active');
-            
-            // Terapkan kelas berdasarkan posisi relatif
-            if (relativePos === 0) {
-                item.classList.add('center', 'active');
-            } else if (relativePos === 1) {
-                item.classList.add('side', 'right-side');
-            } else if (relativePos === facilities.length - 1) {
-                item.classList.add('side', 'left-side');
-            } else if (relativePos === 2) {
-                item.classList.add('outer', 'far-right', 'entering');
-            } else if (relativePos === facilities.length - 2) {
-                item.classList.add('outer', 'far-left', 'entering');
-            } else {
-                item.classList.add('outer');
-            }
-        }
-        
-        // Update progress indicator
-        function updateProgressIndicator() {
-            const dots = document.querySelectorAll('.progress-dot');
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentIndex);
-            });
-        }
-        
-        // Pindah ke slide tertentu
-        function goToSlide(targetIndex) {
-            if (isAnimating || targetIndex === currentIndex) return;
-            
-            isAnimating = true;
-            currentIndex = targetIndex;
-            updateCarousel();
-        }
-        
-        // Pindah ke item berikutnya
-        function nextSlide() {
-            if (isAnimating) return;
-            
-            isAnimating = true;
-            currentIndex = (currentIndex + 1) % facilities.length;
-            updateCarousel();
-        }
-        
-        // Pindah ke item sebelumnya
-        function prevSlide() {
-            if (isAnimating) return;
-            
-            isAnimating = true;
-            currentIndex = (currentIndex - 1 + facilities.length) % facilities.length;
-            updateCarousel();
-        }
-        
-        // Mulai autoplay
-        function startAutoPlay() {
-            autoPlayInterval = setInterval(nextSlide, 4000);
-        }
-        
-        // Hentikan autoplay
-        function stopAutoPlay() {
-            clearInterval(autoPlayInterval);
-        }
-        
-        // Event listeners untuk kontrol
-        nextBtn.addEventListener('click', function() {
-            if (!isAnimating) {
-                stopAutoPlay();
-                nextSlide();
-                startAutoPlay();
-            }
+        })
+        .catch(error => {
+            console.error(error);
+            showEmptyState("Gagal memuat data fasilitas.");
         });
-        
-        prevBtn.addEventListener('click', function() {
-            if (!isAnimating) {
-                stopAutoPlay();
-                prevSlide();
-                startAutoPlay();
-            }
-        });
-        
-        // Hentikan autoplay saat hover
-        carousel.addEventListener('mouseenter', stopAutoPlay);
-        carousel.addEventListener('mouseleave', startAutoPlay);
-        
-        // Inisialisasi carousel
+
+    function showEmptyState(msg) {
+        if (carousel) carousel.innerHTML = `<div class="text-center p-5 text-muted w-100">${msg}</div>`;
+    }
+
+    // --- CAROUSEL LOGIC ---
+    function initCarousel() {
+        if (!carousel) return;
         createFacilityItems();
         createProgressIndicator();
+        updateCarousel(true);
         startAutoPlay();
-        
-        // Tambahan: Navigasi dengan keyboard
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft' && !isAnimating) {
-                stopAutoPlay();
-                prevSlide();
-                startAutoPlay();
-            } else if (e.key === 'ArrowRight' && !isAnimating) {
-                stopAutoPlay();
-                nextSlide();
-                startAutoPlay();
-            }
-        });
-        
-        // Tambahan: Swipe support untuk mobile
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        carousel.addEventListener('touchstart', function(e) {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-        
-        carousel.addEventListener('touchend', function(e) {
-            if (isAnimating) return;
-            
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        });
-        
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            const diff = touchStartX - touchEndX;
-            
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff > 0) {
-                    // Swipe kiri - next
-                    stopAutoPlay();
-                    nextSlide();
-                    startAutoPlay();
-                } else {
-                    // Swipe kanan - prev
-                    stopAutoPlay();
-                    prevSlide();
-                    startAutoPlay();
-                }
-            }
-        }
-    });
+        setupControls();
+    }
 
-    // Tambahkan efek scroll reveal untuk rules section
-document.addEventListener('DOMContentLoaded', function() {
+    function createFacilityItems() {
+        carousel.innerHTML = '';
+        facilities.forEach((facility, index) => {
+            const facilityItem = document.createElement('div');
+            facilityItem.className = 'facility-item';
+            facilityItem.setAttribute('data-index', index);
+            
+            // LOGIKA DETEKSI ICON
+            let iconClass = facility.icon;
+            
+            // Jika user hanya input 1 kata (misal: "wifi"), kita tambah prefix default
+            if (!iconClass.includes(' ')) {
+                // Cek awalan untuk menebak library
+                if (iconClass.startsWith('bi-')) iconClass = 'bi ' + iconClass;
+                else if (iconClass.startsWith('fa-')) iconClass = 'fas ' + iconClass;
+                else iconClass = 'fas fa-' + iconClass.replace(/^fa-/, ''); // Default ke FontAwesome
+            }
+            // Jika database sudah lengkap "bi bi-wifi" atau "fa-solid fa-snowflake", biarkan saja.
+
+            facilityItem.innerHTML = `
+                <i class="${iconClass} facility-icon"></i>
+                <div class="facility-name">${facility.name}</div>
+            `;
+            carousel.appendChild(facilityItem);
+        });
+    }
+
+    function createProgressIndicator() {
+        const oldInd = document.querySelector('.carousel-progress');
+        if(oldInd) oldInd.remove();
+
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'carousel-progress';
+        
+        facilities.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.className = `progress-dot ${index === currentIndex ? 'active' : ''}`;
+            dot.addEventListener('click', () => {
+                if (!isAnimating && index !== currentIndex) {
+                    isAnimating = true;
+                    currentIndex = index;
+                    updateCarousel();
+                    setTimeout(() => isAnimating = false, 600);
+                }
+            });
+            progressContainer.appendChild(dot);
+        });
+        if(carouselContainer) carouselContainer.appendChild(progressContainer);
+    }
+
+    function updateCarousel(instant = false) {
+        const items = carousel.querySelectorAll('.facility-item');
+        if (items.length === 0) return;
+
+        items.forEach((item, index) => {
+            if (instant) item.style.transition = 'none';
+            const len = facilities.length;
+            const relativePos = (index - currentIndex + len) % len;
+            
+            item.className = 'facility-item'; 
+            
+            if (relativePos === 0) item.classList.add('center', 'active');
+            else if (relativePos === 1) item.classList.add('side', 'right-side');
+            else if (relativePos === len - 1) {
+                item.classList.add('side', 'left-side');
+                if (!instant) item.classList.add('leaving');
+            } else if (relativePos === 2) item.classList.add('outer', 'far-right', 'entering');
+            else if (relativePos === len - 2) item.classList.add('outer', 'far-left', 'entering');
+            else item.classList.add('outer');
+
+            if (instant) setTimeout(() => { item.style.transition = ''; }, 50);
+        });
+        
+        // Update Dots Active State
+        const dots = document.querySelectorAll('.progress-dot');
+        dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentIndex));
+    }
+
+    function setupControls() {
+        const nextBtn = document.querySelector('.carousel-next');
+        const prevBtn = document.querySelector('.carousel-prev');
+
+        const move = (dir) => {
+            if (isAnimating) return;
+            stopAutoPlay();
+            isAnimating = true;
+            currentIndex = (currentIndex + dir + facilities.length) % facilities.length;
+            updateCarousel();
+            setTimeout(() => isAnimating = false, 600);
+            startAutoPlay();
+        };
+
+        if (nextBtn) nextBtn.onclick = () => move(1);
+        if (prevBtn) prevBtn.onclick = () => move(-1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') move(-1);
+            if (e.key === 'ArrowRight') move(1);
+        });
+        
+        if (carousel) {
+            carousel.addEventListener('mouseenter', stopAutoPlay);
+            carousel.addEventListener('mouseleave', startAutoPlay);
+        }
+    }
+
+    function startAutoPlay() {
+        stopAutoPlay();
+        autoPlayInterval = setInterval(() => {
+            const nextBtn = document.querySelector('.carousel-next');
+            if (nextBtn && !isAnimating && !document.hidden) nextBtn.click();
+        }, 4000);
+    }
+
+    function stopAutoPlay() {
+        if (autoPlayInterval) clearInterval(autoPlayInterval);
+    }
+
+    // Scroll Reveal for Rules
     const ruleItems = document.querySelectorAll('.rule-item');
-    
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -442,9 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 entry.target.style.transform = 'translateX(0)';
             }
         });
-    }, {
-        threshold: 0.1
-    });
+    }, { threshold: 0.1 });
     
     ruleItems.forEach((item, index) => {
         item.style.opacity = '0';
@@ -454,6 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
 </body>
 
 </html>
