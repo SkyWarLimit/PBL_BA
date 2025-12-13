@@ -1,10 +1,13 @@
 <?php
 session_start();
 
-// Cek status login & Ambil nama user
+// --- LOGIKA SESSION ---
 $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
+// Role default jika tidak ada session
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -12,122 +15,16 @@ $userName = $isLoggedIn ? $_SESSION['nama'] : '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input Berita - Laboratorium Business Analytics</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/newsInputServiceStyle.css">
-
-    <style>
-        /* === MODERN MODAL STYLING === */
-        
-        .modal-backdrop.show {
-            opacity: 1;
-            background-color: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-
-        .modern-modal-content {
-            border: none;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            background: #ffffff;
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .modern-modal-content::before {
-            content: '';
-            position: absolute;
-            top: -50px;
-            right: -50px;
-            width: 150px;
-            height: 150px;
-            background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
-            opacity: 0.1;
-            border-radius: 50%;
-        }
-
-        .modal-icon-wrapper {
-            width: 90px;
-            height: 90px;
-            background: #eaf0ff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 25px auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .modal-icon-wrapper i {
-            font-size: 2.5rem;
-            color: #4361ee;
-            animation: floatIcon 3s ease-in-out infinite;
-        }
-
-        @keyframes floatIcon {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-
-        .modal-title-custom {
-            font-family: 'Nunito', sans-serif;
-            font-weight: 800;
-            color: #1e293b;
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
-        .modal-text-custom {
-            color: #64748b;
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        .btn-modal-primary {
-            background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 12px;
-            font-weight: 700;
-            width: 100%;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
-        }
-
-        .btn-modal-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(67, 97, 238, 0.4);
-            color: white;
-        }
-
-        .btn-modal-secondary {
-            background: transparent;
-            color: #64748b;
-            border: 2px solid #e2e8f0;
-            padding: 12px 28px;
-            border-radius: 12px;
-            font-weight: 700;
-            width: 100%;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .btn-modal-secondary:hover {
-            background: #f8fafc;
-            color: #1e293b;
-            border-color: #cbd5e1;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="../assets/css/newsInputServiceStyle.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
+
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
@@ -139,16 +36,17 @@ $userName = $isLoggedIn ? $_SESSION['nama'] : '';
             </div>
         </div>
 
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a class="nav-link" href="../index.php">Beranda</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="profile.php">Profil</a>
-            </li>
+        <div class="hamburger" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <ul class="nav-menu" id="navMenu">
+            <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
+            
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle active" href="#">
-                    Publikasi
+                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span>Publikasi</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
@@ -157,9 +55,10 @@ $userName = $isLoggedIn ? $_SESSION['nama'] : '';
                     <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
                 </ul>
             </li>
+
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#">
-                    Peminjaman Lab
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span>Peminjaman Lab</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <ul class="dropdown-menu">
@@ -168,21 +67,59 @@ $userName = $isLoggedIn ? $_SESSION['nama'] : '';
                     <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
                 </ul>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="kontak.php">Kontak</a>
+
+            <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
+            
+            <li class="nav-item mobile-auth-section">
+                <?php if ($isLoggedIn): ?>
+                    <div class="mobile-user-profile-modern">
+                        <div class="d-flex align-items-center gap-3 flex-grow-1">
+                            <div class="mobile-avatar-modern">
+                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128" alt="User Avatar">
+                            </div>
+                            <div class="mobile-info-modern">
+                                <span class="greeting-text">Halo,</span>
+                                <span class="username-text"><?php echo htmlspecialchars($userName); ?></span>
+                            </div>
+                        </div>
+                        <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="mobile-login-btn">
+                        <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                    </div>
+                <?php endif; ?>
             </li>
         </ul>
         
-        <?php if(!$isLoggedIn): ?>
-            <button class="login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
-        <?php else: ?>
-            <button class="login-btn" style="background-color: #e63946;" onclick="window.location.href='../admin/logout.php'">Logout</button>
-        <?php endif; ?>
-    </nav>
+        <?php if ($isLoggedIn): ?>
+            <div class="desktop-user-action">
+                <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
+                    <div class="text-end me-2">
+                        <div class="user-name-label"><?php echo htmlspecialchars($userName); ?></div>
+                        <div class="user-role-label"><?php echo htmlspecialchars($userRole); ?></div>
+                    </div>
+                    <div class="avatar-circle">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128" alt="User Avatar">
+                    </div>
+                </a>
 
+                <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        <?php else: ?>
+            <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php endif; ?>
+
+    </nav>
+    
     <div class="container-fluid news-input-container">
         <div class="row">
-            <div class="col-lg-8">
+            
+            <div class="col-lg-8 order-2 order-lg-1">
                 <h1 class="news-input-title">News Input From Users</h1>
                 <p class="news-input-subtitle">enter the following content :</p>
 
@@ -254,7 +191,7 @@ $userName = $isLoggedIn ? $_SESSION['nama'] : '';
                 </form>
             </div>
 
-            <div class="col-lg-4">
+            <div class="col-lg-4 order-1 order-lg-2">
                 <div class="rules-container">
                     <h3 class="rules-title"><i class="fas fa-book me-2"></i>Aturan Pengiriman</h3>
                     <p class="rules-content">
@@ -272,47 +209,56 @@ $userName = $isLoggedIn ? $_SESSION['nama'] : '';
                     </p>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-            <div class="modal-content modern-modal-content">
-                <div class="modal-icon-wrapper">
-                    <i class="fas fa-lock"></i>
-                </div>
-                
-                <h3 class="modal-title-custom">Akses Terbatas</h3>
-                <p class="modal-text-custom">
-                    Halo! Untuk berkontribusi mengirimkan berita ke Laboratorium, silakan login terlebih dahulu.
-                </p>
-
-                <div class="d-flex flex-column gap-2">
-                    <button class="btn-modal-primary" onclick="window.location.href='../admin/login.php'">
-                        <i class="fas fa-sign-in-alt me-2"></i>Login Akun
-                    </button>
-                    <button class="btn-modal-secondary" onclick="window.location.href='../index.php'">
-                        Kembali ke Beranda
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // 1. Cek Login Status
+        // --- 0. NAV MENU LOGIC ---
+        function toggleMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const hamburgerIcon = document.querySelector('.hamburger i');
+            navMenu.classList.toggle('active');
+            
+            if (navMenu.classList.contains('active')) {
+                hamburgerIcon.classList.remove('fa-bars');
+                hamburgerIcon.classList.add('fa-times');
+            } else {
+                hamburgerIcon.classList.remove('fa-times');
+                hamburgerIcon.classList.add('fa-bars');
+            }
+        }
+
+        // --- 1. Cek Login Status ---
         const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
         document.addEventListener('DOMContentLoaded', function() {
             if (!isLoggedIn) {
-                const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-                loginModal.show();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Akses Terbatas',
+                    text: 'Halo! Untuk berkontribusi mengirimkan berita ke Laboratorium, silakan login terlebih dahulu.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Login Akun',
+                    cancelButtonText: 'Kembali ke Beranda',
+                    reverseButtons: true,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    backdrop: `rgba(15, 23, 42, 0.6)`
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '../admin/login.php';
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        window.location.href = '../index.php';
+                    }
+                });
             }
         });
 
-        // 2. Logic Upload Gambar
+        // --- 2. Logic Upload Gambar ---
         const fileUploadContainer = document.getElementById('fileUploadContainer');
         const fileInput = document.getElementById('newsPhoto');
         const imagesPreviewContainer = document.getElementById('imagesPreviewContainer');
@@ -336,34 +282,22 @@ $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 
         fileUploadContainer.addEventListener('dragover', (e) => {
             e.preventDefault();
-            fileUploadContainer.style.borderColor = '#4361ee';
-            fileUploadContainer.style.backgroundColor = '#f8faff';
-        });
-
-        fileUploadContainer.addEventListener('dragleave', () => {
-            fileUploadContainer.style.borderColor = '#cbd5e1';
-            fileUploadContainer.style.backgroundColor = '#fff';
         });
 
         fileUploadContainer.addEventListener('drop', (e) => {
             e.preventDefault();
-            fileUploadContainer.style.borderColor = '#cbd5e1';
-            fileUploadContainer.style.backgroundColor = '#fff';
             if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
         });
 
         function handleFile(file) {
             if (!file.type.startsWith('image/')) {
-                alert('Mohon upload file gambar yang valid (JPG/PNG).');
+                Swal.fire({ icon: 'error', title: 'File Tidak Valid', text: 'Format harus JPG, JPEG, atau PNG.' });
                 return;
             }
             uploadedFile = file;
             const reader = new FileReader();
             reader.onload = (e) => {
-                imagesPreviewContainer.innerHTML = `
-                    <div class="image-preview-item" style="box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                        <img src="${e.target.result}" class="image-preview" style="object-fit: cover;">
-                    </div>`;
+                imagesPreviewContainer.innerHTML = `<div class="image-preview-item"><img src="${e.target.result}"></div>`;
                 uploadPlaceholder.style.display = 'none';
                 imagesPreviewContainer.style.display = 'grid';
                 uploadInfo.style.display = 'flex';
@@ -373,68 +307,48 @@ $userName = $isLoggedIn ? $_SESSION['nama'] : '';
         }
 
         removeAllImagesBtn.addEventListener('click', () => {
-            uploadedFile = null;
-            fileInput.value = '';
-            imagesPreviewContainer.innerHTML = '';
-            uploadPlaceholder.style.display = 'flex';
-            imagesPreviewContainer.style.display = 'none';
-            uploadInfo.style.display = 'none';
+            uploadedFile = null; fileInput.value = ''; imagesPreviewContainer.innerHTML = '';
+            uploadPlaceholder.style.display = 'flex'; imagesPreviewContainer.style.display = 'none'; uploadInfo.style.display = 'none';
         });
         
-        addMoreImagesBtn.addEventListener('click', () => {
-             fileInput.click();
-        });
+        addMoreImagesBtn.addEventListener('click', () => fileInput.click());
 
-        // 3. Logic Submit Form ke API
+        // --- 3. Logic Submit Form ---
         document.getElementById('newsForm').addEventListener('submit', function(e) {
             e.preventDefault();
-
             if (!uploadedFile) {
-                alert('Silakan sertakan minimal satu foto untuk berita ini.');
+                Swal.fire({ icon: 'warning', title: 'Foto Belum Ada', text: 'Sertakan minimal satu foto.' });
                 return;
             }
 
-            // UI Loading
             const btn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
             const btnSpinner = document.getElementById('btnSpinner');
             
-            btn.disabled = true;
-            btnText.textContent = 'Sedang Mengirim...';
-            btnSpinner.classList.remove('d-none');
+            btn.disabled = true; btnText.textContent = 'Sedang Mengirim...'; btnSpinner.classList.remove('d-none');
 
-            // Persiapan Data
             const formData = new FormData();
             formData.append('name', document.getElementById('name').value); 
             formData.append('judul', document.getElementById('newsTitle').value);
-            formData.append('kategori', document.getElementById('newsCategory').value); // Kategori Baru
+            formData.append('kategori', document.getElementById('newsCategory').value);
             formData.append('deskripsi', document.getElementById('newsDescription').value);
             formData.append('tanggal', document.getElementById('newsDate').value);
             formData.append('foto', uploadedFile); 
 
-            // Fetch ke API Backend
-            fetch('../admin/api/submit_news.php', {
-                method: 'POST',
-                body: formData
-            })
+            fetch('../admin/api/submit_news.php', { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('🎉 Berhasil! ' + data.message);
-                    document.getElementById('newsForm').reset();
-                    removeAllImagesBtn.click();
+                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.message }).then(() => {
+                        document.getElementById('newsForm').reset(); removeAllImagesBtn.click();
+                    });
                 } else {
-                    alert('❌ Gagal: ' + data.message);
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('⚠️ Terjadi kesalahan koneksi ke server.');
-            })
+            .catch(error => Swal.fire({ icon: 'error', title: 'Error', text: 'Kesalahan server.' }))
             .finally(() => {
-                btn.disabled = false;
-                btnText.textContent = 'Kirim Berita';
-                btnSpinner.classList.add('d-none');
+                btn.disabled = false; btnText.textContent = 'Kirim Berita'; btnSpinner.classList.add('d-none');
             });
         });
     </script>

@@ -1,47 +1,79 @@
 <?php
-// File: admin/api/kontak.php
-require_once '../../admin/config/database.php';
+// admin/api/kontak.php
 
-// Pastikan session dimulai
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// 1. Matikan error display agar JSON tidak rusak
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ob_start();
 
-checkAuth();
 header('Content-Type: application/json');
-
-$db = (new Database())->getConnection();
-$method = $_SERVER['REQUEST_METHOD'];
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 
 try {
+    // 2. Load Database (Metode Robust)
+    $possiblePaths = [
+        __DIR__ . '/../config/database.php',
+        $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php'
+    ];
+    $dbPath = null;
+    foreach ($possiblePaths as $path) { if (file_exists($path)) { $dbPath = $path; break; }}
+    
+    if (!$dbPath) throw new Exception("Config database tidak ditemukan.");
+    require_once $dbPath;
+
+    // Start Session
+    if (session_status() == PHP_SESSION_NONE) session_start();
+    
+    // Auth Check
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception("Unauthorized access.");
+    }
+
+    // Adaptasi Koneksi
+    if (isset($pdo) && $pdo) { $conn = $pdo; } 
+    elseif (class_exists('Database')) { $db = new Database(); $conn = $db->getConnection(); } 
+    else { throw new Exception("Koneksi database gagal."); }
+
+    $method = $_SERVER['REQUEST_METHOD'];
+
     // === GET DATA (AMBIL PESAN) ===
-    if ($method == 'GET') {
+    if ($method === 'GET') {
         // Ambil semua pesan urut dari yang terbaru
-        $stmt = $db->query("SELECT * FROM kontak ORDER BY created_at DESC");
+        $stmt = $conn->query("SELECT * FROM kontak ORDER BY created_at DESC");
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode(['success' => true, 'data' => $data]);
+        jsonOutput(['success' => true, 'data' => $data]);
     } 
     
     // === POST DATA (UPDATE STATUS / DELETE) ===
-    elseif ($method == 'POST') {
-        
-        // 1. TANDAI SUDAH DIBACA
-        if (isset($_POST['action']) && $_POST['action'] == 'mark_read') {
-            $id = $_POST['id'];
-            $stmt = $db->prepare("UPDATE kontak SET is_read = 1 WHERE id_kontak = ?");
+    if ($method === 'POST') {
+        $action = $_POST['action'] ?? '';
+
+        // -------------------------------------------------------------
+        // 1. TANDAI SUDAH DIBACA (Trigger kontak_update_log otomatis jalan)
+        // -------------------------------------------------------------
+        if ($action === 'mark_read') {
+            $id = (int)$_POST['id'];
+            
+            $stmt = $conn->prepare("UPDATE kontak SET is_read = 1 WHERE id_kontak = ?");
+            
             if ($stmt->execute([$id])) {
-                echo json_encode(['success' => true, 'message' => 'Pesan ditandai sudah dibaca']);
+                jsonOutput(['success' => true, 'message' => 'Pesan ditandai sudah dibaca']);
             } else {
                 throw new Exception('Gagal update status.');
             }
         }
 
-        // 2. HAPUS PESAN
-        elseif (isset($_POST['action']) && $_POST['action'] == 'delete') {
-            $id = $_POST['id'];
-            $stmt = $db->prepare("DELETE FROM kontak WHERE id_kontak = ?");
+        // -------------------------------------------------------------
+        // 2. HAPUS PESAN (Trigger kontak_delete_log otomatis jalan)
+        // -------------------------------------------------------------
+        elseif ($action === 'delete') {
+            $id = (int)$_POST['id'];
+            
+            $stmt = $conn->prepare("DELETE FROM kontak WHERE id_kontak = ?");
+            
             if ($stmt->execute([$id])) {
-                echo json_encode(['success' => true, 'message' => 'Pesan berhasil dihapus']);
+                jsonOutput(['success' => true, 'message' => 'Pesan berhasil dihapus']);
             } else {
                 throw new Exception('Gagal menghapus pesan.');
             }
@@ -49,6 +81,14 @@ try {
     }
 
 } catch (Exception $e) {
+    ob_end_clean();
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    exit;
+}
+
+function jsonOutput($data) {
+    ob_clean();
+    echo json_encode($data);
+    exit;
 }
 ?>

@@ -1,314 +1,263 @@
 <?php
-// api/anggota.php - Manajemen CRUD Dosen/Anggota
+// admin/api/anggota.php
+
+// 1. Matikan error HTML agar JSON aman
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ob_start();
 
 header('Content-Type: application/json');
-require_once __DIR__ . '/../config/database.php';
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 
-// Pastikan hanya admin yang bisa mengakses API ini
-if (!function_exists('checkAuth')) {
-    session_start();
-    function checkAuth() {
-        if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-            exit;
-        }
-    }
-}
-checkAuth();
-
-$method = $_SERVER['REQUEST_METHOD'];
-$db = (new Database())->getConnection();
-
-// Pastikan fungsi uploadFile dan deleteFile ada
-if (!function_exists('uploadFile')) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Fungsi uploadFile tidak ditemukan di database.php']);
-    exit;
-}
-if (!function_exists('deleteFile')) {
-    function deleteFile($path) { return true; } 
-}
-
-
-// --- FUNGSI HELPER ---
-
-/**
- * Mendapatkan semua data anggota dengan relasi penuh.
- * Mengambil Pendidikan dan Keahlian dari tabel relasional.
- * @param PDO $db Objek database
- * @return array
- */
-function getAnggotaData($db) {
-    try {
-        // 1. Query utama untuk data dosen (JOIN ke users untuk mendapatkan nama)
-        $sql_dosen = "SELECT d.id_dosen, d.id_user, d.nidn, d.foto, d.created_at, d.updated_at,
-                     u.nama AS nama_anggota
-                     FROM dosen d
-                     JOIN users u ON d.id_user = u.id_user 
-                     ORDER BY d.id_dosen DESC";
-        $dosen_stmt = $db->query($sql_dosen);
-        $dosen_data = $dosen_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // 2. Ambil semua data relasional dalam satu query untuk efisiensi
-        $sql_links = "SELECT id_dosen, platform, link_url FROM link_akademik_dosen";
-        $links_data = $db->query($sql_links)->fetchAll(PDO::FETCH_ASSOC);
-
-        $sql_pendidikan = "SELECT id_dosen, pendidikan FROM pendidikan_terakhir";
-        $pendidikan_data = $db->query($sql_pendidikan)->fetchAll(PDO::FETCH_ASSOC);
-        
-        $sql_keahlian = "SELECT id_dosen, nama_bidang FROM bidang_keahlian";
-        $keahlian_data = $db->query($sql_keahlian)->fetchAll(PDO::FETCH_ASSOC);
-
-        // 3. Mapping semua data relasional ke dosen
-        $dosen_with_relations = [];
-        foreach ($dosen_data as $dosen) {
-            $id = $dosen['id_dosen'];
-            
-            // Filter dan map data relasional
-            $dosen['links'] = array_filter($links_data, fn($link) => $link['id_dosen'] == $id);
-            
-            $pendidikan = array_filter($pendidikan_data, fn($p) => $p['id_dosen'] == $id);
-            $dosen['pendidikan_terakhir'] = array_column($pendidikan, 'pendidikan'); 
-            
-            $keahlian = array_filter($keahlian_data, fn($k) => $k['id_dosen'] == $id);
-            $dosen['bidang_keahlian'] = array_column($keahlian, 'nama_bidang');
-            
-            $dosen_with_relations[] = $dosen;
-        }
-        
-        return $dosen_with_relations;
-    } catch (PDOException $e) {
-        error_log("Error fetching anggota data: " . $e->getMessage());
-        return [];
-    }
-}
-
-/**
- * Menyimpan data dosen/anggota baru atau mengupdate yang sudah ada ke multi-tabel.
- * @param array $data Data form
- * @param array $file Array $_FILES
- * @param PDO $db Objek database
- * @return array Hasil operasi
- */
-function saveAnggota($data, $file, $db) {
-    $is_update = !empty($data['id_dosen']);
-    $id_dosen = $data['id_dosen'] ?? null;
-    $id_user_input = $data['id_user_terpilih'] ?? null; 
+try {
+    // 2. Load Database (Tanpa mengubah file aslinya)
+    $possiblePaths = [
+        __DIR__ . '/../config/database.php',
+        $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php'
+    ];
+    $dbPath = null;
+    foreach ($possiblePaths as $path) { if (file_exists($path)) { $dbPath = $path; break; }}
     
-    // Ambil data dari form
-    $nidn = $data['nidn'] ?? '';
-    $pendidikan_str = $data['pendidikan_terakhir'] ?? ''; 
-    $keahlian_str = $data['bidang_keahlian'] ?? '';
+    if (!$dbPath) throw new Exception("Config database tidak ditemukan.");
+    require_once $dbPath;
+
+    // Start Session Manual
+    if (session_status() == PHP_SESSION_NONE) session_start();
     
-    // Validasi input
-    if (empty($id_user_input) || empty($nidn) || empty($pendidikan_str) || empty($keahlian_str)) {
-         return ['success' => false, 'message' => 'Semua kolom wajib diisi. (Pastikan User sudah dipilih dari pencarian)'];
+    // Auth Check
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception("Unauthorized access.");
     }
 
-    $db->beginTransaction();
-    try {
-        $foto_path = $data['old_foto'] ?? null; 
+    // Adaptasi Koneksi: Gunakan variabel $pdo dari database.php
+    if (isset($pdo) && $pdo) { 
+        $conn = $pdo; 
+    } elseif (class_exists('Database')) { 
+        $db = new Database(); 
+        $conn = $db->getConnection(); 
+    } else { 
+        throw new Exception("Koneksi database gagal."); 
+    }
 
-        // 1. Proses Upload Foto Baru
-        if (isset($file['foto']) && $file['foto']['error'] === UPLOAD_ERR_OK) {
-            $upload_result = uploadFile($file['foto'], 'anggota');
-            if (!$upload_result['success']) {
-                $db->rollBack();
-                return ['success' => false, 'message' => 'Gagal Upload Foto: ' . $upload_result['message']];
+    // [PENTING] Injeksi ID User untuk Trigger Log
+    $currentUid = (int)$_SESSION['user_id'];
+    $currentIp  = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    $conn->exec("SET app.current_user_id = '$currentUid'");
+    $conn->exec("SET app.current_ip = '$currentIp'");
+
+    $method = $_SERVER['REQUEST_METHOD'];
+
+    // === GET DATA ===
+    if ($method === 'GET') {
+        $action = $_GET['action'] ?? 'list';
+
+        // List User untuk Dropdown Search
+        if ($action === 'get_users') {
+            // Mengambil semua user agar pencarian di frontend bekerja
+            $stmt = $conn->query("SELECT id_user, nama, email, role FROM users ORDER BY nama ASC");
+            jsonOutput(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        } 
+        
+        // Detail Anggota (Edit)
+        else if ($action === 'detail' && isset($_GET['id'])) {
+            $id = (int)$_GET['id'];
+            $stmt = $conn->prepare("SELECT d.*, u.nama, u.email FROM dosen d JOIN users u ON d.id_user = u.id_user WHERE d.id_dosen = :id");
+            $stmt->execute([':id' => $id]);
+            $dosen = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if($dosen) {
+                // Pendidikan
+                $stmt = $conn->prepare("SELECT pendidikan FROM pendidikan_terakhir WHERE id_dosen = :id LIMIT 1");
+                $stmt->execute([':id' => $id]); 
+                $res = $stmt->fetch(PDO::FETCH_ASSOC);
+                $dosen['pendidikan_terakhir'] = $res ? $res['pendidikan'] : '';
+
+                // Keahlian
+                $stmt = $conn->prepare("SELECT nama_bidang FROM bidang_keahlian WHERE id_dosen = :id");
+                $stmt->execute([':id' => $id]); 
+                $skills = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $dosen['bidang_keahlian'] = implode(', ', array_column($skills, 'nama_bidang'));
+
+                // Links
+                $stmt = $conn->prepare("SELECT platform, link_url FROM link_akademik_dosen WHERE id_dosen = :id");
+                $stmt->execute([':id' => $id]); 
+                $links = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $dosen['links_dynamic'] = array_map(function($l){ return ['platform'=>$l['platform'], 'url'=>$l['link_url']]; }, $links);
             }
-            $foto_path = $upload_result['path'];
-            if ($is_update && !empty($data['old_foto']) && $data['old_foto'] !== $foto_path) {
-                deleteFile($data['old_foto']);
-            }
+            jsonOutput(['success' => true, 'data' => $dosen]);
         }
         
-        // 2. Insert/Update Data Dosen (Tabel 'dosen') - Hapus kolom relasional
-        if ($is_update) {
-            $sql_dosen = "UPDATE dosen SET 
-                          nidn = :nidn, updated_at = NOW()" . 
-                          (!empty($foto_path) ? ", foto = :foto" : "") . 
-                          " WHERE id_dosen = :id_dosen";
-            $stmt = $db->prepare($sql_dosen);
-            $stmt->bindParam(':id_dosen', $id_dosen, PDO::PARAM_INT);
-        } else {
-            // INSERT: Menyertakan id_user yang dipilih
-            $sql_dosen = "INSERT INTO dosen (id_user, nidn, foto, created_at, updated_at) 
-                          VALUES (:id_user, :nidn, :foto, NOW(), NOW())";
-            $stmt = $db->prepare($sql_dosen);
-            $stmt->bindParam(':id_user', $id_user_input, PDO::PARAM_INT);
-        }
-
-        $stmt->bindParam(':nidn', $nidn);
-        if (!empty($foto_path)) {
-            $stmt->bindParam(':foto', $foto_path);
-        }
-        $stmt->execute(); 
-
-        if (!$is_update) {
-            $id_dosen = $db->lastInsertId();
-        }
-
-        // --- 3. Update Pendidikan Terakhir (Tabel Relasional) ---
-        $db->prepare("DELETE FROM pendidikan_terakhir WHERE id_dosen = ?")->execute([$id_dosen]);
-        // Pisahkan input berdasarkan koma atau baris baru
-        $pendidikan_list = array_map('trim', array_filter(explode(',', str_replace(["\r\n", "\r", "\n"], ',', $pendidikan_str))));
-        
-        $sql_pendidikan = "INSERT INTO pendidikan_terakhir (id_dosen, pendidikan, created_at) VALUES (?, ?, NOW())";
-        $stmt_pendidikan = $db->prepare($sql_pendidikan);
-
-        foreach ($pendidikan_list as $pendidikan) {
-            if (!empty($pendidikan)) {
-                $stmt_pendidikan->execute([$id_dosen, $pendidikan]);
-            }
-        }
-
-        // --- 4. Update Bidang Keahlian (Tabel Relasional) ---
-        $db->prepare("DELETE FROM bidang_keahlian WHERE id_dosen = ?")->execute([$id_dosen]);
-        // Pisahkan input berdasarkan koma atau baris baru
-        $keahlian_list = array_map('trim', array_filter(explode(',', str_replace(["\r\n", "\r", "\n"], ',', $keahlian_str))));
-        
-        $sql_keahlian = "INSERT INTO bidang_keahlian (id_dosen, nama_bidang, created_at) VALUES (?, ?, NOW())";
-        $stmt_keahlian = $db->prepare($sql_keahlian);
-
-        foreach ($keahlian_list as $bidang) {
-            if (!empty($bidang)) {
-                $stmt_keahlian->execute([$id_dosen, $bidang]);
-            }
-        }
-
-        // --- 5. Update Link Akademik (SAMA) ---
-        $db->prepare("DELETE FROM link_akademik_dosen WHERE id_dosen = ?")->execute([$id_dosen]);
-        if (!empty($data['link_platform'])) {
-            $platforms = $data['link_platform'];
-            $urls = $data['link_url'];
-            if (is_array($platforms) && is_array($urls) && count($platforms) === count($urls)) {
-                $sql_link = "INSERT INTO link_akademik_dosen (id_dosen, platform, link_url, created_at, updated_at) 
-                             VALUES (?, ?, ?, NOW(), NOW())";
-                $link_stmt = $db->prepare($sql_link);
-                foreach ($platforms as $index => $platform) {
-                    $url = $urls[$index];
-                    if (!empty($platform) && !empty($url)) {
-                        $link_stmt->execute([$id_dosen, $platform, $url]);
+        // List Table Anggota
+        else {
+            $sql = "SELECT d.id_dosen, d.nidn, d.foto, u.nama,
+                    (SELECT pendidikan FROM pendidikan_terakhir WHERE id_dosen = d.id_dosen LIMIT 1) as pendidikan,
+                    (SELECT STRING_AGG(nama_bidang, ', ') FROM bidang_keahlian WHERE id_dosen = d.id_dosen) as keahlian,
+                    (SELECT STRING_AGG(CONCAT(platform, '::', link_url), '||') FROM link_akademik_dosen WHERE id_dosen = d.id_dosen) as links_raw
+                    FROM dosen d JOIN users u ON d.id_user = u.id_user ORDER BY u.nama ASC";
+            
+            $stmt = $conn->prepare($sql); 
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $data = [];
+            foreach($result as $row) {
+                $linksMap = [];
+                if($row['links_raw']) {
+                    foreach(explode('||', $row['links_raw']) as $r) {
+                        $parts = explode('::', $r);
+                        if(count($parts) == 2) $linksMap[$parts[0]] = $parts[1];
                     }
                 }
+                $row['links_map'] = $linksMap; 
+                unset($row['links_raw']);
+                $data[] = $row;
+            }
+            jsonOutput(['success' => true, 'data' => $data]);
+        }
+    }
+
+    // === POST DATA ===
+    if ($method === 'POST') {
+        $action = $_POST['action'] ?? 'save';
+
+        // 1. DELETE
+        if ($action === 'delete') {
+            $id = (int)$_POST['id'];
+            
+            // Ambil foto lama
+            $stmt = $conn->prepare("SELECT foto FROM dosen WHERE id_dosen = :id");
+            $stmt->execute([':id' => $id]);
+            $oldData = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Hapus file fisik
+            if ($oldData && !empty($oldData['foto'])) {
+                $filePath = __DIR__ . '/../' . $oldData['foto']; 
+                if (file_exists($filePath)) unlink($filePath);
+            }
+
+            // Hapus Data (Trigger DB aktif otomatis)
+            $conn->prepare("DELETE FROM bidang_keahlian WHERE id_dosen = :id")->execute([':id' => $id]);
+            $conn->prepare("DELETE FROM pendidikan_terakhir WHERE id_dosen = :id")->execute([':id' => $id]);
+            $conn->prepare("DELETE FROM link_akademik_dosen WHERE id_dosen = :id")->execute([':id' => $id]);
+            $conn->prepare("DELETE FROM dosen WHERE id_dosen = :id")->execute([':id' => $id]);
+
+            jsonOutput(['success' => true, 'message' => 'Data berhasil dihapus']);
+        } 
+        
+        // 2. SAVE / UPDATE
+        else {
+            $id_dosen = !empty($_POST['id_dosen']) ? (int)$_POST['id_dosen'] : null;
+            $id_user = $_POST['id_user'];
+            $nidn = $_POST['nidn'];
+            
+            // [FIX ERROR STRING TRUNCATED] 
+            // Potong teks jika lebih dari 250 karakter (karena DB varchar(255))
+            $pendidikan = substr($_POST['pendidikan_terakhir'], 0, 250); 
+            $keahlian_raw = $_POST['bidang_keahlian'];
+
+            if(empty($id_user)) throw new Exception("User wajib dipilih dari daftar.");
+
+            // Upload Foto
+            $fotoPath = '';
+            if (isset($_FILES['foto']) && $_FILES['foto']['error'] === 0) {
+                $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                if(!in_array($ext, $allowed)) throw new Exception("Format file tidak diizinkan.");
+
+                $fileName = 'anggota_' . time() . '_' . uniqid() . '.' . $ext;
+                $targetDir = __DIR__ . '/../uploads/anggota/'; 
+                
+                if (!is_dir($targetDir)) mkdir($targetDir, 0755, true);
+
+                if (move_uploaded_file($_FILES['foto']['tmp_name'], $targetDir . $fileName)) {
+                    $fotoPath = 'uploads/anggota/' . $fileName;
+                }
+            }
+
+            $conn->beginTransaction();
+            try {
+                if ($id_dosen) {
+                    // UPDATE
+                    if ($fotoPath) {
+                        $stmt = $conn->prepare("SELECT foto FROM dosen WHERE id_dosen = :id");
+                        $stmt->execute([':id' => $id_dosen]);
+                        $old = $stmt->fetch(PDO::FETCH_ASSOC);
+                        if ($old && $old['foto'] && file_exists(__DIR__.'/../'.$old['foto'])) {
+                            unlink(__DIR__.'/../'.$old['foto']);
+                        }
+                        
+                        $sql = "UPDATE dosen SET id_user=:u, nidn=:n, foto=:f, updated_at=NOW() WHERE id_dosen=:id";
+                        $conn->prepare($sql)->execute([':u'=>$id_user, ':n'=>$nidn, ':f'=>$fotoPath, ':id'=>$id_dosen]);
+                    } else {
+                        $sql = "UPDATE dosen SET id_user=:u, nidn=:n, updated_at=NOW() WHERE id_dosen=:id";
+                        $conn->prepare($sql)->execute([':u'=>$id_user, ':n'=>$nidn, ':id'=>$id_dosen]);
+                    }
+                    
+                    // Reset Child
+                    $conn->prepare("DELETE FROM pendidikan_terakhir WHERE id_dosen=:id")->execute([':id'=>$id_dosen]);
+                    $conn->prepare("DELETE FROM bidang_keahlian WHERE id_dosen=:id")->execute([':id'=>$id_dosen]);
+                    $conn->prepare("DELETE FROM link_akademik_dosen WHERE id_dosen=:id")->execute([':id'=>$id_dosen]);
+
+                } else {
+                    // INSERT
+                    $stmt = $conn->prepare("SELECT id_dosen FROM dosen WHERE id_user = :u");
+                    $stmt->execute([':u' => $id_user]);
+                    if($stmt->rowCount() > 0) throw new Exception("User ini sudah terdaftar sebagai Anggota.");
+
+                    // [FIX FOREIGN KEY ERROR] Gunakan RETURNING id_dosen
+                    $sql = "INSERT INTO dosen (id_user, nidn, foto, created_at) VALUES (:u, :n, :f, NOW()) RETURNING id_dosen";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute([':u'=>$id_user, ':n'=>$nidn, ':f'=>$fotoPath]);
+                    $id_dosen = $stmt->fetchColumn(); // Ambil ID yang baru dibuat
+                }
+
+                // Insert Relasi (Pastikan ID Dosen Valid)
+                if(!$id_dosen) throw new Exception("Gagal membuat data dosen induk.");
+
+                if($pendidikan) {
+                    $conn->prepare("INSERT INTO pendidikan_terakhir (id_dosen, pendidikan, created_at) VALUES (:id, :p, NOW())")
+                         ->execute([':id'=>$id_dosen, ':p'=>$pendidikan]);
+                }
+
+                if($keahlian_raw) {
+                    foreach(explode(',', $keahlian_raw) as $bid) { 
+                        if($b=trim($bid)) {
+                            // Potong per item keahlian juga
+                            $b_safe = substr($b, 0, 250);
+                            $conn->prepare("INSERT INTO bidang_keahlian (id_dosen, nama_bidang, created_at) VALUES (:id, :b, NOW())")
+                                 ->execute([':id'=>$id_dosen, ':b'=>$b_safe]);
+                        }
+                    }
+                }
+
+                if(isset($_POST['link_platform']) && isset($_POST['link_url'])) {
+                    $p=$_POST['link_platform']; $u=$_POST['link_url'];
+                    for($i=0; $i<count($p); $i++){ 
+                        if(!empty($p[$i]) && !empty($u[$i])) {
+                            $conn->prepare("INSERT INTO link_akademik_dosen (id_dosen, platform, link_url, created_at) VALUES (:id, :p, :u, NOW())")
+                                 ->execute([':id'=>$id_dosen, ':p'=>$p[$i], ':u'=>$u[$i]]); 
+                        }
+                    }
+                }
+
+                $conn->commit();
+                jsonOutput(['success' => true, 'message' => 'Data berhasil disimpan']);
+            } catch (Exception $e) { 
+                $conn->rollBack(); 
+                throw new Exception("Database Error: " . $e->getMessage()); 
             }
         }
-
-        $db->commit();
-        return ['success' => true, 'message' => $is_update ? 'Data anggota berhasil diperbarui.' : 'Anggota baru berhasil ditambahkan.', 'data' => ['id_dosen' => $id_dosen]];
-
-    } catch (PDOException $e) {
-        $db->rollBack();
-        error_log("Error saveAnggota: " . $e->getMessage());
-        return ['success' => false, 'message' => 'Error database saat menyimpan data: ' . $e->getMessage()];
     }
+} catch (Exception $e) { 
+    ob_end_clean(); 
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]); 
+    exit; 
 }
 
-
-// --- LOGIKA UTAMA API ---
-
-if ($method === 'GET') {
-    
-    // ENDPOINT PENCARIAN USER
-    if (isset($_GET['action']) && $_GET['action'] === 'search_user' && isset($_GET['q'])) {
-        $search_term = '%' . $_GET['q'] . '%';
-        // Cari user di tabel users.
-        $stmt = $db->prepare("SELECT id_user, nama, email FROM users WHERE nama LIKE ? OR email LIKE ? LIMIT 10");
-        $stmt->execute([$search_term, $search_term]);
-        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        echo json_encode(['success' => true, 'data' => $users]);
-        exit;
-    }
-    
-    if (isset($_GET['id'])) {
-        // READ detail anggota
-        $id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
-        
-        // Ambil data dasar dosen (JOIN ke users untuk nama)
-        $dosen_stmt = $db->prepare("SELECT d.*, u.nama AS nama_anggota 
-                                   FROM dosen d 
-                                   JOIN users u ON d.id_user = u.id_user
-                                   WHERE d.id_dosen = ?");
-        $dosen_stmt->execute([$id]);
-        $dosen_data = $dosen_stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($dosen_data) {
-            // 1. Ambil Data Link Akademik
-            $links_stmt = $db->prepare("SELECT platform, link_url FROM link_akademik_dosen WHERE id_dosen = ?");
-            $links_stmt->execute([$id]);
-            $dosen_data['links'] = $links_stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // 2. Ambil Data Pendidikan Terakhir
-            $pendidikan_stmt = $db->prepare("SELECT pendidikan FROM pendidikan_terakhir WHERE id_dosen = ?");
-            $pendidikan_stmt->execute([$id]);
-            // Gabungkan array pendidikan menjadi satu string yang dipisahkan koma untuk ditampilkan di textarea
-            $dosen_data['pendidikan_terakhir'] = implode(', ', array_column($pendidikan_stmt->fetchAll(PDO::FETCH_ASSOC), 'pendidikan'));
-            
-            // 3. Ambil Data Bidang Keahlian
-            $keahlian_stmt = $db->prepare("SELECT nama_bidang FROM bidang_keahlian WHERE id_dosen = ?");
-            $keahlian_stmt->execute([$id]);
-            // Gabungkan array bidang menjadi satu string yang dipisahkan koma untuk ditampilkan di textarea
-            $dosen_data['bidang_keahlian'] = implode(', ', array_column($keahlian_stmt->fetchAll(PDO::FETCH_ASSOC), 'nama_bidang'));
-
-            $dosen_data['id_user_terpilih'] = $dosen_data['id_user']; 
-
-            echo json_encode(['success' => true, 'data' => $dosen_data]);
-        } else {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Anggota tidak ditemukan.']);
-        }
-
-    } else {
-        // READ semua anggota (list)
-        echo json_encode(['success' => true, 'data' => getAnggotaData($db)]);
-    }
-
-} elseif ($method === 'POST') {
-    $action = $_POST['action'] ?? 'save';
-
-    if ($action === 'save') {
-        $result = saveAnggota($_POST, $_FILES, $db);
-        echo json_encode($result);
-
-    } elseif ($action === 'delete' && isset($_POST['id'])) {
-        // DELETE (Menghapus dari semua tabel relasional)
-        $id = filter_var($_POST['id'], FILTER_VALIDATE_INT);
-        
-        $db->beginTransaction();
-        try {
-            $stmt_foto = $db->prepare("SELECT foto FROM dosen WHERE id_dosen = ?");
-            $stmt_foto->execute([$id]);
-            $foto_path = $stmt_foto->fetchColumn();
-
-            // Hapus dari tabel relasional
-            $db->prepare("DELETE FROM link_akademik_dosen WHERE id_dosen = ?")->execute([$id]);
-            $db->prepare("DELETE FROM pendidikan_terakhir WHERE id_dosen = ?")->execute([$id]);
-            $db->prepare("DELETE FROM bidang_keahlian WHERE id_dosen = ?")->execute([$id]);
-            
-            // Hapus data dosen
-            $stmt_del = $db->prepare("DELETE FROM dosen WHERE id_dosen = ?");
-            $stmt_del->execute([$id]);
-
-            $db->commit();
-
-            if ($foto_path) deleteFile($foto_path);
-
-            echo json_encode(['success' => true, 'message' => 'Anggota berhasil dihapus.']);
-
-        } catch (PDOException $e) {
-            $db->rollBack();
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Gagal menghapus anggota: ' . $e->getMessage()]);
-        }
-
-    } else {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Aksi tidak valid.']);
-    }
-} else {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+function jsonOutput($data) {
+    ob_clean();
+    echo json_encode($data);
+    exit;
 }
 ?>
