@@ -44,7 +44,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
             <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
 
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                     aria-expanded="false">
                     <span>Publikasi</span>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
@@ -69,7 +69,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                 </ul>
             </li>
 
-            <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
+            <li class="nav-item"><a class="nav-link active" href="kontak.php">Kontak</a></li>
 
             <li class="nav-item mobile-auth-section">
                 <?php if ($isLoggedIn): ?>
