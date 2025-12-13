@@ -1,8 +1,6 @@
-/* ========================================= */
-/* NAVBARRRRRRR */
-/* ========================================= */
-
-/* CSS Kustom untuk Sticky Navbar */
+/* ==========================================================================
+   1. GLOBAL & RESET
+   ========================================================================== */
 * {
   font-family: "Nunito", sans-serif;
   margin: 0;
@@ -11,27 +9,39 @@
 }
 
 body {
-  padding-top: 80px;
+  padding-top: 80px; /* Kompensasi tinggi navbar fixed */
 }
 
+/* ==========================================================================
+   2. NAVBAR UTAMA (STICKY GLASSMORPHISM)
+   ========================================================================== */
 .sticky-navbar {
   width: 100%;
   height: 80px;
-  background-color: rgba(255, 255, 255, 1);
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+
+  /* Background Putih Transparan + Blur */
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
   position: fixed;
   top: 0;
+  left: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 50px;
+  transition: all 0.3s ease;
 }
 
+/* --- LOGO SECTION --- */
 .logo-container {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  margin-right: auto;
 }
 
 .logo {
@@ -43,6 +53,7 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .logo img {
@@ -60,7 +71,6 @@ body {
   font-weight: 700;
   font-size: 18px;
   color: #333;
-  white-space: nowrap;
   line-height: 1.2;
 }
 
@@ -68,139 +78,392 @@ body {
   font-weight: 400;
   font-size: 12px;
   color: #666;
-  white-space: nowrap;
-  line-height: 1.2;
   margin-top: 2px;
 }
 
-.nav-menu {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  align-items: center;
-  gap: 40px;
-  flex-grow: 1;
-  justify-content: center;
-  height: 100%;
-}
-
-.nav-item {
-  position: relative;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.nav-link {
-  color: #333;
-  text-decoration: none;
-  font-weight: 600;
-  padding: 10px 0;
-  transition: color 0.3s;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-  font-size: 16px;
-  height: 100%;
-}
-
-.nav-link:hover {
-  color: #2b95fd;
-}
-
-.nav-link.active {
-  color: #2b95fd;
-}
-
-/* Garis horizontal di bawah menu aktif */
-.nav-link.active::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background-color: #2b95fd;
-  border-radius: 2px 2px 0 0;
-}
-
-/* Dropdown styling */
-.dropdown-toggle {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* Icon panah bawah untuk dropdown */
-.dropdown-toggle::after {
+/* --- HAMBURGER ICON (Hidden di Desktop) --- */
+.hamburger {
   display: none;
-}
-
-.dropdown-icon {
-  font-size: 12px;
-  margin-left: 5px;
-  color: inherit;
-}
-
-/* Custom Dropdown Menu */
-.dropdown-menu {
-  width: 250px; /* Diperlebar dari 200px menjadi 250px */
-  background: rgba(255, 255, 255, 0.95) !important; /* Sedikit lebih solid */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.25) !important;
-  border-radius: 8px;
-  padding: 0;
-  margin-top: 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  display: none;
-  opacity: 0;
-  transition: all 0.3s ease;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 1001;
-}
-
-/* Dropdown muncul saat hover */
-.nav-item.dropdown:hover .dropdown-menu {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Tambahan spacing untuk dropdown container */
-.nav-item.dropdown {
-  position: relative;
-}
-
-.dropdown-item {
-  padding: 12px 20px;
-  font-weight: 500;
-  color: #333;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  height: 40px;
+  font-size: 26px;
   cursor: pointer;
-  white-space: nowrap;
-  text-decoration: none;
+  color: #333;
+  padding: 10px;
+  transition: transform 0.3s ease;
+  margin-left: 20px;
 }
 
-.dropdown-item:last-child {
-  border-bottom: none;
+/* Hilangkan panah dropdown bawaan Bootstrap */
+.nav-link.dropdown-toggle::after {
+  display: none !important;
 }
 
-.dropdown-item:hover {
-  background-color: rgba(43, 149, 253, 0.1);
-  color: #2b95fd;
+/* ==========================================================================
+   3. NAVBAR DESKTOP (Min-Width: 992px)
+   ========================================================================== */
+@media (min-width: 992px) {
+  .nav-menu {
+    display: flex !important;
+    flex-direction: row;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    gap: 30px;
+    flex-grow: 1;
+    justify-content: center;
+    height: 100%;
+    background: transparent;
+    position: static;
+    box-shadow: none;
+    max-height: none;
+    opacity: 1;
+    transform: none !important;
+    visibility: visible;
+  }
+
+  .nav-item {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-link {
+    color: #333;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px 0;
+    transition: color 0.3s;
+    font-size: 16px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: #2b95fd;
+  }
+
+  .nav-link.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #2b95fd;
+  }
+
+  /* Icon Dropdown Desktop */
+  .dropdown-icon {
+    font-size: 11px;
+    margin-top: 1px;
+    transition: transform 0.3s;
+    color: inherit;
+  }
+
+  .nav-item.dropdown:hover .dropdown-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Tombol Login Desktop */
+  .desktop-login-btn {
+    display: block;
+  }
+  .mobile-login-btn {
+    display: none;
+  }
+
+  /* Dropdown Menu Desktop */
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 250px;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+
+    padding: 0;
+    margin: 0;
+  }
+
+  .nav-item.dropdown:hover .dropdown-menu {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .dropdown-item {
+    padding: 12px 20px;
+    color: #333;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .dropdown-item:hover {
+    background-color: rgba(43, 149, 253, 0.1);
+    color: #2b95fd;
+  }
 }
 
+/* ==========================================================================
+   4. NAVBAR MOBILE & TABLET (Max-Width: 991px)
+   ========================================================================== */
+@media (max-width: 991px) {
+  .sticky-navbar {
+    padding: 10px 15px;
+  }
+
+  .lab-name {
+    font-size: 15px;
+  }
+  .lab-tagline {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 55vw;
+  }
+  .logo {
+    margin-right: 10px;
+    width: 45px;
+    height: 45px;
+  }
+
+  .hamburger {
+    display: block;
+  }
+  .desktop-login-btn {
+    display: none;
+  }
+
+  /* --- LACI MENU FULL SCREEN GLASSMORPHISM --- */
+  .nav-menu {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 80px); /* Full Height minus Navbar */
+
+    /* Background Kaca Modern */
+    background-color: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+
+    /* Animasi */
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    overflow-y: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 998;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .nav-menu.active {
+    max-height: 100vh;
+    opacity: 1;
+    visibility: visible;
+    overflow-y: auto;
+    padding-bottom: 100px; /* Space bawah agar konten tidak terpotong */
+  }
+
+  .nav-item {
+    width: 100%;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03); /* Border tipis halus */
+    display: block;
+    height: auto;
+  }
+
+  .nav-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 20px 30px; /* Padding lebih lega */
+    color: #333;
+    font-weight: 700;
+    font-size: 17px;
+    text-decoration: none;
+  }
+
+  .nav-link:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: #2b95fd;
+  }
+
+  /* Icon Mobile */
+  .dropdown-icon {
+    font-size: 16px;
+    color: #999;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nav-link.show .dropdown-icon,
+  .nav-link[aria-expanded="true"] .dropdown-icon {
+    transform: rotate(180deg);
+    color: #2b95fd;
+  }
+
+  /* DROPDOWN MENU MOBILE (ACCORDION) */
+  .dropdown-menu {
+    display: block;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    visibility: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s step-end;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: rgba(250, 250, 250, 0.5); /* Sedikit beda warna */
+    float: none;
+  }
+
+  .dropdown-menu.show {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    inset: auto !important;
+    margin-top: 0 !important;
+    max-height: 80vh;
+    opacity: 1;
+    visibility: visible;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s step-start;
+  }
+
+  .dropdown-item {
+    padding: 14px 25px 14px 45px;
+    color: #555;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    display: block;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+  }
+
+  .dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: #2b95fd;
+  }
+
+  /* --- PROFILE MODERN MINIMALIS (MOBILE) --- */
+  .mobile-user-profile-modern {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 25px 30px;
+    margin-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08); /* Garis pemisah atas */
+    background: transparent;
+  }
+
+  .mobile-avatar-modern {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+  }
+
+  .mobile-avatar-modern img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .mobile-info-modern {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .greeting-text {
+    font-size: 11px;
+    color: #888;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .username-text {
+    font-size: 16px;
+    font-weight: 800;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+  }
+
+  /* Tombol Logout Minimalis */
+  .logout-btn-modern {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #fff0f0;
+    color: #ff4d4d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .logout-btn-modern:active {
+    transform: scale(0.9);
+    background-color: #ffe0e0;
+  }
+
+  /* Tombol Login Mobile */
+  .mobile-login-btn {
+    display: block;
+    border-bottom: none;
+    margin-top: 20px;
+    width: 100%;
+    padding: 0 30px 40px 30px;
+  }
+
+  .mobile-login-btn .login-link {
+    background-color: #2b95fd;
+    color: white !important;
+    justify-content: center;
+    width: 100%;
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: 0 4px 10px rgba(43, 149, 253, 0.2);
+  }
+}
+
+/* Button Login Base Styles */
 .login-btn {
   background-color: #2b95fd;
   color: white;
@@ -209,117 +472,119 @@ body {
   border-radius: 5px;
   font-weight: 600;
   transition: background-color 0.3s;
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
-.login-btn:hover {
-  background-color: #1a7fd8;
+/* ==========================================================================
+   USER AUTH STYLES (UPDATED - NO DROPDOWN ON DESKTOP)
+   ========================================================================== */
+
+/* --- LOGIC DISPLAY --- */
+/* Sembunyikan Desktop Action di Mobile, Tampilkan Mobile Auth di Mobile */
+.desktop-user-action {
+  display: none !important;
+}
+.mobile-auth-section {
+  display: block !important;
 }
 
-/* Konten dummy untuk demonstrasi scroll */
-.content {
-  height: 2000px;
-  padding: 50px;
-  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-}
-
-/* Responsif untuk tablet dan mobile */
-@media (max-width: 1200px) {
-  .sticky-navbar {
-    padding: 0 30px;
+/* Saat Layar Besar (Desktop) */
+@media (min-width: 992px) {
+  .desktop-user-action {
+    display: flex !important;
   }
-
-  .nav-menu {
-    gap: 30px;
-  }
-}
-
-@media (max-width: 992px) {
-  .sticky-navbar {
-    padding: 0 20px;
-  }
-
-  .nav-menu {
-    gap: 20px;
-  }
-
-  .lab-name {
-    font-size: 16px;
-  }
-
-  .lab-tagline {
-    font-size: 11px;
-  }
-
-  .nav-link {
-    font-size: 14px;
-  }
-
-  .dropdown-menu {
-    width: 220px; /* Diperlebar dari 180px menjadi 220px */
-    margin-top: 0;
-  }
-
-  /* Untuk mobile, tetap menggunakan klik */
-  .nav-item.dropdown:hover .dropdown-menu {
-    display: none;
-  }
-
-  .nav-item.dropdown .dropdown-menu.show {
-    display: block;
-    opacity: 1;
-    transform: none;
-    margin-top: 0;
+  .mobile-auth-section {
+    display: none !important;
   }
 }
 
-@media (max-width: 768px) {
-  .sticky-navbar {
-    height: auto;
-    padding: 15px 20px;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
+/* --- DESKTOP USER CONTAINER --- */
+.desktop-user-action {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Jarak antara profil dan tombol logout */
+  margin-left: 20px;
+}
 
-  .logo-container {
-    order: 1;
-  }
+/* 1. Link Profil (Nama + Avatar) */
+.user-profile-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 4px 8px 4px 15px;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
 
-  .nav-menu {
-    order: 3;
-    width: 100%;
-    margin-top: 15px;
-    justify-content: space-between;
-    gap: 10px;
-    height: auto;
-  }
+.user-profile-link:hover {
+  background-color: rgba(43, 149, 253, 0.08);
+  border-color: rgba(43, 149, 253, 0.2);
+}
 
-  .nav-item {
-    height: auto;
-  }
+/* Label Nama & Role */
+.user-name-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.2;
+}
 
-  .nav-link {
-    height: auto;
-  }
+.user-role-label {
+  font-size: 11px;
+  color: #888;
+  font-weight: 600;
+}
 
-  .nav-link.active::after {
-    bottom: -5px;
-  }
+/* Avatar Circle */
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
 
-  .dropdown-menu {
-    width: 200px;
-    margin-top: 0;
-  }
+.user-profile-link:hover .avatar-circle {
+  transform: scale(1.05);
+  border-color: #2b95fd;
+}
 
-  .login-btn {
-    order: 2;
-    margin-left: auto;
-  }
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-  .lab-name-container {
-    display: none;
-  }
+/* 2. Tombol Logout Desktop (BARU) */
+.desktop-logout-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Membuat tombol bulat */
+  background-color: #fff;
+  color: #dc3545; /* Warna merah bootstrap */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border: 1px solid #ffecec;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.desktop-logout-btn:hover {
+  background-color: #dc3545;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+  border-color: #dc3545;
+}
+
+.desktop-logout-btn:active {
+  transform: scale(0.95);
 }
 
 /* ========================================= */
@@ -513,7 +778,7 @@ body {
     padding: 0 40px;
     gap: 40px; /* Mengurangi jarak pada layar lebih kecil */
   }
-  
+
   .maskot-image {
     max-width: 350px; /* Menyesuaikan ukuran maskot */
   }
@@ -531,11 +796,11 @@ body {
   .business-analytics {
     font-size: 28px;
   }
-  
+
   .hero-container {
     gap: 30px;
   }
-  
+
   .maskot-image {
     max-width: 300px;
   }
@@ -574,7 +839,7 @@ body {
   .feature-btn {
     min-width: 180px;
   }
-  
+
   .maskot-image {
     max-width: 250px;
   }
@@ -617,7 +882,7 @@ body {
   .btn-content {
     /* HAPUS justify-content: center; agar konten tombol tetap rata kiri */
   }
-  
+
   .maskot-image {
     max-width: 200px;
   }
@@ -635,7 +900,7 @@ body {
   .hero-detailed-description {
     font-size: 13px;
   }
-  
+
   .maskot-image {
     max-width: 180px;
   }
@@ -963,13 +1228,17 @@ body {
 
 /* Overlay gelap untuk meningkatkan keterbacaan teks */
 .card-preview-profile::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
   z-index: 1;
 }
 
@@ -1003,161 +1272,161 @@ body {
 
 /* Rectangle Besar Kiri (640x560) */
 .news-card-lg {
-    min-height: 560px;
-    width: 100%;
-    max-width: 640px;
-    position: relative;
-    transition: all 0.4s ease;
-    cursor: pointer;
+  min-height: 560px;
+  width: 100%;
+  max-width: 640px;
+  position: relative;
+  transition: all 0.4s ease;
+  cursor: pointer;
 }
 
 /* Container untuk gambar besar */
 .news-lg-img-container {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 
 /* Gambar untuk rectangle besar */
 .news-lg-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 1;
 }
 
 /* Hover Effect untuk Rectangle Besar */
 .news-card-lg:hover .news-lg-img {
-    transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 /* Hover Overlay dengan Gradient Hitam-Putih - ANIMASI DIPERBAIKI */
 .news-hover-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 0;
-    background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.8) 0%,
-        rgba(0, 0, 0, 0.4) 30%,
-        rgba(255, 255, 255, 0.2) 70%,
-        rgba(255, 255, 255, 0) 100%
-    );
-    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 2;
-    pointer-events: none;
-    opacity: 0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.4) 30%,
+    rgba(255, 255, 255, 0.2) 70%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
 }
 
 .news-card-lg:hover .news-hover-overlay {
-    height: 100%;
-    opacity: 1;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  height: 100%;
+  opacity: 1;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Konten untuk rectangle besar */
 .news-lg-content {
-    position: relative;
-    z-index: 3;
-    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  z-index: 3;
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .news-card-lg:hover .news-lg-content {
-    transform: translateY(-10px);
+  transform: translateY(-10px);
 }
 
 .news-card-lg:hover .news-lg-content h3 {
-    transform: translateY(-5px);
+  transform: translateY(-5px);
 }
 
 /* Rectangle Kecil Kanan (190x160) */
 .news-sm-img {
-    width: 190px;
-    height: 160px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.4s ease;
+  width: 190px;
+  height: 160px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.4s ease;
 }
 
 /* Gambar Profil di Rectangle Kecil */
 .news-profile-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 0.5rem;
-    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Hover Effect untuk Rectangle Kecil - ANIMASI DIPERBAIKI */
 .news-sm-hover-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 0;
-    background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.7) 0%,
-        rgba(0, 0, 0, 0.3) 40%,
-        rgba(255, 255, 255, 0.1) 80%,
-        rgba(255, 255, 255, 0) 100%
-    );
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 1;
-    border-radius: 0.5rem;
-    pointer-events: none;
-    opacity: 0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.3) 40%,
+    rgba(255, 255, 255, 0.1) 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 1;
+  border-radius: 0.5rem;
+  pointer-events: none;
+  opacity: 0;
 }
 
 .news-item-sm:hover .news-sm-hover-overlay {
-    height: 100%;
-    opacity: 1;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  height: 100%;
+  opacity: 1;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Styling untuk konten news item kecil */
 .news-item-sm {
-    padding: 15px;
-    border-radius: 8px;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    border: 1px solid transparent;
-    cursor: pointer;
+  padding: 15px;
+  border-radius: 8px;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
 .news-sm-content {
-    flex: 1;
-    transition: all 0.3s ease;
+  flex: 1;
+  transition: all 0.3s ease;
 }
 
 /* Hover Effect untuk Seluruh News Item Kecil - ANIMASI DIPERBAIKI */
 .news-item-sm:hover {
-    background-color: #f8f9fa;
-    border-color: #e9ecef;
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background-color: #f8f9fa;
+  border-color: #e9ecef;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .news-item-sm:hover h5 {
-    color: #2b95fd;
-    transition: color 0.3s ease;
+  color: #2b95fd;
+  transition: color 0.3s ease;
 }
 
 /* Hover Effect pada Gambar ketika Seluruh News Item di-hover */
 .news-item-sm:hover .news-profile-img {
-    transform: scale(1.1);
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: scale(1.1);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Animasi untuk hover out yang lebih smooth */
@@ -1167,8 +1436,8 @@ body {
 .news-item-sm,
 .news-item-sm .news-profile-img,
 .news-item-sm .news-sm-hover-overlay {
-    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    transition-duration: 0.5s;
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition-duration: 0.5s;
 }
 
 .news-card-lg:hover .news-lg-img,
@@ -1177,213 +1446,213 @@ body {
 .news-item-sm:hover,
 .news-item-sm:hover .news-profile-img,
 .news-item-sm:hover .news-sm-hover-overlay {
-    transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    transition-duration: 0.4s;
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition-duration: 0.4s;
 }
 
 /* Efek khusus untuk transisi keluar yang lebih smooth */
 .news-hover-overlay,
 .news-sm-hover-overlay {
-    transition-property: height, opacity;
+  transition-property: height, opacity;
 }
 
 .news-lg-img,
 .news-profile-img {
-    transition-property: transform;
+  transition-property: transform;
 }
 
 .news-lg-content {
-    transition-property: transform;
+  transition-property: transform;
 }
 
 .news-item-sm {
-    transition-property: transform, background-color, border-color, box-shadow;
+  transition-property: transform, background-color, border-color, box-shadow;
 }
 
 /* Fallback background jika gambar tidak load */
 .news-lg-img-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #8c94a0 0%, #5a6372 100%);
-    z-index: 0;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #8c94a0 0%, #5a6372 100%);
+  z-index: 0;
 }
 
 /* Utilitas Line Clamp */
 .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Garis Bawah Judul News */
 .section-title-underline2 {
-    width: 60%;
-    height: 5px;
-    background-color: #7bdff2;
-    border-radius: 10px;
-    margin: 0 auto;
-    margin-top: 4px;
+  width: 60%;
+  height: 5px;
+  background-color: #7bdff2;
+  border-radius: 10px;
+  margin: 0 auto;
+  margin-top: 4px;
 }
 
 /* Tombol News */
 .news-btn-container {
-    margin-top: 4px;
-    position: relative;
-    z-index: 3;
+  margin-top: 4px;
+  position: relative;
+  z-index: 3;
 }
 
 .news-btn {
-    width: 130px;
-    height: 40px;
-    background: transparent;
-    color: #000000ff;
-    border: 1.5px solid #000000ff;
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 15px 0 20px;
-    position: relative;
-    overflow: hidden;
+  width: 130px;
+  height: 40px;
+  background: transparent;
+  color: #000000ff;
+  border: 1.5px solid #000000ff;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 15px 0 20px;
+  position: relative;
+  overflow: hidden;
 }
 
 .news-btn:hover {
-    background: rgba(43, 149, 253, 0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: rgba(43, 149, 253, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .news-btn:active {
-    transform: translateY(0);
+  transform: translateY(0);
 }
 
 .btn-text {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-    letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
 }
 
 .arrow-icon {
-    font-size: 16px;
-    transform: rotate(45deg);
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  font-size: 16px;
+  transform: rotate(45deg);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .news-btn:hover .arrow-icon {
-    transform: rotate(45deg) translate(2px, -2px);
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: rotate(45deg) translate(2px, -2px);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Responsive Design untuk News Section */
 @media (max-width: 1200px) {
-    .news-card-lg {
-        min-height: 500px;
-    }
+  .news-card-lg {
+    min-height: 500px;
+  }
 }
 
 @media (max-width: 992px) {
-    .news-card-lg {
-        min-height: 400px;
-        max-width: 100%;
-        margin-bottom: 2rem;
-    }
-    
-    .news-sm-img {
-        width: 140px;
-        height: 120px;
-    }
-    
-    .news-lg-content {
-        padding: 1.5rem !important;
-    }
+  .news-card-lg {
+    min-height: 400px;
+    max-width: 100%;
+    margin-bottom: 2rem;
+  }
+
+  .news-sm-img {
+    width: 140px;
+    height: 120px;
+  }
+
+  .news-lg-content {
+    padding: 1.5rem !important;
+  }
 }
 
 @media (max-width: 768px) {
-    .news-sm-img {
-        width: 100px;
-        height: 100px;
-    }
-    
-    .news-item-sm {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .news-sm-img {
-        margin-bottom: 15px;
-    }
-    
-    .news-lg-content h3 {
-        font-size: 1.25rem;
-    }
-    
-    .news-lg-content {
-        padding: 1rem !important;
-    }
-    
-    /* Adjust hover effects for mobile */
-    .news-card-lg:hover .news-lg-img {
-        transform: none;
-    }
-    
-    .news-card-lg:hover .news-hover-overlay {
-        height: 0;
-        opacity: 0;
-    }
-    
-    .news-item-sm:hover {
-        transform: none;
-        background-color: transparent;
-        border-color: transparent;
-        box-shadow: none;
-    }
-    
-    .news-item-sm:hover .news-sm-hover-overlay {
-        height: 0;
-        opacity: 0;
-    }
-    
-    .news-item-sm:hover .news-profile-img {
-        transform: none;
-    }
-    
-    .news-item-sm:hover h5 {
-        color: inherit;
-    }
+  .news-sm-img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .news-item-sm {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .news-sm-img {
+    margin-bottom: 15px;
+  }
+
+  .news-lg-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .news-lg-content {
+    padding: 1rem !important;
+  }
+
+  /* Adjust hover effects for mobile */
+  .news-card-lg:hover .news-lg-img {
+    transform: none;
+  }
+
+  .news-card-lg:hover .news-hover-overlay {
+    height: 0;
+    opacity: 0;
+  }
+
+  .news-item-sm:hover {
+    transform: none;
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .news-item-sm:hover .news-sm-hover-overlay {
+    height: 0;
+    opacity: 0;
+  }
+
+  .news-item-sm:hover .news-profile-img {
+    transform: none;
+  }
+
+  .news-item-sm:hover h5 {
+    color: inherit;
+  }
 }
 
 @media (max-width: 576px) {
-    .news-card-lg {
-        min-height: 350px;
-    }
-    
-    .news-sm-img {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .news-lg-content h3 {
-        font-size: 1.1rem;
-    }
+  .news-card-lg {
+    min-height: 350px;
+  }
+
+  .news-sm-img {
+    width: 80px;
+    height: 80px;
+  }
+
+  .news-lg-content h3 {
+    font-size: 1.1rem;
+  }
 }
 
 /* ========================================= */
@@ -1391,131 +1660,833 @@ body {
 /* ========================================= */
 
 .gallery-btn {
-    width: 130px;
-    height: 40px;
-    background: transparent;
-    color: #000000ff;
-    border: 1.5px solid #000000ff;
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 15px 0 20px;
-    position: relative;
-    overflow: hidden;
+  width: 130px;
+  height: 40px;
+  background: transparent;
+  color: #000000ff;
+  border: 1.5px solid #000000ff;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 15px 0 20px;
+  position: relative;
+  overflow: hidden;
 }
 
 .gallery-btn:hover {
-    background: rgba(43, 149, 253, 0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: rgba(43, 149, 253, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .gallery-btn:active {
-    transform: translateY(0);
+  transform: translateY(0);
 }
 
 .btn-text {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-    letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
 }
 
 .arrow-icon {
-    font-size: 16px;
-    transform: rotate(45deg);
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  font-size: 16px;
+  transform: rotate(45deg);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .gallery-btn:hover .arrow-icon {
-    transform: rotate(45deg) translate(2px, -2px);
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: rotate(45deg) translate(2px, -2px);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* ========================================= */
-/* GALLERY SECTION STYLING - PINTEREST/MASONRY */
-/* ========================================= */
+/* ========================================================== */
+/* --- HERO SECTION RESPONSIF (REVISI: BACKGROUND & ISI) ---  */
+/* ========================================================== */
 
-.gallery-grid {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-}
+@media (max-width: 991px) {
+  /* 1. CONTAINER UTAMA */
+  .hero-section {
+    width: 100vw !important;
+    max-width: 100% !important;
 
-.gallery-column {
+    /* FIX GAP: Margin top negatif kecil untuk menutup celah putih pixel */
+    margin-top: -9px !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+
+    height: auto !important;
+    min-height: auto !important;
+
+    background-color: rgba(213, 224, 236, 0.5);
+
+    /* PADDING ATAS DIKURANGI */
+    /* Kita set pas di 70px. Jika masih ada jarak, kita mainkan di maskotnya */
+    padding-top: 70px !important;
+
+    padding-bottom: 20px;
+
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    flex: 1;
-    max-width: 310px;
-}
+    align-items: center;
+  }
 
-.gallery-item {
-    position: relative;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    break-inside: avoid;
-}
+  .hero-rectangle {
+    display: none;
+  }
 
-.gallery-item:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-}
-
-.gallery-item img {
+  /* 2. CONTAINER KONTEN */
+  .hero-container {
     width: 100%;
+    padding: 0 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0;
+  }
+
+  /* 3. MASKOT PENGUIN (AGRESIF KE ATAS) */
+  .hero-maskot {
+    order: -1;
+
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* KUNCI: Margin Negatif Ekstrem */
+    /* Ini akan menarik pinguin naik menembus batas padding */
+    /* Sesuaikan angka -30px ini jika kurang naik atau terlalu naik */
+    margin-top: -60px !important;
+
+    padding-top: 0 !important;
+    margin-bottom: 10px; /* Jarak ke judul dibuat sangat dekat */
+  }
+
+  .maskot-image {
+    width: 150px;
     height: auto;
     display: block;
-    transition: transform 0.5s ease;
+  }
+
+  /* 4. TEKS JUDUL */
+  .hero-text-content {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 15px;
+  }
+
+  .title-line {
+    font-size: 22px;
+    line-height: 1.3;
+    font-weight: 800;
+    color: #04163e;
+  }
+
+  .business-analytics {
+    font-size: 18px;
+    margin-top: 5px;
+    display: block;
+    font-weight: 700;
+    color: #04163e;
+  }
+
+  .hero-detailed-description {
+    font-size: 14px;
+    margin-top: 10px;
+    margin-bottom: 0;
+    color: #04163e;
+    opacity: 0.9;
+  }
+
+  /* 5. TOMBOL */
+  .buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 0;
+  }
+
+  .feature-btn {
+    width: 100%;
+    max-width: 100%;
+    height: 45px;
+    margin: 0;
+    min-width: 0 !important;
+    flex: none !important;
+
+    border-radius: 25px;
+    background-color: transparent;
+    border: 1.5px solid #000;
+
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+  }
+
+  .btn-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .btn-icon {
+    margin-right: 15px;
+    width: 20px;
+    text-align: center;
+  }
+
+  .btn-text {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
 }
 
-.gallery-item:hover img {
-    transform: scale(1.05);
+/* ========================================================== */
+/* --- ABOUT SECTION RESPONSIF (JUSTIFY TEXT) ---             */
+/* ========================================================== */
+
+@media (max-width: 991px) {
+  /* 1. Container About */
+  .about-section {
+    /* Kurangi padding agar tidak terlalu sempit di HP */
+    padding: 60px 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .about-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+
+    /* Pastikan container flex column */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Ini membuat JUDUL tetap di tengah */
+  }
+
+  /* 2. Judul Tetap di Tengah */
+  .about-title {
+    font-size: 28px; /* Ukuran font disesuaikan mobile */
+    font-weight: 800;
+    text-align: center; /* Wajib Center */
+    margin-bottom: 15px;
+    color: #04163e;
+  }
+
+  /* Garis Bawah Judul */
+  .about-line {
+    width: 80px;
+    height: 6px;
+    background-color: #7bdff2; /* Warna biru muda sesuai gambar */
+    border-radius: 4px;
+    margin-bottom: 30px;
+  }
+
+  /* 3. PARAGRAF (Revisi Utama: Rata Kanan-Kiri) */
+  .about-description {
+    font-size: 15px;
+    line-height: 1.8; /* Jarak antar baris diperlega agar enak dibaca */
+    color: #333333;
+
+    /* KUNCI: Membuat teks rata kanan-kiri seperti di gambar */
+    text-align: justify;
+
+    /* Opsional: Mengaktifkan hyphenation agar spasi tidak bolong-bolong */
+    hyphens: auto;
+    -webkit-hyphens: auto;
+
+    width: 100%;
+    padding: 0 10px; /* Sedikit padding agar tidak nempel pinggir layar */
+  }
 }
 
-.gallery-overlay {
+/* Tweak untuk HP Kecil (< 400px) */
+@media (max-width: 400px) {
+  .about-section {
+    padding: 50px 15px;
+  }
+  .about-title {
+    font-size: 24px;
+  }
+  .about-description {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+
+/* ========================================================== */
+/* --- PROFILE CAROUSEL RESPONSIF (MOBILE SLIDER) ---         */
+/* ========================================================== */
+@media (max-width: 1200px) {
+  /* 1. SECTION UTAMA */
+  .profile-carousel-section {
+    padding: 40px 0 10px 0;
+    height: auto !important;
+    min-height: auto;
+    background-color: #ffffff;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .custom-container-relative {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    position: relative;
+    padding: 0;
+
+    /* Layout Vertikal: Foto di Atas */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* 2. FOTO/BACKDROP (DI ATAS) */
+  .gray-backdrop-box {
+    position: relative;
+    top: 0;
+    left: 0;
+    transform: none;
+
+    width: 90%;
+    max-width: 500px;
+    height: 350px !important;
+
+    background-color: #f5f5f5;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 0;
+    z-index: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .backdrop-img-content {
+    width: 100%;
+    height: 100%;
+    object-fit: cover opacity 1;
+  }
+
+  /* 3. WRAPPER CAROUSEL (CONTAINER KARTU) */
+  .carousel-wrapper {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+
+    width: 100%;
+
+    /* PENTING UNTUK JS ANIMASI: */
+    overflow: hidden; /* Sembunyikan kartu yang jauh di luar layar */
+    z-index: 10;
+
+    /* --- TEKNIK CENTER PEEKABOO --- */
+    /* Kita beri padding kiri-kanan agar kartu pertama didorong ke tengah */
+    /* Lebar kartu kita set 70vw. Sisa 30vw dibagi 2 = 15vw */
+    margin-top: -180px; /* Tarik ke atas menempel ke backdrop */
+    padding-left: 15vw;
+    padding-right: 15vw;
+
+    /* Pastikan box-sizing border-box agar padding dihitung dalam width */
+    box-sizing: border-box;
+  }
+
+  /* 4. TRACK (JALUR KARTU YANG DIGESER JS) */
+  .carousel-track {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px; /* Jarak antar kartu */
+
+    /* PENTING: Izinkan JS mengubah width dan transform */
+    width: max-content;
+
+    /* Pastikan transisi aktif agar gesernya halus */
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* 5. KARTU (CARD) */
+  .custom-card {
+    /* UKURAN KARTU DINAMIS (70% Layar) */
+    /* Flex-shrink 0 agar tidak gepeng */
+    flex: 0 0 70vw;
+    max-width: 350px;
+    height: 340px;
+
+    background-color: #ffffff;
+
+    /* Desain Tajam (Sesuai Request) */
+    border-radius: 0;
+    border: none;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px 20px;
+
+    /* Reset Efek Aneh-Aneh */
+    opacity: 1 !important;
+    transform: none !important;
+    margin: 0;
+  }
+
+  /* Card Aktif (Hanya Border Biru) */
+  .custom-card.active {
+    border: none;
+    z-index: 5;
+  }
+
+  .card-content h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #333;
+  }
+
+  .card-content p {
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  /* 6. TOMBOL NAVIGASI (DI BAWAH) */
+  .carousel-nav {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    margin-top: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    z-index: 10;
+  }
+
+  .nav-btn {
+    width: 50px;
+    height: 50px;
+    background: #ffffff;
+    border: 1px solid #333;
+    border-radius: 0; /* Kotak */
+    color: #333;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+}
+
+/* HP KECIL (< 400px) */
+@media (max-width: 400px) {
+  .gray-backdrop-box {
+    height: 200px;
+  }
+  .custom-card {
+    height: 300px;
+  }
+}
+
+/* ========================================================== */
+/* --- PROFILE LAB SECTION RESPONSIF (MOBILE FIX) ---         */
+/* ========================================================== */
+
+@media (max-width: 991px) {
+  /* 1. JARAK SECTION */
+  .profile.lab.section {
+    padding-top: 10px !important;
+    padding-bottom: 40px;
+  }
+
+  /* 2. AREA JUDUL & TOMBOL (REORDERING) */
+
+  /* Flex Container Utama */
+  .profile.lab.section .row.mb-5 {
+    margin-bottom: 2rem !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start !important; /* KUNCI: RATA KIRI */
+    text-align: left; /* Pastikan semua teks RATA KIRI */
+  }
+
+  /* KUNCI: Bongkar kolom kiri agar isinya bisa diurutkan ulang */
+  .profile.lab.section .col-lg-5 {
+    display: contents;
+  }
+
+  /* URUTAN 1: Label 'Profile' */
+  .profile.lab.section .text-uppercase {
+    order: 1;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+    font-weight: 700;
+    /* Tambah padding manual karena col-lg-5 hilang */
+    padding-left: 20px;
+  }
+
+  /* URUTAN 2: Judul Utama (Rata Kiri) */
+  .profile.lab.section h2 {
+    order: 2;
+    font-size: 28px;
+    color: #04163e;
+    margin-bottom: 10px;
+    padding-left: 20px; /* Padding kiri */
+    text-align: left; /* Paksa rata kiri */
+  }
+
+  /* URUTAN 3: Teks Lorem (Disisipkan di tengah) */
+  .profile.lab.section .col-lg-7 {
+    order: 3;
+    text-align: left;
+    padding: 0 20px; /* Padding kiri-kanan */
+    margin-top: 0;
+    margin-bottom: 5px; /* Beri jarak ke tombol di bawahnya */
+  }
+
+  .text-muted {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #555;
+  }
+
+  /* URUTAN 4: Tombol Read More (Paling Bawah) */
+  .profile-btn-container {
+    order: 4;
+    display: flex;
+    justify-content: flex-start; /* Tombol RATA KIRI */
+    width: 100%;
+    margin-top: 0;
+    padding-left: 20px; /* Padding kiri */
+  }
+
+  /* 3. KARTU PREVIEW (GAMBAR ATAS, TEKS BAWAH) */
+  .profile.lab.section .row.mt-4 {
+    margin-top: 1rem !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; /* Jarak antar kartu */
+  }
+
+  .profile.lab.section .col-md-4 {
+    width: 100%;
+    max-width: 350px; /* Batas lebar kartu agar tidak terlalu lebar di tablet */
+    padding: 0;
+  }
+
+  .card-preview-profile {
+    height: auto !important; /* Tinggi otomatis menyesuaikan isi */
+    width: 100%;
+
+    /* STYLE CARD BARU: Background Putih & Shadow Halus */
+    background-color: #ffffff !important;
+    border: 1px solid #e5e5e5 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Agar sudut gambar ikut melengkung */
+  }
+
+  /* --- BAGIAN FOTO (DI ATAS) --- */
+  /* Pastikan gambar tampil sebagai blok di atas, bukan background */
+  .card-preview-profile img,
+  .card-preview-profile .card-bg-img {
+    width: 100%;
+    /* Tinggi gambar dikurangi (180px) agar kartu terlihat compact/kecil */
+    height: 220px !important;
+    object-fit: cover;
+    display: block !important;
+    position: relative !important;
+  }
+
+  /* --- BAGIAN TEKS (DI BAWAH) --- */
+  /* Kita ubah prilaku 'overlay' menjadi blok biasa di bawah gambar */
+  .card-preview-profile .card-img-overlay {
+    position: relative !important; /* Reset posisi absolute */
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: auto;
+
+    background: #ffffff !important; /* Background Putih */
+    padding: 25px 20px !important; /* Padding diperkecil agar compact */
+
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  /* TYPOGRAPHY (Ubah warna jadi Gelap agar terbaca di putih) */
+  .card-preview-profile .card-title {
+    font-size: 1.1rem; /* Font judul sedikit diperkecil */
+    font-weight: 700;
+    color: #04163e !important; /* Warna biru gelap / hitam */
+    margin-bottom: 5px;
+  }
+
+  .card-preview-profile .card-subtitle {
+    font-size: 0.85rem;
+    color: #666 !important;
+    margin-bottom: 10px;
+  }
+
+  .card-preview-profile .card-text {
+    font-size: 0.85rem; /* Font deskripsi diperkecil */
+    line-height: 1.5;
+    color: #555 !important;
+    margin-bottom: 20px !important;
+
+    /* Opsional: Batasi teks max 3 baris agar kartu tidak kepanjangan */
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* --- TOMBOL (STYLE DARK OUTLINE) --- */
+  .respon-btn-container {
+    margin-top: auto; /* Dorong tombol ke bawah */
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .respon-btn {
+    width: 120px !important; /* Lebar tombol diperkecil */
+    height: 35px !important; /* Tinggi tombol diperkecil */
+
+    background: transparent !important;
+    border: 1px solid #333 !important; /* Border Hitam/Gelap */
+    border-radius: 18px !important;
+    color: #333 !important; /* Teks Hitam */
+
+    font-size: 12px !important;
+    font-weight: 600;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 15px !important;
+  }
+
+  .respon-btn .arrow-icon {
+    font-size: 12px;
+    color: #333 !important; /* Panah Hitam */
+  }
+}
+
+/* KHUSUS HP KECIL (< 400px) */
+@media (max-width: 400px) {
+  .profile.lab.section h2 {
+    font-size: 24px;
+  }
+  .card-preview-profile {
+    height: auto !important;
+  }
+}
+
+/* ========================================================== */
+/* --- NEWS SECTION RESPONSIF (MOBILE STACK & RESIZE) ---     */
+/* ========================================================== */
+@media (max-width: 991px) {
+  /* 1. CONTAINER SECTION */
+  .news-section {
+    padding: 40px 0;
+  }
+
+  /* 2. HEADER (JUDUL & TOMBOL) */
+  .news-section .d-flex.justify-content-between.align-items-end {
+    flex-direction: column;
+
+    /* Container Utama Rata Kiri (Agar blok judul ada di kiri) */
+    align-items: flex-start !important;
+
+    gap: 15px;
+    margin-bottom: 30px !important;
+  }
+
+  /* --- LOGIKA POSISI JUDUL & GARIS --- */
+  /* Target Div Pembungkus (Anak Pertama: Judul + Garis) */
+  .news-section
+    .d-flex.justify-content-between.align-items-end
+    > div:first-child {
+    display: flex;
+    flex-direction: column;
+
+    /* KUNCI 1: Lebar container menyusut mengikuti panjang teks */
+    width: fit-content;
+
+    /* KUNCI 2: Pusatkan isi container (Teks & Garis saling tengah) */
+    align-items: center;
+  }
+
+  .news-section h2 {
+    font-size: 26px;
+    margin-bottom: 10px;
+    text-align: center; /* Teks center relatif terhadap container kecilnya */
+    width: 100%;
+  }
+
+  .section-title-underline2 {
+    width: 60%;
+    height: 4px !important;
+    border-radius: 10px !important;
+    background-color: #7bdff2 !important;
+    margin: 0; /* Tidak perlu margin auto, karena parent sudah align-items center */
+  }
+
+  /* Tombol Tetap Kiri */
+  .news-btn-container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 5px;
+  }
+
+  /* 3. LAYOUT VERTIKAL (RESET GRID) */
+  .news-section .row.g-4 {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  /* 4. BERITA UTAMA (FULL WIDTH FIX) */
+  .news-card-lg {
+    height: 400px !important;
+    min-height: 400px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0;
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+    display: block;
+  }
+
+  .news-lg-img-container {
+    width: 100%;
+    height: 100% !important;
     position: absolute;
     top: 0;
     left: 0;
+  }
+
+  .news-lg-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .news-lg-content {
+    padding: 20px !important;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    text-align: left;
+  }
+
+  .news-lg-content h3 {
+    font-size: 18px;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .news-lg-content .d-flex.gap-3 {
+    gap: 10px !important;
+    font-size: 11px !important;
+    flex-wrap: wrap;
+  }
+
+  /* 5. LIST BERITA KECIL */
+  .col-lg-6.d-flex.flex-column.gap-4 {
+    gap: 15px !important;
+  }
+
+  .news-item-sm {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px;
+    border: 1px solid #f0f0f0;
+    border-radius: 10px;
+    width: 100%;
+  }
+
+  .news-sm-img {
+    width: 90px !important;
+    height: 80px !important;
+    border-radius: 8px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .news-profile-img {
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.8) 100%);
-    display: flex;
-    align-items: flex-end;
-    padding: 20px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
+    object-fit: cover;
+  }
 
-.gallery-item:hover .gallery-overlay {
-    opacity: 1;
-}
+  .news-sm-content {
+    padding-left: 15px;
+    flex: 1;
+  }
 
-.gallery-text h3 {
-    color: white;
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    line-height: 1.3;
-}
-
-.gallery-text p {
-    color: rgba(255, 255, 255, 0.9);
+  .news-sm-content h5 {
     font-size: 14px;
-    margin: 0;
-    line-height: 1.4;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 5px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .news-sm-content .text-muted {
+    font-size: 10px !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .news-sm-content p {
+    display: none;
+  }
 }
 
+<<<<<<< HEAD
 .section-title-underline3 {
     width: 60%;
     height: 5px;
@@ -1534,104 +2505,262 @@ body {
     .gallery-column {
         max-width: calc(25% - 15px);
     }
+=======
+/* HP KECIL (< 400px) */
+@media (max-width: 400px) {
+  .news-card-lg {
+    height: 300px !important;
+    min-height: 300px !important;
+  }
+  .news-sm-img {
+    width: 80px !important;
+    height: 70px !important;
+  }
+>>>>>>> origin/Abid
 }
 
-@media (max-width: 992px) {
-    .gallery-grid {
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-    
-    .gallery-column {
-        max-width: calc(50% - 10px);
-        flex: 0 0 calc(50% - 10px);
-    }
-    
-    .gallery-title {
-        font-size: 32px;
-    }
-    
-    .gallery-subtitle {
-        font-size: 16px;
-    }
+/* ========================================= */
+/* BOOKING LAB */
+/* ========================================= */
+
+/* CSS Table Booking */
+.table-booking-wrapper {
+  padding: 20px 0;
+  background-color: #f8f9fa;
+}
+.table-booking-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.booking-table th.today {
+  background-color: #e3f2fd !important;
+  border: 1px solid #90caf9 !important;
+}
+.booking-rectangle {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 5px 8px !important;
+  border-left: 4px solid !important;
+  position: absolute;
+  width: calc(100% - 4px);
+  left: 2px;
+  font-size: 11px;
+  z-index: 5;
+  transition: 0.2s;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+.booking-rectangle:hover {
+  z-index: 10;
+  transform: scale(1.02);
+}
+.booking-time {
+  font-size: 10px;
+  font-weight: 800;
+  margin-bottom: 2px;
+  color: #333;
+}
+.booking-instansi {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  color: #000;
+  text-transform: uppercase;
+}
+.booking-name {
+  font-size: 10px;
+  color: #555;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-@media (max-width: 768px) {
-    .gallery-section {
-        padding: 60px 0;
-    }
-    
-    .gallery-grid {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-    }
-    
-    .gallery-column {
-        max-width: 100%;
-        flex: 0 0 100%;
-        width: 100%;
-    }
-    
-    .gallery-title {
-        font-size: 28px;
-    }
-    
-    .gallery-subtitle {
-        font-size: 15px;
-    }
-    
-    .gallery-overlay {
-        opacity: 1;
-        padding: 15px;
-    }
-    
-    .gallery-item {
-        max-width: 400px;
-        margin: 0 auto;
-    }
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.date-navigation {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.nav-btn {
+  width: 35px;
+  height: 35px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.today-btn {
+  padding: 0 15px;
+  height: 35px;
+  border: none;
+  background: #2b95fd;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.date-range {
+  font-weight: 700;
+  font-size: 16px;
+  min-width: 200px;
+  text-align: center;
 }
 
-@media (max-width: 480px) {
-    .gallery-section {
-        padding: 50px 0;
-    }
-    
-    .gallery-header {
-        margin-bottom: 40px;
-    }
-    
-    .gallery-grid {
-        gap: 12px;
-    }
-    
-    .gallery-column {
-        gap: 12px;
-    }
-    
-    .gallery-text h3 {
-        font-size: 16px;
-    }
-    
-    .gallery-text p {
-        font-size: 13px;
-    }
+.table-responsive-custom {
+  border: 1px solid #e0e0e0;
+  max-height: 700px;
+  overflow-y: auto;
+  position: relative;
+  border-radius: 8px;
+}
+.booking-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 600px;
+}
+.booking-table th {
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 10px;
+  border-bottom: 2px solid #ddd;
+  border-right: 1px solid #ddd;
+  text-align: center;
+}
+.booking-table th:first-child {
+  left: 0;
+  z-index: 30;
+  width: 70px;
+  border-right: 2px solid #ccc;
+}
+.time-header {
+  width: 70px;
+  background: #fff;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  border-right: 2px solid #ccc;
+  padding: 0 !important;
+  vertical-align: top;
 }
 
-/* Smooth loading animation */
-.gallery-item {
-    animation: fadeInUp 0.6s ease forwards;
-    opacity: 0;
-    transform: translateY(20px);
+.day-cell {
+  padding: 0 !important;
+  height: 840px;
+  position: relative;
+  background: #fff;
+  border-right: 1px solid #eee;
+  vertical-align: top;
+}
+.day-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+.time-line {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  height: 1px;
+  pointer-events: none;
+}
+.time-line.line-hour {
+  background: #e0e0e0;
+}
+.time-line.line-half {
+  border-top: 1px dashed #eee;
+}
+.time-label {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  transform: translateY(-50%);
 }
 
-@keyframes fadeInUp {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* CSS Calendar & Form */
+.calendar-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  height: 100%;
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.calendar-month {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+}
+.calendar-nav button {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+.calendar-table th {
+  text-align: center;
+  padding: 10px 0;
+  font-weight: 600;
+  color: #666;
+  font-size: 14px;
+}
+.calendar-table td {
+  text-align: center;
+  padding: 10px 0;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+}
+.calendar-table td:hover:not(.disabled) {
+  background: #f0f8ff;
+  color: #2b95fd;
+}
+.calendar-table td.active {
+  background: #2b95fd;
+  color: white;
+  font-weight: bold;
+}
+.calendar-table td.disabled {
+  color: #ccc;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.calendar-table td.other-month {
+  color: #ccc;
 }
 
+<<<<<<< HEAD
 /* ========================================================== */
 /* ---  CSS RESPONSIF (NAVBAR RAMPING & DROPDOWN) ---   */
 /* ========================================================== */
@@ -2738,3 +3867,79 @@ body {
 .gallery-column:nth-child(3) .gallery-item { animation-delay: 0.3s; }
 .gallery-column:nth-child(4) .gallery-item { animation-delay: 0.4s; }
 }
+=======
+.selected-date-display {
+  background: #eaf0ff;
+  color: #2b95fd;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 700;
+  border: 1px solid #dbeafe;
+  margin-bottom: 15px;
+}
+.booking-btn {
+  background: #2b95fd;
+  color: white;
+  border: none;
+  padding: 12px;
+  width: 100%;
+  border-radius: 5px;
+  font-weight: 600;
+  margin-top: 10px;
+  transition: 0.3s;
+}
+.booking-btn:hover {
+  background: #1a7fd8;
+}
+
+/* Modal Detail Table */
+.modal-overlay-detail {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content-detail {
+  background: white;
+  width: 90%;
+  max-width: 450px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+.modal-header-detail {
+  background: #2b95fd;
+  color: white;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+}
+.modal-body-detail {
+  padding: 20px;
+}
+.detail-row {
+  margin-bottom: 10px;
+}
+.detail-label {
+  font-size: 12px;
+  color: #888;
+  font-weight: 700;
+  display: block;
+}
+.detail-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+>>>>>>> origin/Abid
