@@ -700,85 +700,14 @@ body {
 }
 
 /* 1. KUNCI HEADER "WAKTU" (Pojok Kiri Atas) */
-<<<<<<< HEAD
-/* Harus sticky ke atas (saat scroll bawah) DAN ke kiri (saat scroll samping) */
-=======
->>>>>>> origin/Abid
 .booking-table th:first-child {
     position: sticky;
     left: 0;
     top: 0; 
-<<<<<<< HEAD
-    z-index: 50 !important; /* Layer paling tinggi */
-    background-color: #f5f5f5;
-    border-right: 1px solid #e0e0e0; /* Batas kanan agar tegas */
-    box-shadow: 2px 0 5px rgba(0,0,0,0.05); /* Bayangan halus */
-}
-
-/* 2. KUNCI KOLOM ANGKA (07:00 - 21:00) */
-.time-header {
-    position: sticky !important; /* Paksa sticky */
-    left: 0;
-    z-index: 40; /* Di atas konten tabel, di bawah header */
-    background-color: #ffffff; /* WAJIB ada background */
-    border-right: 1px solid #e0e0e0;
-    
-    /* Pastikan lebar tetap */
-    width: 70px;
-    min-width: 70px;
-    padding: 0 !important;
-    vertical-align: top;
-    
-    /* Bayangan agar terlihat mengambang di atas konten saat di-scroll */
-    box-shadow: 2px 0 5px rgba(0,0,0,0.05); 
-}
-
-/* 3. KUNCI HEADER HARI (Senin, Selasa...) */
-/* Ini sudah ada di kode lama Anda (.day-header), tapi pastikan z-indexnya benar */
-.day-header {
-    position: sticky;
-    top: 0;
-    z-index: 30; /* Di bawah pojok kiri atas (50), tapi di atas konten */
-    background-color: #f8f9fa;
-}
-
-.time-header {
-    background-color: #ffffff;
-    border-right: 1px solid #e0e0e0;
-    width: 70px;
-    min-width: 70px;
-    padding: 0 !important;
-    vertical-align: top;
-    z-index: 20;
-}
-
-/* Styling Garis di Kolom Header */
-.time-header-line {
-    position: absolute;
-    width: 100%; /* Memanjang penuh selebar kolom waktu */
-    left: 0;
-    z-index: 1; /* Di belakang teks angka */
-}
-
-/* Menggunakan kembali style solid/dashed */
-.time-header-line.line-hour {
-    height: 1px;
-    background-color: #e0e0e0;
-}
-
-.time-header-line.line-half {
-    height: 1px;
-    border-top: 1px dashed #ebebeb;
-}
-
-.time-header div[style*="position: relative"] {
-  width: 100%; /* Height diset oleh JS */
-=======
     z-index: 50 !important;
     background-color: #f5f5f5;
     border-right: 1px solid #e0e0e0;
     box-shadow: 2px 0 5px rgba(0,0,0,0.05);
->>>>>>> origin/Abid
 }
 
 /* 2. KUNCI KOLOM ANGKA (07:00 - 21:00) */
@@ -797,17 +726,6 @@ body {
 
 /* 3. KUNCI HEADER HARI */
 .day-header {
-<<<<<<< HEAD
-  background-color: #f8f9fa;
-  font-weight: 600;
-  min-width: 140px;
-  color: #2b95fd;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 2px solid #e0e0e0; /* Pemisah header yang lebih jelas */
-  padding-bottom: 15px !important;
-=======
     position: sticky;
     top: 0;
     z-index: 30;
@@ -821,7 +739,6 @@ body {
 
 .time-header div[style*="position: relative"] {
   width: 100%;
->>>>>>> origin/Abid
 }
 
 .today {
@@ -867,44 +784,9 @@ body {
 
 .day-container { position: relative; height: 840px; padding: 0; width: 100%; margin: 0 1px; }
 
-<<<<<<< HEAD
-.booking-desc {
-  color: #666;
-  font-size: 11px;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-/* Container untuk hari - relatif positioning untuk booking rectangle */
-.day-container {
-  position: relative;
-  height: 840px; /* 14 jam × 60px */
-  padding: 0;
-  width: 100%;
-  margin: 0 1px; /* Memberi nafas 1px kiri kanan */
-}
-
-/* Sel tabel untuk hari - DIBUAT TINGGI TETAP */
-.day-cell {
-  position: relative;
-  padding: 0 !important;
-  height: 840px; /* Tinggi tetap untuk container */
-  min-height: 840px;
-  background-color: transparent;
-  cursor: default;
-  vertical-align: top !important;
-  transition: background-color 0.2s ease;
-}
-
-.day-cell:hover {
-    background-color: rgba(43, 149, 253, 0.03); /* Highlight biru sangat tipis saat hover */
-=======
 .day-cell {
   position: relative; padding: 0 !important; height: 840px; min-height: 840px;
   background-color: transparent; cursor: default; vertical-align: top !important; transition: background-color 0.2s ease;
->>>>>>> origin/Abid
 }
 .day-cell:hover { background-color: rgba(43, 149, 253, 0.03); }
 
@@ -914,64 +796,6 @@ body {
 .day-cell.empty { background-color: transparent; }
 
 /* Grid lines untuk waktu */
-<<<<<<< HEAD
-.time-grid {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.time-line {
-    position: absolute;
-    width: 100%;
-    left: 0;
-    z-index: 1;
-}
-/* Garis Jam - Solid Tipis */
-.time-line.line-hour {
-    height: 1px;
-    background-color: #b3b1b1; /* Abu-abu solid */
-    border-top: none;
-}
-
-/* Garis Setengah Jam - Putus-putus Halus */
-.time-line.line-half {
-    height: 1px;
-    background-color: transparent;
-    border-top: 2px dashed #ebebeb; /* Putus-putus sangat halus */
-}
-
-/* Pastikan Label Teks berada di atas garis */
-.time-label {
-    z-index: 2; 
-    position: absolute;
-    width: 100%;
-    left: 0;
-    text-align: center;
-    height: 30px; /* Tinggi slot */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* Background putih sedikit transparan agar teks terbaca jelas jika menabrak garis (opsional) */
-    /* background-color: rgba(255,255,255,0.8); */ 
-}
-
-/* Jam Tepat (07:00, 08:00) - Lebih Gelap & Tegas */
-.time-label.is-hour {
-    font-size: 12px;
-    font-weight: 700;
-    color: #333; 
-}
-
-/* Setengah Jam (07:30) - Lebih Kecil & Tipis */
-.time-label.is-half {
-    font-size: 11px;
-    font-weight: 500;
-    color: #999; /* Warna abu-abu soft */
-=======
 .time-grid { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
 .time-line { position: absolute; width: 100%; left: 0; z-index: 1; }
 .time-line.line-hour { height: 1px; background-color: #b3b1b1; border-top: none; }
@@ -981,7 +805,6 @@ body {
 .time-label {
     z-index: 2; position: absolute; width: 100%; left: 0; text-align: center; height: 30px;
     display: flex; align-items: center; justify-content: center;
->>>>>>> origin/Abid
 }
 .time-label.is-hour { font-size: 12px; font-weight: 700; color: #333; }
 .time-label.is-half { font-size: 11px; font-weight: 500; color: #999; }
@@ -1033,87 +856,12 @@ body {
   .date-navigation { width: 100%; justify-content: space-between; }
   .action-buttons { width: 100%; justify-content: center; }
 
-<<<<<<< HEAD
-  .nav-menu {
-    gap: 20px;
-    order: 3;
-    width: 100%;
-    justify-content: space-around;
-    margin-top: 10px;
-  }
-
-  .lab-name {
-    font-size: 16px;
-  }
-
-  .lab-tagline {
-    font-size: 11px;
-  }
-
-  .nav-link {
-    font-size: 14px;
-  }
-
-  .dropdown-menu {
-    width: 200px;
-    position: absolute;
-    top: 100%;
-    left: 0;
-  }
-
-  .table-booking-container {
-    padding: 20px;
-  }
-
-  .table-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .date-navigation {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .action-buttons {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .booking-table th {
-    font-size: 12px;
-    padding: 6px 4px !important;
-    vertical-align: middle;
-    text-transform: uppercase;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-  }
-
-  .time-header {
-    width: 70px;
-  }
-
-  .day-header {
-    min-width: 120px;
-  }
-
-  .day-cell {
-    height: 700px;
-    min-height: 700px;
-  }
-
-  .day-container {
-    height: 700px;
-  }
-=======
   /* Font & Sizing Table */
   .booking-table th { font-size: 12px; padding: 6px 4px !important; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.5px; }
   .time-header { width: 70px; }
   .day-header { min-width: 120px; }
   .day-cell { height: 700px; min-height: 700px; }
   .day-container { height: 700px; }
->>>>>>> origin/Abid
 }
 
 @media (max-width: 768px) {
@@ -1148,381 +896,6 @@ body {
 }
 
 @media (max-width: 576px) {
-<<<<<<< HEAD
-  .table-booking-container {
-    padding: 15px;
-  }
-
-  .booking-table th {
-    padding: 3px 1px !important;
-    font-size: 9px;
-  }
-
-  .time-header {
-    width: 50px;
-    font-size: 9px;
-  }
-
-  .day-header {
-    min-width: 70px;
-    font-size: 10px;
-  }
-
-  .time-inputs {
-    flex-direction: column;
-  }
-
-  .day-cell {
-    height: 500px;
-    min-height: 500px;
-  }
-
-  .day-container {
-    height: 500px;
-  }
-}
-
-/* ========================================================== */
-/* ---  1. CSS RESPONSIF NAVBAR ---   */
-/* ========================================================== */
-/* ========================================================== */
-/* ---  CSS RESPONSIF (NAVBAR RAMPING & DROPDOWN) ---   */
-/* ========================================================== */
-
-/* --- 1. Tombol Hamburger (Default) --- */
-.mobile-menu-btn {
-    display: none; 
-    font-size: 24px;
-    cursor: pointer;
-    color: #333;
-    padding: 5px;
-    z-index: 1002;
-}
-
-/* --- 2. Media Query Tablet & Mobile (Max 991px) --- */
-@media (max-width: 991px) {
-    
-    /* --- A. Navbar Header (FIXED DI ATAS) --- */
-    .sticky-navbar {
-        min-height: 70px; /* Tinggi Minimal Header */
-        height: auto; 
-        padding: 10px 20px; 
-        
-        display: flex;
-        flex-direction: row;
-        align-items: center; 
-        justify-content: space-between;
-        
-        background-color: #ffffff; /* Putih Solid */
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-        border-bottom: 1px solid #eee;
-        
-        position: fixed;
-        width: 100%;
-        top: 0;
-        z-index: 1001; /* Layer Header Tinggi */
-    }
-
-    /* Layout Logo & Hamburger */
-    .logo-container {
-        order: 1; 
-        display: flex;
-        align-items: center; 
-        flex: 1; 
-        min-width: 0;
-        margin-right: 10px;
-    }
-
-    .mobile-menu-btn {
-        order: 2; 
-        display: block;
-        flex-shrink: 0;
-        margin-left: auto;
-        align-self: center; 
-    }
-
-    /* --- B. Style Logo & Teks (Wrapping Aktif) --- */
-    .logo {
-        width: 40px; 
-        height: 40px;
-        margin-right: 12px;
-        flex-shrink: 0;
-    }
-    
-    .logo img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-    
-    .lab-name-container {
-        display: flex !important;
-        flex-direction: column;
-        justify-content: center;
-        overflow: visible; 
-    }
-    
-    .lab-name {
-        font-size: 14px; 
-        font-weight: 700;
-        line-height: 1.2;
-        color: #333;
-        white-space: normal; /* Izinkan turun baris */
-        word-wrap: break-word;
-    }
-    
-    .lab-tagline {
-        display: block !important;
-        font-size: 11px;
-        color: #666;
-        margin-top: 2px;
-        white-space: normal;
-        line-height: 1.2;
-    }
-
-    /* --- C. Menu Drawer (REVISI: ANIMASI DARI ATAS KE BAWAH) --- */
-    .nav-menu {
-        position: fixed;
-        top: 70px; /* Posisi start di bawah header */
-        left: 0;   /* Full width (kiri-kanan penuh) */
-        width: 100%;
-        height: calc(100vh - 70px); 
-        
-        background-color: #ffffff !important;
-        
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start !important;
-        gap: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        
-        /* LOGIKA ANIMASI BARU (TOP-DOWN) */
-        /* Kita geser menu ke atas (-100%) agar sembunyi */
-        transform: translateY(-150%); 
-        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        
-        overflow-y: auto;
-        
-        /* PENTING: Z-index harus di bawah header (Header biasanya 1001) */
-        /* Agar terlihat meluncur turun dari belakang header */
-        z-index: 999; 
-        border: none !important;
-    }
-
-    .nav-menu.active {
-        /* Kembalikan ke posisi semula (turun ke bawah) */
-        transform: translateY(0);
-    }
-
-    /* --- D. Item Menu (REVISI: JARAK LEBIH RAPAT) --- */
-    .nav-item {
-        width: 100%;
-        display: block;
-        /* Flex: none mencegah item melar tingginya */
-        flex: none; 
-        height: auto;
-        margin: 0 !important;
-        border-bottom: 1px solid #f0f0f0; 
-        background-color: #ffffff;
-    }
-
-    .nav-link {
-        width: 100%;
-        /* REVISI: Padding diperkecil dari 12px ke 8px agar lebih dekat */
-        padding: 12px 24px; 
-        font-size: 15px;
-        color: #333;
-        font-weight: 600;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 0 !important;
-        height: auto !important;
-    }
-    
-    .nav-link:hover {
-        background-color: #f8f9fa;
-        color: #2b95fd;
-    }
-
-     .nav-item:last-child { border-bottom: none; }
-  
-    
-    .nav-link.active::after { display: none; }
-
-    /* Dropdown */
-    .nav-item.dropdown:hover .dropdown-menu { display: none; }
-    
-    /* Dropdown Mobile - REVISI */
-    .dropdown-menu {
-        position: static !important; /* Agar mendorong menu di bawahnya */
-        width: 100% !important;
-        background-color: #fcfcfc !important; 
-        border: none !important;
-        padding: 0 !important; 
-        display: none; /* Default hidden */
-        opacity: 1 !important; /* Pastikan terlihat */
-        visibility: visible !important;
-        transform: none !important; /* Hapus efek animasi desktop */
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.03) !important;
-    }
-
-    /* Class untuk menampilkan dropdown */
-    .dropdown-menu.show { 
-        display: block !important; 
-    }
-    
-    /* Putar icon panah saat aktif */
-    .nav-link.show .dropdown-icon { 
-        transform: rotate(180deg); 
-    }
-
-    .dropdown-menu.show { display: block !important; }
-
-    .dropdown-item {
-        /* REVISI: Padding dropdown juga diperkecil agar konsisten rapatnya */
-        padding: 10px 24px 10px 45px; 
-        color: #555;
-        font-size: 14px;
-        border-bottom: 1px solid #f5f5f5;
-    }
-
-    .nav-link.show .dropdown-icon { transform: rotate(180deg); }
-
-    /* Tombol Login */
-    .login-btn {
-        margin: 30px auto 15px auto; /* Margin juga sedikit diperkecil */
-        width: 90%;
-        display: block;
-        height: 40px; /* Tinggi tombol disesuaikan sedikit */
-        background-color: #2b95fd;
-        color: white;
-        border: none;
-        border-radius: 6px;
-
-        flex: none;
-    }
-   
-    /* --- E. Hero Section Fix --- */
-    .hero-section {
-        /* Tambah padding karena header fixed */
-        padding-top: 100px !important; 
-    }
-}
-
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-
-/* ========================================================== */
-/* ---  2. CSS RESPONSIF TABEL BOOKING (MODIFIKASI SAYA) ---  */
-/* ---  Agar Tabel tidak rusak saat Navbar berubah        --- */
-/* ========================================================== */
-
-@media (max-width: 991px) {
-    /* Reset Padding Body karena Navbar Fixed (70px) */
-    body {
-        padding-top: 70px !important;
-    }
-
-    /* Container Tabel */
-    .table-booking-container {
-        padding: 20px 10px;
-        width: 100%;
-        overflow: hidden; 
-    }
-
-    /* Header Tabel (Navigasi Tanggal) */
-    .table-header {
-        flex-direction: column;
-        gap: 15px;
-        align-items: center;
-    }
-
-    .date-navigation {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .action-buttons {
-        width: 100%;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    
-    .btn-add-booking, .btn-cancel-booking {
-        width: 100%;
-    }
-
-    /* --- TABEL SCROLL SAMPING (STICKY WAKTU) --- */
-    
-    .table-responsive {
-        display: block;
-        width: 100%;
-        overflow-x: auto; /* Scroll Samping */
-        -webkit-overflow-scrolling: touch;
-        margin-top: 15px;
-        border: 1px solid #e0e0e0;
-        background: #fff;
-    }
-
-    .booking-table {
-        min-width: 600px; /* Paksa lebar tabel */
-    }
-
-    /* KUNCI POJOK KIRI ATAS (HEADER 'WAKTU') */
-    .booking-table th:first-child {
-        position: sticky !important;
-        left: 0 !important;
-        top: 0 !important;
-        z-index: 50 !important;
-        background-color: #f5f5f5 !important;
-        border-right: 2px solid #ddd !important;
-        min-width: 60px !important;
-        width: 60px !important;
-    }
-
-    /* KUNCI KOLOM JAM (07:00, 08:00...) */
-    .time-header {
-        position: sticky !important;
-        left: 0 !important;
-        z-index: 40 !important;
-        background-color: #ffffff !important; /* WAJIB PUTIH */
-        border-right: 2px solid #ddd !important;
-        min-width: 60px !important;
-        width: 60px !important;
-    }
-
-    /* Penyesuaian Font di Mobile */
-    .booking-table th {
-        font-size: 11px;
-        padding: 8px 2px !important;
-    }
-
-    .time-label.is-hour { 
-        font-size: 10px !important; 
-        font-weight: 800; 
-    }
-    
-    /* Sembunyikan menit 30 di HP agar rapi */
-    .time-label.is-half { display: none !important; }
-
-    /* Ukuran Kotak Booking */
-    .booking-time { font-size: 9px; }
-    .booking-title { font-size: 10px; line-height: 1.1; }
-    .booking-desc { display: none; }
-    .booking-rectangle { padding: 4px; }
-}
-
-/* KHUSUS HP KECIL */
-@media (max-width: 576px) {
-    .lab-tagline { display: none !important; }
-=======
   .table-booking-container { padding: 15px; }
   .booking-table th { padding: 3px 1px !important; font-size: 9px; }
   .time-header { width: 50px; font-size: 9px; }
@@ -1533,5 +906,4 @@ body {
   
   /* Navbar tweaks for very small screen */
   .lab-tagline { display: none !important; }
->>>>>>> origin/Abid
 }

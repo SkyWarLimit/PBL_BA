@@ -1,17 +1,6 @@
-<<<<<<< HEAD
-/* ========================================= */
-/* 1. GLOBAL & DESKTOP STYLE (BASE) */
-/* ========================================= */
-
-*/* ========================================= */
-/* 1. GLOBAL & DESKTOP STYLE (BASE) */
-/* ========================================= */
-
-=======
 /* ==========================================================================
    1. GLOBAL & RESET
    ========================================================================== */
->>>>>>> origin/Abid
 * {
     font-family: "Nunito", sans-serif;
     margin: 0;
@@ -20,54 +9,6 @@
 }
 
 body {
-<<<<<<< HEAD
-  padding-top: 80px; /* Jarak agar konten tidak tertutup navbar */
-  background-color: #f8f9fa;
-}
-
-/* --- TOMBOL HAMBURGER DEFAULT (Hidden di Desktop) --- */
-.mobile-menu-btn {
-    display: none; 
-    font-size: 24px;
-    cursor: pointer;
-    color: #333;
-    padding: 5px;
-    z-index: 1002;
-}
-
-/* --- NAVBAR UTAMA (DESKTOP) --- */
-.sticky-navbar {
-  width: 100%;
-  height: 80px;
-  background-color: #ffffff;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  
-  /* Flexbox untuk menyusun Logo dan Menu */
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* PENTING: Logo kiri, Menu kanan */
-  padding: 0 50px;
-}
-
-/* Container Logo */
-.logo-container {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  gap: 15px; /* Jarak antara gambar logo dan teks */
-}
-
-.logo {
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-=======
     padding-top: 80px; /* Kompensasi tinggi navbar fixed */
 }
 
@@ -113,7 +54,6 @@ body {
     justify-content: center;
     overflow: hidden;
     flex-shrink: 0;
->>>>>>> origin/Abid
 }
 
 .logo img {
@@ -128,60 +68,6 @@ body {
 }
 
 .lab-name {
-<<<<<<< HEAD
-  font-weight: 800;
-  font-size: 18px;
-  color: #333;
-  line-height: 1.2;
-}
-
-.lab-tagline {
-  font-weight: 400;
-  font-size: 12px;
-  color: #666;
-  margin-top: 2px;
-}
-
-/* Menu Desktop */
-.nav-menu {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  align-items: center;
-  gap: 30px;
-}
-
-.nav-item {
-  position: relative;
-}
-
-.nav-link {
-  color: #333;
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 16px;
-  transition: color 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.nav-link:hover, .nav-link.active {
-  color: #2b95fd;
-}
-
-/* Tombol Login Desktop */
-.login-btn {
-  background-color: #2b95fd;
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 6px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.3s;
-=======
     font-weight: 700;
     font-size: 18px;
     color: #333;
@@ -573,7 +459,6 @@ body {
     border-radius: 5px;
     font-weight: 600;
     transition: background-color 0.3s;
->>>>>>> origin/Abid
 }
 
 /* ==========================================================================
@@ -591,130 +476,6 @@ body {
     .mobile-auth-section { display: none !important; }
 }
 
-<<<<<<< HEAD
-/* Dropdown Desktop */
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: white;
-  border-radius: 8px;
-  padding: 10px 0;
-  min-width: 200px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  display: none; /* Default hidden */
-  z-index: 1001;
-}
-
-.nav-item.dropdown:hover .dropdown-menu {
-  display: block; /* Show on hover desktop */
-}
-
-.dropdown-item {
-  display: block;
-  padding: 10px 20px;
-  color: #333;
-  text-decoration: none;
-  font-size: 14px;
-}
-
-.dropdown-item:hover {
-  background-color: #f0f8ff;
-  color: #2b95fd;
-}
-
-/* ========================================================== */
-/* --- 2. CSS RESPONSIF (MOBILE FIX) --- */
-/* ========================================================== */
-
-@media (max-width: 991px) {
-    
-    /* 1. Atur Ulang Navbar Header */
-    .sticky-navbar {
-        height: 70px; /* Sedikit lebih kecil di mobile */
-        padding: 0 20px; 
-        justify-content: space-between; /* Pastikan Logo & Hamburger berjauhan */
-    }
-
-    /* 2. Tampilkan Tombol Hamburger */
-    .mobile-menu-btn {
-        display: block; 
-    }
-
-    /* 3. MENU DRAWER (KUNCI PERBAIKAN) */
-    /* Kita gunakan Position Fixed agar menu KELUAR dari header */
-    .nav-menu {
-        position: fixed; /* Melayang, tidak menekan logo */
-        top: 70px;       /* Muncul di bawah navbar */
-        left: 0;
-        width: 100%;
-        height: calc(100vh - 70px);
-        background-color: #ffffff;
-        
-        /* Ubah orientasi jadi kolom (ke bawah) */
-        flex-direction: column;
-        align-items: flex-start; /* Rata kiri */
-        justify-content: flex-start;
-        padding: 20px 0;
-        gap: 0;
-
-        /* Sembunyikan dengan geser ke atas */
-        transform: translateY(-150%);
-        transition: transform 0.4s ease-in-out;
-        z-index: 999;
-        overflow-y: auto;
-        border-top: 1px solid #eee;
-    }
-
-    /* Class active untuk memunculkan menu */
-    .nav-menu.active {
-        transform: translateY(0);
-    }
-
-    /* 4. Style Item Menu Mobile */
-    .nav-item {
-        width: 100%;
-        border-bottom: 1px solid #f5f5f5;
-    }
-
-    .nav-link {
-        width: 100%;
-        padding: 15px 25px;
-        justify-content: space-between; /* Agar panah dropdown di kanan */
-    }
-
-    /* 5. Dropdown Mobile (Klik Only) */
-    /* Disable hover desktop behavior */
-    .nav-item.dropdown:hover .dropdown-menu { 
-        display: none; 
-    }
-    
-    .dropdown-menu {
-        position: static; /* Biar nempel di bawah parentnya, bukan floating */
-        width: 100%;
-        box-shadow: none;
-        background-color: #fcfcfc;
-        display: none;
-        padding-left: 20px; /* Indentasi */
-    }
-
-    .dropdown-menu.show {
-        display: block !important;
-    }
-
-    /* 6. Tombol Login Mobile */
-    .login-btn {
-        width: 90%;
-        margin: 20px auto;
-        display: block;
-        height: 45px;
-    }
-
-    /* 7. Penyesuaian Logo Mobile */
-    .lab-name { font-size: 14px; }
-    .lab-tagline { font-size: 11px; }
-    .logo { width: 35px; height: 35px; }
-=======
 /* --- DESKTOP USER CONTAINER --- */
 .desktop-user-action {
     display: flex;
@@ -803,7 +564,6 @@ body {
 
 .desktop-logout-btn:active {
     transform: scale(0.95);
->>>>>>> origin/Abid
 }
 
 /* ========================================= */
@@ -871,30 +631,6 @@ body {
 .booking-btn { background-color: #2b95fd; color: white; border: none; padding: 12px 30px; border-radius: 5px; font-weight: 600; width: 100%; margin-top: 10px; }
 .booking-btn:hover { background-color: #1a7fd8; }
 
-<<<<<<< HEAD
-/* ========================================= */
-/* 4. MEDIA QUERY UNTUK KONTEN SAJA (CLEANUP) */
-/* ========================================= */
-
-/* Tablet: Hanya atur padding konten */
-@media (max-width: 992px) {
-  .content-container {
-    padding: 30px 20px;
-  }
-}
-
-/* Mobile: Hanya atur font konten & form */
-@media (max-width: 768px) {
-  .section-title {
-    font-size: 28px;
-  }
-
-  .time-inputs {
-    flex-direction: column;
-    gap: 0;
-  }
-}
-=======
 .calendar-nav {
   display: flex;
   gap: 10px;
@@ -993,4 +729,3 @@ body {
   background-color: #1a7fd8;
 }
 
->>>>>>> origin/Abid

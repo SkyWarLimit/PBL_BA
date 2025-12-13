@@ -1,3 +1,13 @@
+<?php
+session_start();
+
+// --- LOGIKA SESSION ---
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+// Role default jika tidak ada session
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+?>
+
 
 <!DOCTYPE html>
 <html lang="id">

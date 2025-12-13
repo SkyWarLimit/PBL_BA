@@ -829,10 +829,11 @@ html {
 
 #latest-news,
 #prestasi,
-#announcement, {
+#announcement {
     scroll-margin-top: 160px;
     padding-top: 20px;
 }
+
 
 /* Responsive Design untuk Section Navigation */
 
