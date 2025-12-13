@@ -84,6 +84,7 @@ function renderGalleryItem($item)
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="./assets/css/berandaStyle.css?v=<?php echo time(); ?>">
 
@@ -94,7 +95,6 @@ function renderGalleryItem($item)
         <link rel="stylesheet" href="./assets/css/galeri-addon.css?v=<?php echo time(); ?>">
     <?php endif; ?>
 
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
 
     <style>
         /* CSS Table Booking */
@@ -508,7 +508,7 @@ function renderGalleryItem($item)
                                 <span class="username-text"><?php echo htmlspecialchars($userName); ?></span>
                             </div>
                         </div>
-                        <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                        <a class="logout-btn-modern" href="../admin/logout.php" title="Logout">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
                     </div>
@@ -533,7 +533,7 @@ function renderGalleryItem($item)
                     </div>
                 </a>
 
-                <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                <a class="desktop-logout-btn" onclick="window.location.href='./admin/logout.php'" title="Keluar / Logout">
                     <i class="fas fa-sign-out-alt"></i>
                 </a>
 
