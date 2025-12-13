@@ -190,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
 
         <div class="login-right">
-            <img src="../assets/images/logo.png" alt="Logo Lab" class="login-logo">
+            <img src="../assets/img/logo.png" alt="Logo Lab" class="login-logo">
             <h3 class="welcome-title">Lab Business Analytics</h3>
             <p class="welcome-text">Transforming Data into Decisions.<br>Kelola data dan aktivitas laboratorium Anda dengan mudah dan aman.</p>
         </div>

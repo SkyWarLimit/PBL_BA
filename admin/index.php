@@ -801,7 +801,7 @@ checkAuth();
 
     <div class="sidebar">
         <a href="#" class="sidebar-brand">
-            <img src="../assets/images/logo.png" alt="Logo">
+            <img src="../assets/img/logo.png" alt="Logo">
             <span>Lab Admin</span>
         </a>
 
@@ -2205,7 +2205,8 @@ checkAuth();
 
         let currentPage = 'beranda';
         loadPage('beranda');
-// =========================================================================
+        
+        // =========================================================================
         // === ANGGOTA MANAJEMEN FUNCTIONS (TAMBAHKAN/GANTIKAN DI INDEX.PHP) ===
         // =========================================================================
 
