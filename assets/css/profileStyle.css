@@ -1376,7 +1376,12 @@ body {
 @media (max-width: 991px) {
     /* 1. RESET DASAR */
     .tree { min-width: 100%; padding: 0 15px; }
-    .tree-container { overflow-x: hidden; }
+    .tree-container { 
+        overflow-x: auto !important;
+        margin: 0 !important;
+        width: 100% !important;
+        padding: 20px 0;
+    }
 
     /* Sembunyikan elemen lama */
     .tree > ul > li > ul::before,
@@ -2030,9 +2035,12 @@ a.btn-read-more:hover {
 /* ========================================================================= */
 
 html, body {
+    width: 100%;
     max-width: 100% !important;
-    /* overflow-x: hidden !important; */
+    overflow-x: hidden !important;
     position: relative;
+    margin: 0;
+    
 }
 
 body {
@@ -2345,6 +2353,8 @@ body {
         text-align: justify; 
     }
 }
+
+
 
 /* ========================================================== */
 /* FIX TOTAL: RESEARCH FOCUS MOBILE (Strict Override)         */

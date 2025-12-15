@@ -287,7 +287,6 @@ function renderGalleryItem($item)
             font-size: 11px;
             font-weight: 700;
             color: #666;
-            transform: translateY(-50%);
         }
 
         /* CSS Calendar & Form */
@@ -872,6 +871,7 @@ function renderGalleryItem($item)
                     <h2 class="fw-bold text-dark mb-2">Today's Lab Gallery</h2>
                     <div class="section-title-underline2"></div>
                 </div>
+                
                 <div class="gallery-btn-container">
                     <button class="gallery-btn" onclick="window.location.href='./pages/galeri.php'">
                         <span class="btn-text">
@@ -1215,7 +1215,7 @@ function renderGalleryItem($item)
     
     // Konfigurasi Grid Waktu
     const START_HOUR = 7;       // Jam 07:00
-    const END_HOUR = 21;        // Jam 21:00
+    const END_HOUR = 22;        // Jam 22:00
     const PIXELS_PER_HOUR = 60; // Tinggi 1 jam = 60px (Penting untuk presisi)
     const TOTAL_HOURS = END_HOUR - START_HOUR;
     const TOTAL_HEIGHT = TOTAL_HOURS * PIXELS_PER_HOUR; // Total tinggi grid (840px)
