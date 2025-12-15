@@ -6,10 +6,6 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 // Role default jika tidak ada session
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
-?>
-
-<?php
-session_start();
 
 // --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
 // Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
@@ -87,6 +83,26 @@ try {
 } catch (PDOException $e) {
     error_log("Error fetching dosen: " . $e->getMessage());
 }
+
+try {
+    // Tambahkan 'visi' dan 'misi' ke dalam query IN clause
+    $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'maskot', 'visi', 'misi')");
+    $settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Convert ke array asosiatif biar gampang dipanggil
+    $settings = [];
+    foreach($settingsRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    if (!empty($settings['logo']['file_path'])) $logoSrc = '../admin/' . $settings['logo']['file_path'];
+    if (!empty($settings['maskot']['file_path'])) $maskotSrc = '../admin/' . $settings['maskot']['file_path'];
+    
+    // Ambil value visi misi
+    if (!empty($settings['visi']['value'])) $visiText = $settings['visi']['value'];
+    if (!empty($settings['misi']['value'])) $misiText = $settings['misi']['value'];
+
+} catch (Exception $e) { /* Ignore */ }
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -294,21 +310,34 @@ try {
                     aliquip ex ea commodo consequat.
                 </p>
                 <div class="vision-mission-card mb-4">
-                    <h3 class="vision-mission-title">Visi</h3>
-                    <p class="vision-mission-text">Menjadi laboratorium unggul rujukan nasional sebagai inkubator solusi
-                        cerdas
-                        berbasis data.</p>
-                </div>
-                <div class="vision-mission-card">
-                    <h3 class="vision-mission-title">Misi</h3>
-                    <ol class="vision-mission-list">
-                        <li>Mengembangkan riset terapan</li>
-                        <li>Mengintegrasikan berbagai disiplin ilmu</li>
-                        <li>Membangun kemitraan strategis dengan industri</li>
-                        <li>Mengembangkan talenta (dosen dan mahasiswa)</li>
-                        <li>Menjalankan tata kelola laboratorium yang profesional, etis, dan berkelanjutan</li>
-                    </ol>
-                </div>
+    <h3 class="vision-mission-title">Visi</h3>
+    <p class="vision-mission-text">
+        <?php echo nl2br(htmlspecialchars($visiText)); ?>
+    </p>
+</div>
+
+<div class="vision-mission-card">
+    <h3 class="vision-mission-title">Misi</h3>
+    <div class="vision-mission-list-container">
+        <?php 
+            // Cek apakah isi misi mengandung tag HTML list
+            if (strpos($misiText, '<li>') !== false) {
+                // Jika user input pake HTML (misal dari summernote/text editor)
+                echo $misiText; 
+            } else {
+                // Jika input teks biasa (misal dipisah enter), kita buat list manual
+                echo '<ol class="vision-mission-list">';
+                $misiLines = explode("\n", $misiText);
+                foreach ($misiLines as $line) {
+                    if (trim($line)) {
+                        echo '<li>' . htmlspecialchars($line) . '</li>';
+                    }
+                }
+                echo '</ol>';
+            }
+        ?>
+    </div>
+</div>
             </div>
         </div>
 
@@ -396,63 +425,7 @@ try {
         </div>
 
         <div class="py-4"></div>
-
-        <!-- Struktur Organisasi Section -->
-        <div class="org-structure py-5" id="struktur-organisasi">
-            <h2 class="section-title mb-3">Struktur Organisasi</h2>
-            <p class="section-description mb-5">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-                dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                ex ea commodo consequat.
-            </p>
-
-            <div class="tree-container">
-                <div class="tree">
-                    <ul>
-                        <li>
-                            <div class="org-node main-node">
-                                <span>Kepala Laboratory</span>
-                            </div>
-                            <ul>
-                                <!-- Baris pertama: Sekretaris dan Bendahara -->
-                                <li class="support-row">
-                                    <div class="org-node child-node">
-                                        <span>Sekretaris</span>
-                                    </div>
-                                    <div class="org-node child-node">
-                                        <span>Bendahara</span>
-                                    </div>
-                                </li>
-
-                                <!-- Baris kedua: Semua Koordinator -->
-                                <li class="coordinator-row">
-                                    <div class="coordinator-container">
-                                        <div class="org-node child-node">
-                                            <span>Koor. Pengembangan Kelimuan</span>
-                                        </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Riset & PkM</span>
-                                        </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Kemitraan</span>
-                                        </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Sarana & Prasarana</span>
-                                        </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Publikasi</span>
-                                        </div>
-                                        <div class="org-node child-node">
-                                            <span>Koor. Pengelolaan Tugas Akhir</span>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        
         <!-- SECTION ANGGOTA LABORATORY (DYNAMIC) -->
         <div class="org-structure py-5" id="struktur-organisasi">
             <h2 class="section-title mb-3">Struktur Organisasi</h2>
