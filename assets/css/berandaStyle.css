@@ -8,6 +8,13 @@
   box-sizing: border-box;
 }
 
+/* TAMBAHKAN INI */
+html, body {
+  width: 100%;
+  overflow-x: hidden; /* KUNCI: Mencegah scroll ke samping (white space kanan) */
+  position: relative;
+}
+
 body {
   padding-top: 80px; /* Kompensasi tinggi navbar fixed */
 }
@@ -1715,7 +1722,7 @@ body {
 @media (max-width: 991px) {
   /* 1. CONTAINER UTAMA */
   .hero-section {
-    width: 100vw !important;
+    width: 100% !important;
     max-width: 100% !important;
 
     /* FIX GAP: Margin top negatif kecil untuk menutup celah putih pixel */
@@ -1738,6 +1745,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow: hidden;
   }
 
   .hero-rectangle {
@@ -1747,6 +1755,7 @@ body {
   /* 2. CONTAINER KONTEN */
   .hero-container {
     width: 100%;
+    max-width: 100%;
     padding: 0 25px;
     display: flex;
     flex-direction: column;
@@ -2320,13 +2329,13 @@ body {
 
   /* 2. HEADER (JUDUL & TOMBOL) */
   .news-section .d-flex.justify-content-between.align-items-end {
-    flex-direction: column;
+    flex-direction: row !important;
 
     /* Container Utama Rata Kiri (Agar blok judul ada di kiri) */
-    align-items: flex-start !important;
-
-    gap: 15px;
-    margin-bottom: 30px !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px;
+    margin-bottom: 20px !important;
   }
 
   /* --- LOGIKA POSISI JUDUL & GARIS --- */
@@ -2338,17 +2347,20 @@ body {
     flex-direction: column;
 
     /* KUNCI 1: Lebar container menyusut mengikuti panjang teks */
-    width: fit-content;
+    width: fit-content !important;
+    max-width: 70%;
 
     /* KUNCI 2: Pusatkan isi container (Teks & Garis saling tengah) */
-    align-items: center;
+    align-items: flex-start;
+    flex: 0 0 auto !important;
   }
 
   .news-section h2 {
-    font-size: 26px;
-    margin-bottom: 10px;
-    text-align: center; /* Teks center relatif terhadap container kecilnya */
-    width: 100%;
+    font-size: 20px;
+    margin-bottom: 5px;
+    text-align: left; /* Teks center relatif terhadap container kecilnya */
+    width: auto;
+    line-height: 1,2;
   }
 
   .section-title-underline2 {
@@ -2361,10 +2373,10 @@ body {
 
   /* Tombol Tetap Kiri */
   .news-btn-container {
-    width: 100%;
-    display: flex;
-    justify-content: flex-start;
-    margin-top: 5px;
+    width: auto !important;
+    display: block;
+    margin-top: 0;
+    flex-shrink: 0;
   }
 
   /* 3. LAYOUT VERTIKAL (RESET GRID) */
@@ -2496,6 +2508,53 @@ body {
     width: 80px !important;
     height: 70px !important;
   }
+}
+
+/* ========================================= */
+/* FIX RESPONSIF HEADER GALLERY (MOBILE) */
+/* ========================================= */
+
+@media (max-width: 991px) {
+    /* 1. Atur Flex Container agar Judul & Tombol tetap sejajar (Row) */
+    .gallery-section .d-flex.justify-content-between.align-items-end {
+        flex-direction: row !important;
+        align-items: center !important; /* Ganti align-items-end jadi center agar rapi */
+        justify-content: space-between !important;
+        gap: 10px; /* Jarak antara judul dan tombol */
+        margin-bottom: 20px !important;
+    }
+
+    /* 2. Modifikasi Judul "Today's Lab Gallery" */
+    .gallery-section h2 {
+        font-size: 19px; /* Perkecil ukuran font (sebelumnya bawaan h2 terlalu besar) */
+        margin-bottom: 5px;
+        white-space: nowrap; /* KUNCI UTAMA: Paksa teks tidak turun baris */
+        line-height: 1.2;
+    }
+
+    /* 3. Sesuaikan Garis Bawah (Underline) */
+    .gallery-section .section-title-underline2 {
+        width: 60%; /* Lebar garis mengikuti panjang teks */
+        height: 4px;
+        background-color: #7bdff2;
+        border-radius: 10px;
+        margin-top: 2px;
+    }
+
+    /* 4. Pastikan Tombol tidak 'gepeng' atau turun */
+    .gallery-btn-container {
+        flex-shrink: 0; /* Mencegah tombol mengecil */
+        margin-top: 0;
+    }
+    
+    /* Optional: Sesuaikan ukuran tombol gallery jika perlu sama persis dgn news */
+    .gallery-btn {
+        width: auto !important;
+        min-width: 110px;
+        height: 35px;
+        font-size: 12px;
+        padding: 0 10px;
+    }
 }
 
 /* ========================================= */
@@ -2668,11 +2727,45 @@ body {
 .time-label {
   position: absolute;
   width: 100%;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: #666;
-  transform: translateY(-50%);
+  height: 60px; /* Tinggi presisi 1 jam */
+  
+  /* Flexbox Setup */
+  display: flex;
+  justify-content: center; /* Teks rata tengah secara Horizontal (Kiri-Kanan) */
+  align-items: flex-start; /* Teks rata ATAS secara Vertikal */
+  
+  /* Jarak teks dari garis solid atas */
+  padding-top: 5px; 
+  
+  /* Styling Font */
+  font-size: 12px;
+  font-weight: 800;
+  color: #212529;
+  
+  /* Border Utama (Kotak Luar) */
+  border-top: 1px solid #e0e0e0;   /* Garis solid jam (00:00) */
+  border-right: 1px solid #e0e0e0; /* Garis pemisah kanan */
+  
+  background-color: #fff;
+  z-index: 5;
+  box-sizing: border-box;
+}
+
+/* Membuat Garis Putus-putus (Menit 30) dengan Pseudo-element */
+.time-label::after {
+  content: "";
+  position: absolute;
+  top: 50%; /* Posisi tepat di tengah (menit 30) */
+  left: 0;
+  width: 100%;
+  border-bottom: 1px dashed #eee; /* Garis putus-putus tipis */
+  pointer-events: none; /* Agar tidak mengganggu klik */
+}
+
+/* Tambahan: Sembunyikan label jam terakhir (misal 21:00) 
+   agar tidak muncul di bawah tabel (karena table hanya sampai jam 21:00) */
+.time-label:last-child {
+  display: none !important;
 }
 
 /* CSS Calendar & Form */
@@ -2812,4 +2905,54 @@ body {
   font-weight: 600;
   border-bottom: 1px solid #eee;
   padding-bottom: 5px;
+}
+
+/* ========================================= */
+/* FIX RESPONSIF TABLE BOOKING (MOBILE) */
+/* ========================================= */
+
+@media (max-width: 768px) {
+  /* 1. Kurangi Padding Container agar area lebih luas */
+  .table-booking-container {
+    padding: 15px 10px; /* Kiri-kanan lebih tipis (10px) */
+  }
+
+  /* 2. Layout Flex Navigasi: Izinkan elemen turun baris (Wrap) */
+  .date-navigation {
+    flex-wrap: wrap;
+    justify-content: space-between; /* Sebar elemen */
+    gap: 8px; /* Jarak antar elemen */
+    width: 100%;
+  }
+
+  /* 3. Teks Tanggal (Date Range): Fleksibel & Kecilkan Min-Width */
+  .date-range {
+    min-width: 120px; /* Kurangi drastis dari 200px agar muat */
+    font-size: 14px;  /* Perkecil font sedikit */
+    flex-grow: 1;     /* Mengisi ruang kosong di antara panah */
+    text-align: center;
+    order: 2;         /* Pastikan urutan ke-2 (Tengah) */
+  }
+
+  /* 4. Tombol Panah (Prev/Next) */
+  .nav-btn {
+    width: 32px;      /* Sedikit lebih kecil */
+    height: 32px;
+    flex-shrink: 0;   /* Jangan sampai tombol gepeng */
+  }
+  
+  #prev-week { order: 1; } /* Panah kiri urutan 1 */
+  #next-week { order: 3; } /* Panah kanan urutan 3 */
+
+  /* 5. Tombol TODAY: Turun ke bawah & Full Width */
+  .today-btn {
+    order: 4;         /* Taruh paling terakhir */
+    width: 100%;      /* Lebar penuh (Full Width) */
+    margin-top: 5px;  /* Beri jarak sedikit dari atas */
+    height: 38px;     /* Tinggi tombol yang nyaman disentuh */
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

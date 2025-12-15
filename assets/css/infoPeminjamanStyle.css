@@ -1435,3 +1435,150 @@ body {
         line-height: 1.5;
     }
 }
+/* ========================================================== */
+/* ---  ADDITIONAL RESPONSIVE HERO SECTION ---  */
+/* ========================================================== */
+
+/* 1. RESET BODY & HERO (SAMA SEPERTI SEBELUMNYA) */
+body {
+    padding-top: 20px !important;
+}
+
+.hero-section {
+    padding-top: 80px; 
+    margin-top: 10px !important;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+.hero-rectangle {
+    top: 0;
+    bottom: 0;
+    height: 100%;
+}
+
+/* 2. LOGIC BARU UNTUK WATERMARK "BORROWING" */
+
+/* Pastikan container teks menjadi acuan posisi */
+.hero-text-content {
+    position: relative;
+    z-index: 5;
+}
+
+/* Pastikan judul utama berada DI ATAS watermark */
+.title-content {
+    position: relative;
+    z-index: 10; /* Lebih tinggi dari overlay */
+}
+
+/* MEDIA QUERY TABLET (Max 991px) */
+@media (max-width: 991px) {
+    .hero-section {
+        padding-top: 70px !important; 
+        height: auto;
+        padding-bottom: 60px;
+    }
+
+    .hero-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hero-text-content {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Center semua konten */
+    }
+
+    /* --- PERBAIKAN UTAMA DI SINI --- */
+    /* Kita kembalikan ke absolute agar tidak mendorong layout, 
+       tapi kita center paksa menggunakan left 50% + transform */
+    .about-overlay {
+        position: absolute; /* Tetap absolute seperti desktop! */
+        top: -50px; /* Tarik ke atas agar pas di belakang judul */
+        left: 50%;  /* Titik awal di tengah container */
+        transform: translateX(-50%); /* Geser balik 50% agar benar-benar center */
+        width: 100%;
+        pointer-events: none; /* Agar tidak menghalangi klik */
+        z-index: 1; /* Di bawah judul */
+        margin: 0; /* Hapus margin aneh */
+    }
+
+    /* Ukuran font tetap besar agar efek watermark terjaga */
+    .about-text {
+        font-size: 80px !important; /* Paksa besar */
+        display: block;
+        white-space: nowrap; /* Jangan sampai turun baris */
+    }
+
+    /* Elemen lain */
+    .hero-inner-rectangle {
+        width: 300px;
+        height: 300px;
+        margin: 0 auto 40px auto; /* Beri jarak bawah agar tidak nempel watermark */
+    }
+
+    .register-btn-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+    }
+}
+
+/* MEDIA QUERY MOBILE (Max 576px) */
+@media (max-width: 576px) {
+    .hero-inner-rectangle {
+        width: 80%;
+        max-width: 280px;
+        height: 250px;
+        margin-bottom: 30px;
+    }
+
+    /* Penyesuaian Watermark di layar HP kecil */
+    .about-overlay {
+        top: -35px; /* Sedikit turun menyesuaikan font judul */
+    }
+
+    .about-text {
+        font-size: 60px !important; /* Masih cukup besar untuk watermark */
+    }
+
+    .title-line {
+        font-size: 32px;
+    }
+    
+    .register-btn {
+        width: 100%;
+        max-width: 266px;
+    }
+}
+
+/* 4. FIX UNTUK CAROUSEL DI LAYAR KECIL */
+@media (max-width: 768px) {
+    .facilities-carousel-container {
+        height: 350px; /* Mengurangi tinggi container agar tidak terlalu kosong */
+        margin-top: 20px;
+    }
+    
+    /* Memastikan item carousel tidak keluar jalur */
+    .facility-item.center {
+        width: 180px;
+        height: 240px;
+    }
+    
+    .facility-item.side {
+        width: 140px;
+        height: 190px;
+    }
+    
+    .facility-icon {
+        font-size: 40px;
+        margin-bottom: 15px;
+    }
+    
+    .facility-name {
+        font-size: 16px;
+    }
+}

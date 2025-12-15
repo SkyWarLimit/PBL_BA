@@ -167,11 +167,11 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
             </div>
             <div class="action-buttons">
                 <?php if ($isLoggedIn): ?>
-                    <button class="btn-add-booking" id="open-add-booking">Add Booking</button>
+                    <button class="btn-add-booking" onclick="window.location.href='../pages/booking.php'">Add Booking</button>
                 <?php else: ?>
                     <button class="btn-add-booking" onclick="alert('Silakan login terlebih dahulu untuk melakukan booking.')">Login to Book</button>
                 <?php endif; ?>
-                <button class="btn-cancel-booking">Cancel Booking</button>
+                <button class="btn-cancel-booking" onclick="window.location.href='../pages/formCancel.php'">Cancel Booking</button>
             </div>
         </div>
 
@@ -309,7 +309,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
         let renderedBookings = new Set();
 
         const START_HOUR = 7;
-        const END_HOUR = 21;
+        const END_HOUR = 22;
         const PIXELS_PER_HOUR = 60;
         const TOTAL_HOURS = END_HOUR - START_HOUR;
         const TOTAL_HEIGHT = TOTAL_HOURS * PIXELS_PER_HOUR;
@@ -453,7 +453,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
             timeCell.className = 'time-header';
             const timeList = document.createElement('div');
             timeList.style.position = 'relative';
-            timeList.style.height = `${TOTAL_HEIGHT + 50}px`; 
+            timeList.style.height = `${TOTAL_HEIGHT}px`; 
 
             for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
                 const topPos = (hour - START_HOUR) * PIXELS_PER_HOUR;
@@ -470,7 +470,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
             for (let day = 0; day < 5; day++) {
                 const date = new Date(mondayDate); date.setDate(date.getDate() + day);
                 const cell = document.createElement('td'); cell.className = 'day-cell';
-                const container = document.createElement('div'); container.className = 'day-container'; container.style.height = `${TOTAL_HEIGHT + 50}px`;
+                const container = document.createElement('div'); container.className = 'day-container'; container.style.height = `${TOTAL_HEIGHT}px`;
                 for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
                     const topPos = (hour - START_HOUR) * PIXELS_PER_HOUR;
                     if(hour !== START_HOUR) { 

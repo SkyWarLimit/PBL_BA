@@ -1,6 +1,16 @@
 <?php
 session_start();
 
+// --- LOGIKA SESSION ---
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+// Role default jika tidak ada session
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+?>
+
+<?php
+session_start();
+
 // --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
 // Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
 // Gunakan __DIR__ agar path relatifnya aman
