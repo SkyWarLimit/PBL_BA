@@ -167,11 +167,11 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
             </div>
             <div class="action-buttons">
                 <?php if ($isLoggedIn): ?>
-                    <button class="btn-add-booking" id="open-add-booking">Add Booking</button>
+                    <button class="btn-add-booking" onclick="window.location.href='../pages/booking.php'">Add Booking</button>
                 <?php else: ?>
                     <button class="btn-add-booking" onclick="alert('Silakan login terlebih dahulu untuk melakukan booking.')">Login to Book</button>
                 <?php endif; ?>
-                <button class="btn-cancel-booking">Cancel Booking</button>
+                <button class="btn-cancel-booking" onclick="window.location.href='../pages/formCancel.php'">Cancel Booking</button>
             </div>
         </div>
 
