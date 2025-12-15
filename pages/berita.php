@@ -1,6 +1,10 @@
 <?php
 session_start();
 
+// --- 1. KONEKSI DATABASE & LOGIKA SESSION ---
+require_once '../admin/config/database.php';
+$db = (new Database())->getConnection();
+
 // --- LOGIKA SESSION ---
 $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
@@ -14,6 +18,28 @@ $apiPath = $isLoggedIn ? '../admin/api/berita.php' : '../api/berita.php';
 // Jika API/berita.php ada di admin/api/, dan pages/berita.php ada di pages/, 
 // maka path yang benar dari pages/ adalah ../admin/api/berita.php.
 // Saya berasumsi struktur anda: /pages/berita.php dan /admin/api/berita.php
+
+try {
+    $querySetting = 'SELECT "key", file_path FROM settings WHERE "key" IN (\'logo\', \'maskot\')';
+    $stmtSetting = $db->prepare($querySetting);
+    $stmtSetting->execute();
+    $settingsData = $stmtSetting->fetchAll(PDO::FETCH_KEY_PAIR); 
+
+    // --- PERBAIKAN PATH ---
+    // Gunakan "../admin/" agar browser keluar dari folder 'pages' dulu
+    
+    $logoSrc = !empty($settingsData['logo']) 
+        ? '../admin/' . $settingsData['logo']  // BENAR: ../admin/uploads/...
+        : '../assets/images/logo.png';         // Fallback juga pakai ../
+
+    $maskotSrc = !empty($settingsData['maskot']) 
+        ? '../admin/' . $settingsData['maskot'] 
+        : '../assets/img/MaskotLab.png';
+
+} catch (PDOException $e) {
+    $logoSrc = '../assets/images/logo.png';
+    $maskotSrc = '../assets/img/MaskotLab.png';
+}
 ?>
 
 <!DOCTYPE html>
@@ -35,7 +61,7 @@ $apiPath = $isLoggedIn ? '../admin/api/berita.php' : '../api/berita.php';
     <nav class="sticky-navbar" id="mainNavbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
                 <div class="lab-name">Laboratorium Business Analytics</div>

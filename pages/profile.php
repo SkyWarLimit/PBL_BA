@@ -1,4 +1,83 @@
+<?php
+session_start();
 
+// --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
+// Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
+// Gunakan __DIR__ agar path relatifnya aman
+$dbPath = __DIR__ . '/../admin/config/database.php';
+
+if (file_exists($dbPath)) {
+    require_once $dbPath;
+} else {
+    // Fallback jika path beda
+    $dbPathAlternative = $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php';
+    if (file_exists($dbPathAlternative)) {
+        require_once $dbPathAlternative;
+    } else {
+        die("Error: Config database tidak ditemukan. Cek path file.");
+    }
+}
+
+$db = (new Database())->getConnection();
+
+// Logika User Session
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+
+// --- 2. AMBIL DATA SETTING (Logo & Maskot) ---
+$logoSrc = '../assets/images/logo.png';
+$maskotSrc = '../assets/img/MaskotLab.png';
+
+try {
+    $stmt = $db->query("SELECT key, file_path FROM settings WHERE key IN ('logo', 'maskot')");
+    $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    if (!empty($settings['logo'])) $logoSrc = '../admin/' . $settings['logo'];
+    if (!empty($settings['maskot'])) $maskotSrc = '../admin/' . $settings['maskot'];
+} catch (Exception $e) { /* Ignore */
+}
+
+// --- 3. AMBIL DATA DOSEN / ANGGOTA (QUERY POSTGRESQL) ---
+$dosenList = [];
+try {
+    // Query ini menggabungkan tabel dosen, user, dan anggota
+    // Menggunakan STRING_AGG (PostgreSQL) pengganti GROUP_CONCAT
+    $sql = "SELECT 
+                d.id_dosen,
+                u.nama as nama_lengkap,
+                d.nidn,
+                d.foto,
+                
+                -- Ambil Keahlian (Gabungan dari tabel anak)
+                (
+                    SELECT STRING_AGG(nama_bidang, ', ') 
+                    FROM bidang_keahlian bk 
+                    WHERE bk.id_dosen = d.id_dosen
+                ) as keahlian_list,
+                
+                -- Fallback ke kolom tabel induk
+                d.bidang_keahlian as keahlian_single,
+                
+                -- Ambil Link Scholar (Case Insensitive search 'scholar')
+                (SELECT link_url FROM link_akademik_dosen WHERE id_dosen = d.id_dosen AND platform ILIKE '%scholar%' LIMIT 1) as link_scholar,
+                
+                -- Ambil Link Sinta (Case Insensitive search 'sinta')
+                (SELECT link_url FROM link_akademik_dosen WHERE id_dosen = d.id_dosen AND platform ILIKE '%sinta%' LIMIT 1) as link_sinta
+
+            FROM dosen d
+            JOIN users u ON d.id_user = u.id_user
+            JOIN anggota a ON d.id_dosen = a.id_dosen
+            WHERE a.is_active = true
+            ORDER BY u.nama ASC";
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute();
+    $dosenList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Error fetching dosen: " . $e->getMessage());
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -20,7 +99,7 @@
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="../assets/images/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
                 <div class="lab-name">Laboratorium Business Analytics</div>
@@ -66,56 +145,56 @@
 
             <li class="nav-item mobile-auth-section">
                 <?php if ($isLoggedIn): ?>
-                <div class="mobile-user-profile-modern">
-                    <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="mobile-avatar-modern">
-                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128"
-                                alt="User Avatar">
+                    <div class="mobile-user-profile-modern">
+                        <div class="d-flex align-items-center gap-3 flex-grow-1">
+                            <div class="mobile-avatar-modern">
+                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128"
+                                    alt="User Avatar">
+                            </div>
+                            <div class="mobile-info-modern">
+                                <span class="greeting-text">Halo,</span>
+                                <span class="username-text">
+                                    <?php echo htmlspecialchars($userName); ?>
+                                </span>
+                            </div>
                         </div>
-                        <div class="mobile-info-modern">
-                            <span class="greeting-text">Halo,</span>
-                            <span class="username-text">
-                                <?php echo htmlspecialchars($userName); ?>
-                            </span>
-                        </div>
+                        <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
                     </div>
-                    <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
                 <?php else: ?>
-                <div class="mobile-login-btn">
-                    <a class="nav-link login-link" href="../admin/login.php">Login</a>
-                </div>
+                    <div class="mobile-login-btn">
+                        <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                    </div>
                 <?php endif; ?>
             </li>
         </ul>
 
         <?php if ($isLoggedIn): ?>
-        <div class="desktop-user-action">
+            <div class="desktop-user-action">
 
-            <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
-                <div class="text-end me-2">
-                    <div class="user-name-label">
-                        <?php echo htmlspecialchars($userName); ?>
+                <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
+                    <div class="text-end me-2">
+                        <div class="user-name-label">
+                            <?php echo htmlspecialchars($userName); ?>
+                        </div>
+                        <div class="user-role-label">
+                            <?php echo htmlspecialchars($userRole); ?>
+                        </div>
                     </div>
-                    <div class="user-role-label">
-                        <?php echo htmlspecialchars($userRole); ?>
+                    <div class="avatar-circle">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128"
+                            alt="User Avatar">
                     </div>
-                </div>
-                <div class="avatar-circle">
-                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128"
-                        alt="User Avatar">
-                </div>
-            </a>
+                </a>
 
-            <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
-                <i class="fas fa-sign-out-alt"></i>
-            </a>
+                <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
 
-        </div>
+            </div>
         <?php else: ?>
-        <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+            <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
         <?php endif; ?>
 
     </nav>
@@ -364,6 +443,60 @@
                 </div>
             </div>
         </div>
+        <!-- SECTION ANGGOTA LABORATORY (DYNAMIC) -->
+        <div class="org-structure py-5" id="struktur-organisasi">
+            <h2 class="section-title mb-3">Struktur Organisasi</h2>
+            <p class="section-description mb-5">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+                dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+                ex ea commodo consequat.
+            </p>
+
+            <div class="tree-container">
+                <div class="tree">
+                    <ul>
+                        <li>
+                            <div class="org-node main-node">
+                                <span>Kepala Laboratory</span>
+                            </div>
+                            <ul>
+                                <li class="support-row">
+                                    <div class="org-node child-node">
+                                        <span>Sekretaris</span>
+                                    </div>
+                                    <div class="org-node child-node">
+                                        <span>Bendahara</span>
+                                    </div>
+                                </li>
+
+                                <li class="coordinator-row">
+                                    <div class="coordinator-container">
+                                        <div class="org-node child-node">
+                                            <span>Koor. Pengembangan Kelimuan</span>
+                                        </div>
+                                        <div class="org-node child-node">
+                                            <span>Koor. Riset & PkM</span>
+                                        </div>
+                                        <div class="org-node child-node">
+                                            <span>Koor. Kemitraan</span>
+                                        </div>
+                                        <div class="org-node child-node">
+                                            <span>Koor. Sarana & Prasarana</span>
+                                        </div>
+                                        <div class="org-node child-node">
+                                            <span>Koor. Publikasi</span>
+                                        </div>
+                                        <div class="org-node child-node">
+                                            <span>Koor. Pengelolaan Tugas Akhir</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
         <div class="researcher-section py-4" id="anggota-laboratory">
             <div class="container">
@@ -380,7 +513,7 @@
 
                 <div class="row">
                     <div class="col-12">
-                        
+
                         <div class="table-responsive shadow-sm rounded-3">
                             <table class="table table-hover custom-table mb-0">
                                 <thead>
@@ -391,443 +524,248 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Rakhmat+Arianto&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Rakhmat Arianto</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Natural Language Processing,
-                                            Data Science</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
+                                    <?php if (empty($dosenList)): ?>
+                                        <tr>
+                                            <td colspan="3" class="text-center py-4">Belum ada data dosen.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($dosenList as $dosen): ?>
+                                            <?php
+                                            // Tentukan bidang keahlian (prioritas dari tabel relasi, fallback ke kolom dosen)
+                                            $keahlian = !empty($dosen['keahlian_list']) ? $dosen['keahlian_list'] : $dosen['keahlian_single'];
 
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Rudy+Ariyanto&background=eef2f7&color=345482&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Rudy Ariyanto</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Data Analytics</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
+                                            // Jika masih kosong atau hanya angka (foreign key mentah), tampilkan dash
+                                            if (empty($keahlian) || is_numeric($keahlian)) {
+                                                $keahlian = '-';
+                                            }
 
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Ahmadi+Yuli+Ananta&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Ahmadi Yuli Ananta</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Enterprise System, Business
-                                            Process Reengineering</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
+                                            // Logika Foto
+                                            $fotoPath = !empty($dosen['foto'])
+                                                ? '../admin/' . htmlspecialchars($dosen['foto']) // Asumsi path relatif sama dengan logo
+                                                : 'https://ui-avatars.com/api/?name=' . urlencode($dosen['nama_lengkap']) . '&background=eef2f7&color=1f3a60&bold=true';
+                                            ?>
+                                            <tr>
+                                                <td class="ps-4">
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="<?php echo $fotoPath; ?>"
+                                                            alt="<?php echo htmlspecialchars($dosen['nama_lengkap']); ?>"
+                                                            class="table-avatar me-3"
+                                                            onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($dosen['nama_lengkap']); ?>&background=eef2f7&color=1f3a60&bold=true';">
+                                                        <div>
+                                                            <h6 class="mb-0 fw-bold text-dark"><?php echo htmlspecialchars($dosen['nama_lengkap']); ?></h6>
+                                                            <small class="text-muted">NIDN: <?php echo htmlspecialchars($dosen['nidn'] ?? '-'); ?></small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="align-middle text-primary fw-semibold">
+                                                    <?php echo htmlspecialchars($keahlian); ?>
+                                                </td>
+                                                <td class="align-middle text-end pe-4">
+                                                    <?php if (!empty($dosen['link_scholar'])): ?>
+                                                        <a href="<?php echo htmlspecialchars($dosen['link_scholar']); ?>" target="_blank" class="btn-link-custom">Scholar</a>
+                                                    <?php else: ?>
+                                                        <span class="btn-link-custom disabled" style="opacity: 0.5; cursor: default;">Scholar</span>
+                                                    <?php endif; ?>
 
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Candra+Bella+Vista&background=eef2f7&color=345482&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Candra Bella Vista</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Natural Language Processing,
-                                            Business Intelligence</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Endah+Septa+Sintiya&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Endah Septa Sintiya</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Data Driven Decision Making
-                                        </td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Dhebys+Suryani+Hormansyah&background=eef2f7&color=345482&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Dhebys Suryani Hormansyah</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Digital Marketing Analysis
-                                        </td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Farid+Angga+Pribadi&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Farid Angga Pribadi</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Business Analytics</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Hendra+Pradibta&background=eef2f7&color=345482&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Hendra Pradibta</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Manajemen Bisnis</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Rokhimatul+Wakhidah&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Rokhimatul Wakhidah</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">IT Governance, Business
-                                            Intelligence</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
+                                                    <?php if (!empty($dosen['link_sinta'])): ?>
+                                                        <a href="<?php echo htmlspecialchars($dosen['link_sinta']); ?>" target="_blank" class="btn-link-custom">Sinta</a>
+                                                    <?php else: ?>
+                                                        <span class="btn-link-custom disabled" style="opacity: 0.5; cursor: default;">Sinta</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
+
                         <div class="mobile-researcher-grid">
-                            
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Rakhmat+Arianto&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Rakhmat Arianto">
-                                </div>
-                                <h3 class="res-card-name">Rakhmat Arianto</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Natural Language Processing, Data Science</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
+                            <?php if (empty($dosenList)): ?>
+                                <div class="col-12 text-center">Belum ada data.</div>
+                            <?php else: ?>
+                                <?php foreach ($dosenList as $dosen): ?>
+                                    <?php
+                                    $keahlian = !empty($dosen['keahlian_list']) ? $dosen['keahlian_list'] : $dosen['keahlian_single'];
+                                    if (empty($keahlian) || is_numeric($keahlian)) {
+                                        $keahlian = '-';
+                                    }
 
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Rudy+Ariyanto&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Rudy Ariyanto">
-                                </div>
-                                <h3 class="res-card-name">Rudy Ariyanto</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Data Analytics</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
+                                    $fotoPath = !empty($dosen['foto'])
+                                        ? '../admin/' . htmlspecialchars($dosen['foto'])
+                                        : 'https://ui-avatars.com/api/?name=' . urlencode($dosen['nama_lengkap']) . '&background=eef2f7&color=1f3a60&bold=true';
+                                    ?>
+                                    <div class="res-card">
+                                        <div class="res-card-img-wrapper">
+                                            <img src="<?php echo $fotoPath; ?>" class="res-card-img"
+                                                alt="<?php echo htmlspecialchars($dosen['nama_lengkap']); ?>"
+                                                onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($dosen['nama_lengkap']); ?>&background=eef2f7&color=1f3a60&bold=true';">
+                                        </div>
+                                        <h3 class="res-card-name"><?php echo htmlspecialchars($dosen['nama_lengkap']); ?></h3>
+                                        <span class="res-card-nidn">NIDN: <?php echo htmlspecialchars($dosen['nidn'] ?? '-'); ?></span>
+                                        <p class="res-card-role"><?php echo htmlspecialchars($keahlian); ?></p>
+                                        <div class="res-card-links">
+                                            <?php if (!empty($dosen['link_scholar'])): ?>
+                                                <a href="<?php echo htmlspecialchars($dosen['link_scholar']); ?>" target="_blank" class="btn-link-custom">Scholar</a>
+                                            <?php else: ?>
+                                                <span class="btn-link-custom disabled" style="opacity: 0.5;">Scholar</span>
+                                            <?php endif; ?>
 
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Ahmadi+Yuli+Ananta&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Ahmadi Yuli Ananta">
-                                </div>
-                                <h3 class="res-card-name">Ahmadi Yuli Ananta</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Enterprise System, Business Process Reengineering</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Candra+Bella+Vista&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Candra Bella Vista">
-                                </div>
-                                <h3 class="res-card-name">Candra Bella Vista</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Natural Language Processing, Business Intelligence</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Endah+Septa+Sintiya&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Endah Septa Sintiya">
-                                </div>
-                                <h3 class="res-card-name">Endah Septa Sintiya</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Data Driven Decision Making</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Dhebys+Suryani+Hormansyah&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Dhebys Suryani Hormansyah">
-                                </div>
-                                <h3 class="res-card-name">Dhebys Suryani Hormansyah</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Digital Marketing Analysis</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Farid+Angga+Pribadi&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Farid Angga Pribadi">
-                                </div>
-                                <h3 class="res-card-name">Farid Angga Pribadi</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Business Analytics</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Hendra+Pradibta&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Hendra Pradibta">
-                                </div>
-                                <h3 class="res-card-name">Hendra Pradibta</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Manajemen Bisnis</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Rokhimatul+Wakhidah&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Rokhimatul Wakhidah">
-                                </div>
-                                <h3 class="res-card-name">Rokhimatul Wakhidah</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">IT Governance, Business Intelligence</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
+                                            <?php if (!empty($dosen['link_sinta'])): ?>
+                                                <a href="<?php echo htmlspecialchars($dosen['link_sinta']); ?>" target="_blank" class="btn-link-custom">Sinta</a>
+                                            <?php else: ?>
+                                                <span class="btn-link-custom disabled" style="opacity: 0.5;">Sinta</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
-                        
+
                         <div class="mobile-pagination mt-4" id="mobilePagination">
-                           </div>
-                        </div>
-                </div>
-            </div>
-        </div>
-            </div>
-        </div>
-
-        <div class="py-5"></div>
-
-        <!-- Makna Logo & Maskot Section -->
-        <div class="row mb-5" id="makna-logo-maskot">
-            <div class="col-12">
-                <h2 class="section-title mb-3">Makna Logo & Maskot</h2>
-                <p class="section-description mb-5">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua. Ut enim ad minim
-                    veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                </p>
-            </div>
-
-            <div class="row align-items-start">
-                <!-- Makna Logo Section - Kiri -->
-                <div class="col-lg-6 mb-5 mb-lg-0">
-                    <div class="logo-section">
-                        <!-- Kotak Logo dipindah ke bawah sub judul -->
-                        <div class="symbol-preview-large mb-4">
-                            <div class="symbol-placeholder-large logo-placeholder">
-                                <span class="symbol-text-large">LOGO</span>
-                            </div>
-                        </div>
-                        <h3 class="symbol-title mb-4">Makna Logo</h3>
-                        <div class="symbol-content mb-4">
-                            <p class="symbol-description">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-                                veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                                consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
-                                eu fugiat nulla pariatur.
-                            </p>
-                            <p class="symbol-description">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                                exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                            </p>
-                        </div>
-                        <div class="text-start">
-                            <a href="maknaLogo.html" class="btn-read-more">Read More</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Makna Maskot Section - Kanan -->
-                <div class="col-lg-6">
-                    <div class="mascot-section">
-                        <h3 class="symbol-title mb-4">Makna Maskot</h3>
-                        <div class="symbol-content mb-4">
-                            <p class="symbol-description">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut enim
-                                ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                                consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
-                                eu fugiat nulla pariatur.
-                            </p>
-                            <p class="symbol-description">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                                exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                            </p>
-                        </div>
-                        <div class="text-start mb-4">
-                            <a href="maknaMaskot.html" class="btn-read-more">Read More</a>
-                        </div>
-                        <!-- Kotak Maskot dipindah ke bawah tombol Read More -->
-                        <div class="symbol-preview-large">
-                            <div class="symbol-placeholder-large mascot-placeholder">
-                                <span class="symbol-text-large">MASKOT</span>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+    </div>
+    <div class="py-5"></div>
 
-        <div class="py-5"></div>
+    <!-- Makna Logo & Maskot Section -->
+    <div class="row mb-5" id="makna-logo-maskot">
+        <div class="col-12">
+            <h2 class="section-title mb-3">Makna Logo & Maskot</h2>
+            <p class="section-description mb-5">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+                et dolore magna aliqua. Ut enim ad minim
+                veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+            </p>
+        </div>
 
-        <!-- research focus -->
-        <div class="row mb-5" id="research-focus">
-            <div class="col-12">
-                <h2 class="section-title mb-3">Research Focus</h2>
-                <p class="section-description mb-5">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                    aliquip ex ea commodo consequat.
-                </p>
-                <!-- Research Focus -->
-                <section class="profile-carousel-section">
-                    <div class="custom-container-relative">
-                        <div class="gray-backdrop-box">
-                            <img id="backdrop-image"
-                                src="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg"
-                                alt="Research Project Image" class="backdrop-img-content">
+        <div class="row align-items-start">
+            <!-- Makna Logo Section - Kiri -->
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <div class="logo-section">
+                    <!-- Kotak Logo dipindah ke bawah sub judul -->
+                    <div class="symbol-preview-large mb-4">
+                        <div class="symbol-placeholder-large logo-placeholder">
+                            <span class="symbol-text-large">LOGO</span>
                         </div>
-                        <div class="carousel-wrapper">
-                            <div class="carousel-track" id="track">
-                                <div class="custom-card"
-                                    data-bg-img="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg">
-                                    <div class="card-content">
-                                        <h3>Data Analytics Platform</h3>
-                                        <p>Platform analisis data terintegrasi untuk bisnis intelligence</p>
-                                    </div>
+                    </div>
+                    <h3 class="symbol-title mb-4">Makna Logo</h3>
+                    <div class="symbol-content mb-4">
+                        <p class="symbol-description">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                            incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+                            veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                            consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+                            eu fugiat nulla pariatur.
+                        </p>
+                        <p class="symbol-description">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+                            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                        </p>
+                    </div>
+                    <div class="text-start">
+                        <a href="maknaLogo.html" class="btn-read-more">Read More</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Makna Maskot Section - Kanan -->
+            <div class="col-lg-6">
+                <div class="mascot-section">
+                    <h3 class="symbol-title mb-4">Makna Maskot</h3>
+                    <div class="symbol-content mb-4">
+                        <p class="symbol-description">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                            incididunt ut labore et dolore magna aliqua. Ut enim
+                            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                            consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+                            eu fugiat nulla pariatur.
+                        </p>
+                        <p class="symbol-description">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+                            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                        </p>
+                    </div>
+                    <div class="text-start mb-4">
+                        <a href="maknaMaskot.html" class="btn-read-more">Read More</a>
+                    </div>
+                    <!-- Kotak Maskot dipindah ke bawah tombol Read More -->
+                    <div class="symbol-preview-large">
+                        <div class="symbol-placeholder-large mascot-placeholder">
+                            <span class="symbol-text-large">MASKOT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="py-5"></div>
+
+    <!-- research focus -->
+    <div class="row mb-5" id="research-focus">
+        <div class="col-12">
+            <h2 class="section-title mb-3">Research Focus</h2>
+            <p class="section-description mb-5">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+                et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+                aliquip ex ea commodo consequat.
+            </p>
+            <!-- Research Focus -->
+            <section class="profile-carousel-section">
+                <div class="custom-container-relative">
+                    <div class="gray-backdrop-box">
+                        <img id="backdrop-image"
+                            src="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg"
+                            alt="Research Project Image" class="backdrop-img-content">
+                    </div>
+                    <div class="carousel-wrapper">
+                        <div class="carousel-track" id="track">
+                            <div class="custom-card"
+                                data-bg-img="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg">
+                                <div class="card-content">
+                                    <h3>Data Analytics Platform</h3>
+                                    <p>Platform analisis data terintegrasi untuk bisnis intelligence</p>
                                 </div>
-                                <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-03-24 124657.png">
-                                    <div class="card-content">
-                                        <h3>Machine Learning Research</h3>
-                                        <p>Pengembangan model machine learning untuk prediksi bisnis</p>
-                                    </div>
+                            </div>
+                            <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-03-24 124657.png">
+                                <div class="card-content">
+                                    <h3>Machine Learning Research</h3>
+                                    <p>Pengembangan model machine learning untuk prediksi bisnis</p>
                                 </div>
-                                <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-04-08 013511.png">
-                                    <div class="card-content">
-                                        <h3>Visualization Dashboard</h3>
-                                        <p>Dashboard interaktif untuk visualisasi data real-time</p>
-                                    </div>
+                            </div>
+                            <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-04-08 013511.png">
+                                <div class="card-content">
+                                    <h3>Visualization Dashboard</h3>
+                                    <p>Dashboard interaktif untuk visualisasi data real-time</p>
                                 </div>
-                                <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-03-20 102632.png">
-                                    <div class="card-content">
-                                        <h3>Business Intelligence</h3>
-                                        <p>Solusi BI untuk pengambilan keputusan berbasis data</p>
-                                    </div>
+                            </div>
+                            <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-03-20 102632.png">
+                                <div class="card-content">
+                                    <h3>Business Intelligence</h3>
+                                    <p>Solusi BI untuk pengambilan keputusan berbasis data</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="carousel-nav">
-                            <button class="nav-btn prev-btn" id="prevBtn">
-                                <i class="fa fa-arrow-left"></i>
-                            </button>
-                            <button class="nav-btn next-btn" id="nextBtn">
-                                <i class="fa fa-arrow-right"></i>
-                            </button>
-                        </div>
                     </div>
-                </section>
-            </div>
+                    <div class="carousel-nav">
+                        <button class="nav-btn prev-btn" id="prevBtn">
+                            <i class="fa fa-arrow-left"></i>
+                        </button>
+                        <button class="nav-btn next-btn" id="nextBtn">
+                            <i class="fa fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
         </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1336,7 +1274,7 @@
 
             // Initialize navigation components
             new SectionNavigation();
-                // new NavbarScrollBehavior();
+            // new NavbarScrollBehavior();
             new CompactNavbar();
 
             console.log('All JavaScript components initialized successfully');
@@ -1347,7 +1285,7 @@
         /* ========================================= */
         if (!('scrollBehavior' in document.documentElement.style)) {
             document.querySelectorAll('.section-nav-link').forEach(link => {
-                link.addEventListener('click', function (e) {
+                link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const targetId = this.getAttribute('href').substring(1);
                     const targetSection = document.getElementById(targetId);
@@ -1368,151 +1306,150 @@
         /* ========================================= */
         /* MOBILE PAGINATION LOGIC                   */
         /* ========================================= */
-            document.addEventListener('DOMContentLoaded', function() {
-        const gridContainer = document.querySelector('.mobile-researcher-grid');
-        const cards = document.querySelectorAll('.mobile-researcher-grid .res-card');
-        const paginationContainer = document.getElementById('mobilePagination');
-        
-        let currentPage = 1;
-        let itemsPerPage = 3; 
-        let totalPages = 1;
-        let isAnimating = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            const gridContainer = document.querySelector('.mobile-researcher-grid');
+            const cards = document.querySelectorAll('.mobile-researcher-grid .res-card');
+            const paginationContainer = document.getElementById('mobilePagination');
 
-        function updateConfig() {
-            const width = window.innerWidth;
-            if (width <= 576) {
-                itemsPerPage = 2; // HP: 2 Kartu
-            } else {
-                itemsPerPage = 3; // Tablet: 3 Kartu
-            }
-            
-            totalPages = Math.ceil(cards.length / itemsPerPage);
-            if (currentPage > totalPages) currentPage = 1;
-            
-            renderPagination();
-            // Load awal langsung tanpa animasi exit, tapi tetap stagger masuk
-            swapCards(currentPage, true); 
-        }
+            let currentPage = 1;
+            let itemsPerPage = 3;
+            let totalPages = 1;
+            let isAnimating = false;
 
-        // FUNGSI UTAMA: EXIT -> SWAP -> STAGGER ENTER
-        function showPage(page) {
-            if (isAnimating) return;
-            isAnimating = true;
-
-            // 1. Fase Exit: Container menghilang (Fade Out)
-            gridContainer.classList.add('is-exiting');
-
-            // 2. Tunggu 200ms (sesuai CSS transition opacity)
-            setTimeout(() => {
-                
-                // 3. Fase Swap & Enter
-                swapCards(page, true); // true = aktifkan animasi masuk
-                
-                // Kembalikan Opacity Container
-                gridContainer.classList.remove('is-exiting');
-
-                // Kunci animasi sebentar sampai efek selesai semua
-                setTimeout(() => {
-                    isAnimating = false;
-                }, 600); // Buffer aman
-
-            }, 200);
-        }
-
-        function swapCards(page, triggerAnimation = false) {
-            const start = (page - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            
-            let visibleIndex = 0; // Counter untuk urutan animasi (0, 1, 2...)
-
-            cards.forEach((card, index) => {
-                // Reset animasi lama dulu
-                card.classList.remove('card-animate-enter');
-                card.style.animationDelay = '0s';
-                card.style.opacity = ''; // Reset opacity inline
-
-                if (index >= start && index < end) {
-                    card.style.display = 'flex';
-                    
-                    if (triggerAnimation) {
-                        // Trik Force Reflow agar animasi bisa restart
-                        void card.offsetWidth; 
-                        
-                        // Tambah class animasi
-                        card.classList.add('card-animate-enter');
-                        
-                        // LOGIKA "KIRI KE KANAN":
-                        // Beri delay bertingkat: 0ms, 100ms, 200ms...
-                        card.style.animationDelay = `${visibleIndex * 0.1}s`;
-                        visibleIndex++;
-                    }
+            function updateConfig() {
+                const width = window.innerWidth;
+                if (width <= 576) {
+                    itemsPerPage = 2; // HP: 2 Kartu
                 } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        // --- Bagian Pagination (Tetap Sama) ---
-        function renderPagination() {
-            paginationContainer.innerHTML = ''; 
-            if (totalPages > 1) {
-                // Prev
-                const prevBtn = createBtn('<i class="fas fa-chevron-left"></i>', () => {
-                    let nextPage = currentPage > 1 ? currentPage - 1 : totalPages;
-                    changePage(nextPage);
-                });
-                paginationContainer.appendChild(prevBtn);
-
-                // Angka
-                for (let i = 1; i <= totalPages; i++) {
-                    const link = createBtn(i, () => changePage(i));
-                    if (i === currentPage) link.classList.add('active');
-                    paginationContainer.appendChild(link);
+                    itemsPerPage = 3; // Tablet: 3 Kartu
                 }
 
-                // Next
-                const nextBtn = createBtn('<i class="fas fa-chevron-right"></i>', () => {
-                    let nextPage = currentPage < totalPages ? currentPage + 1 : 1;
-                    changePage(nextPage);
-                });
-                paginationContainer.appendChild(nextBtn);
-            }
-        }
+                totalPages = Math.ceil(cards.length / itemsPerPage);
+                if (currentPage > totalPages) currentPage = 1;
 
-        function createBtn(content, onClick) {
-            const btn = document.createElement('a');
-            btn.href = 'javascript:void(0)';
-            btn.className = 'page-link-custom';
-            btn.innerHTML = content;
-            btn.addEventListener('click', onClick);
-            return btn;
-        }
-
-        function changePage(newPage) {
-            if (newPage !== currentPage) {
-                currentPage = newPage;
-                showPage(currentPage);
                 renderPagination();
+                // Load awal langsung tanpa animasi exit, tapi tetap stagger masuk
+                swapCards(currentPage, true);
             }
-        }
 
-        updateConfig();
+            // FUNGSI UTAMA: EXIT -> SWAP -> STAGGER ENTER
+            function showPage(page) {
+                if (isAnimating) return;
+                isAnimating = true;
 
-        window.addEventListener('resize', () => {
-            clearTimeout(window.resizeTimer);
-            window.resizeTimer = setTimeout(updateConfig, 100);
+                // 1. Fase Exit: Container menghilang (Fade Out)
+                gridContainer.classList.add('is-exiting');
+
+                // 2. Tunggu 200ms (sesuai CSS transition opacity)
+                setTimeout(() => {
+
+                    // 3. Fase Swap & Enter
+                    swapCards(page, true); // true = aktifkan animasi masuk
+
+                    // Kembalikan Opacity Container
+                    gridContainer.classList.remove('is-exiting');
+
+                    // Kunci animasi sebentar sampai efek selesai semua
+                    setTimeout(() => {
+                        isAnimating = false;
+                    }, 600); // Buffer aman
+
+                }, 200);
+            }
+
+            function swapCards(page, triggerAnimation = false) {
+                const start = (page - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+
+                let visibleIndex = 0; // Counter untuk urutan animasi (0, 1, 2...)
+
+                cards.forEach((card, index) => {
+                    // Reset animasi lama dulu
+                    card.classList.remove('card-animate-enter');
+                    card.style.animationDelay = '0s';
+                    card.style.opacity = ''; // Reset opacity inline
+
+                    if (index >= start && index < end) {
+                        card.style.display = 'flex';
+
+                        if (triggerAnimation) {
+                            // Trik Force Reflow agar animasi bisa restart
+                            void card.offsetWidth;
+
+                            // Tambah class animasi
+                            card.classList.add('card-animate-enter');
+
+                            // LOGIKA "KIRI KE KANAN":
+                            // Beri delay bertingkat: 0ms, 100ms, 200ms...
+                            card.style.animationDelay = `${visibleIndex * 0.1}s`;
+                            visibleIndex++;
+                        }
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            // --- Bagian Pagination (Tetap Sama) ---
+            function renderPagination() {
+                paginationContainer.innerHTML = '';
+                if (totalPages > 1) {
+                    // Prev
+                    const prevBtn = createBtn('<i class="fas fa-chevron-left"></i>', () => {
+                        let nextPage = currentPage > 1 ? currentPage - 1 : totalPages;
+                        changePage(nextPage);
+                    });
+                    paginationContainer.appendChild(prevBtn);
+
+                    // Angka
+                    for (let i = 1; i <= totalPages; i++) {
+                        const link = createBtn(i, () => changePage(i));
+                        if (i === currentPage) link.classList.add('active');
+                        paginationContainer.appendChild(link);
+                    }
+
+                    // Next
+                    const nextBtn = createBtn('<i class="fas fa-chevron-right"></i>', () => {
+                        let nextPage = currentPage < totalPages ? currentPage + 1 : 1;
+                        changePage(nextPage);
+                    });
+                    paginationContainer.appendChild(nextBtn);
+                }
+            }
+
+            function createBtn(content, onClick) {
+                const btn = document.createElement('a');
+                btn.href = 'javascript:void(0)';
+                btn.className = 'page-link-custom';
+                btn.innerHTML = content;
+                btn.addEventListener('click', onClick);
+                return btn;
+            }
+
+            function changePage(newPage) {
+                if (newPage !== currentPage) {
+                    currentPage = newPage;
+                    showPage(currentPage);
+                    renderPagination();
+                }
+            }
+
+            updateConfig();
+
+            window.addEventListener('resize', () => {
+                clearTimeout(window.resizeTimer);
+                window.resizeTimer = setTimeout(updateConfig, 100);
+            });
         });
-    });
     </script>
 
     <script>
-        
-    // --- 0. NAV MENU LOGIC (HAMBURGER) ---
+        // --- 0. NAV MENU LOGIC (HAMBURGER) ---
         function toggleMenu() {
             const navMenu = document.getElementById('navMenu');
             const hamburgerIcon = document.querySelector('.hamburger i');
             navMenu.classList.toggle('active');
-            
+
             if (navMenu.classList.contains('active')) {
                 hamburgerIcon.classList.remove('fa-bars');
                 hamburgerIcon.classList.add('fa-times');
@@ -1526,19 +1463,19 @@
         // const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
         function toggleMenu() {
-    const navMenu = document.getElementById('navMenu');
-    const icon = document.querySelector('.hamburger i');
+            const navMenu = document.getElementById('navMenu');
+            const icon = document.querySelector('.hamburger i');
 
-    navMenu.classList.toggle('active');
+            navMenu.classList.toggle('active');
 
-    if (navMenu.classList.contains('active')) {
-        icon.classList.remove('fa-bars');
-        icon.classList.add('fa-times');
-    } else {
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
-    }
-}
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
     </script>
 </body>
 

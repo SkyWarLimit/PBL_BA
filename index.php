@@ -72,6 +72,35 @@ function renderGalleryItem($item)
         </div>
     </div>';
 }
+// --- [BARU] LOGIKA DINAMIS LOGO & MASKOT (POSTGRESQL) ---
+try {
+    // 1. Ambil data dari tabel settings
+    // Kita cari baris dimana kolom "key" adalah 'logo' atau 'maskot'
+    // PENTING: Gunakan tanda kutip dua (") pada kata "key" karena ini PostgreSQL
+    $querySetting = 'SELECT "key", file_path FROM settings WHERE "key" IN (\'logo\', \'maskot\')';
+    
+    $stmtSetting = $db->prepare($querySetting);
+    $stmtSetting->execute();
+    
+    // Hasil jadi array asosiatif: ['logo' => 'uploads/logo/...', 'maskot' => 'uploads/maskot/...']
+    $settingsData = $stmtSetting->fetchAll(PDO::FETCH_KEY_PAIR); 
+
+    // 2. SETUP VARIABEL LOGO
+    // Jika ada data di DB, gabungkan dengan path './admin/'. Jika tidak, pakai default.
+    $logoSrc = !empty($settingsData['logo']) 
+        ? './admin/' . $settingsData['logo'] 
+        : './assets/images/logo.png';
+
+    // 3. SETUP VARIABEL MASKOT
+    $maskotSrc = !empty($settingsData['maskot']) 
+        ? './admin/' . $settingsData['maskot'] 
+        : './assets/img/MaskotLab.png';
+
+} catch (PDOException $e) {
+    // Fallback jika terjadi error koneksi
+    $logoSrc = './assets/images/logo.png';
+    $maskotSrc = './assets/img/MaskotLab.png';
+}
 ?>
 
 <!DOCTYPE html>
@@ -454,7 +483,7 @@ function renderGalleryItem($item)
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="./assets/images/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
                 <div class="lab-name">Laboratorium Business Analytics</div>
@@ -581,7 +610,7 @@ function renderGalleryItem($item)
             </div>
 
             <div class="hero-maskot">
-                <img src="./assets/img/MaskotLab.png" alt="Maskot Business Analytics Laboratory" class="maskot-image">
+                <img src="<?php echo htmlspecialchars($maskotSrc); ?>" alt="Maskot Business Analytics Laboratory" class="maskot-image">
             </div>
         </div>
     </section>
@@ -1207,519 +1236,542 @@ function renderGalleryItem($item)
         /* ========================================= */
         // --- TAMBAHAN: SCRIPT BOOKING TABLE ---
         /* ========================================= */
-        document.addEventListener('DOMContentLoaded', function () {
-    
-    // --- KONFIGURASI GLOBAL ---
-    // Sesuaikan path ini dengan lokasi file API PHP Anda
-    const API_URL = './admin/api/peminjaman.php'; 
-    
-    // Konfigurasi Grid Waktu
-    const START_HOUR = 7;       // Jam 07:00
-    const END_HOUR = 21;        // Jam 21:00
-    const PIXELS_PER_HOUR = 60; // Tinggi 1 jam = 60px (Penting untuk presisi)
-    const TOTAL_HOURS = END_HOUR - START_HOUR;
-    const TOTAL_HEIGHT = TOTAL_HOURS * PIXELS_PER_HOUR; // Total tinggi grid (840px)
+        document.addEventListener('DOMContentLoaded', function() {
 
-    // State Variables
-    let bookingsData = []; 
-    let tableCurrentDate = new Date();     // Tanggal aktif untuk Tabel (Kiri)
-    let calendarCurrentDate = new Date();  // Tanggal aktif untuk Kalender (Kanan)
+            // --- KONFIGURASI GLOBAL ---
+            // Sesuaikan path ini dengan lokasi file API PHP Anda
+            const API_URL = './admin/api/peminjaman.php';
 
-    // Ambil status login dari PHP Session
-    const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
+            // Konfigurasi Grid Waktu
+            const START_HOUR = 7; // Jam 07:00
+            const END_HOUR = 21; // Jam 21:00
+            const PIXELS_PER_HOUR = 60; // Tinggi 1 jam = 60px (Penting untuk presisi)
+            const TOTAL_HOURS = END_HOUR - START_HOUR;
+            const TOTAL_HEIGHT = TOTAL_HOURS * PIXELS_PER_HOUR; // Total tinggi grid (840px)
 
-    // ============================================================
-    // 1. INISIALISASI & EVENT LISTENER
-    // ============================================================
-    
-    // Init Tampilan Awal
-    generateTableStructure();
-    loadBookingsFromAPI();
-    initCalendar();
+            // State Variables
+            let bookingsData = [];
+            let tableCurrentDate = new Date(); // Tanggal aktif untuk Tabel (Kiri)
+            let calendarCurrentDate = new Date(); // Tanggal aktif untuk Kalender (Kanan)
 
-    // Event Listener Navigasi Tabel (Kiri)
-    document.getElementById('prev-week').addEventListener('click', () => changeTableWeek(-7));
-    document.getElementById('next-week').addEventListener('click', () => changeTableWeek(7));
-    document.getElementById('today-btn').addEventListener('click', () => { 
-        tableCurrentDate = new Date(); 
-        generateTableStructure(); 
-    });
+            // Ambil status login dari PHP Session
+            const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
-    // Event Listener Navigasi Kalender (Kanan)
-    document.getElementById('cal-prev').addEventListener('click', () => { 
-        calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1); 
-        generateCalendar(calendarCurrentDate); 
-    });
-    document.getElementById('cal-next').addEventListener('click', () => { 
-        calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1); 
-        generateCalendar(calendarCurrentDate); 
-    });
+            // ============================================================
+            // 1. INISIALISASI & EVENT LISTENER
+            // ============================================================
 
-    // Tombol Submit Booking Form
-    const btnProcess = document.getElementById('btn-process-booking');
-    if(btnProcess) btnProcess.addEventListener('click', processBooking);
+            // Init Tampilan Awal
+            generateTableStructure();
+            loadBookingsFromAPI();
+            initCalendar();
 
-    // Event Listener Modal & Menu (Gallery/Navbar)
-    const nextBtn = document.getElementById('nextBtn');
-    const prevBtn = document.getElementById('prevBtn');
-    if(nextBtn) nextBtn.addEventListener('click', moveNext);
-    if(prevBtn) prevBtn.addEventListener('click', movePrev);
-    
-    // Klik area luar modal untuk menutup
-    window.onclick = function(e) { 
-        if(e.target == document.getElementById('detail-modal')) closeModalDetail(); 
-        if(e.target == document.getElementById('galleryModal')) closeModal(); 
-    }
+            // Event Listener Navigasi Tabel (Kiri)
+            document.getElementById('prev-week').addEventListener('click', () => changeTableWeek(-7));
+            document.getElementById('next-week').addEventListener('click', () => changeTableWeek(7));
+            document.getElementById('today-btn').addEventListener('click', () => {
+                tableCurrentDate = new Date();
+                generateTableStructure();
+            });
 
-    // ============================================================
-    // 2. LOGIKA TABEL JADWAL (BAGIAN KIRI)
-    // ============================================================
+            // Event Listener Navigasi Kalender (Kanan)
+            document.getElementById('cal-prev').addEventListener('click', () => {
+                calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+                generateCalendar(calendarCurrentDate);
+            });
+            document.getElementById('cal-next').addEventListener('click', () => {
+                calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+                generateCalendar(calendarCurrentDate);
+            });
 
-    // 2.A. Fetch Data dari Database
-    async function loadBookingsFromAPI() {
-        try {
-            const response = await fetch(API_URL);
-            const result = await response.json();
-            
-            if (result.success) {
-                // Filter hanya yang disetujui/confirmed
-                bookingsData = result.data
-                    .filter(item => ['approved', 'confirmed'].includes(item.status.toLowerCase()))
-                    .map(item => {
-                        const checkIn = item.check_in.split(' '); 
-                        const checkOut = item.check_out.split(' ');
-                        return { 
-                            id: item.id_peminjaman, 
-                            date: checkIn[0], 
-                            startTime: checkIn[1].substring(0, 5), // Ambil HH:MM
-                            endTime: checkOut[1].substring(0, 5),   // Ambil HH:MM
-                            instansi: item.asal_instansi, 
-                            bookerName: item.nama_akun, 
-                            purpose: item.tujuan, 
-                            status: item.status, 
-                            color: 'rgba(209, 231, 221, 1)', // Warna background kotak (Hijau muda lembut)
-                            borderColor: 'rgba(25, 135, 84, 1)' // Border hijau tua
-                        };
-                    });
+            // Tombol Submit Booking Form
+            const btnProcess = document.getElementById('btn-process-booking');
+            if (btnProcess) btnProcess.addEventListener('click', processBooking);
+
+            // Event Listener Modal & Menu (Gallery/Navbar)
+            const nextBtn = document.getElementById('nextBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            if (nextBtn) nextBtn.addEventListener('click', moveNext);
+            if (prevBtn) prevBtn.addEventListener('click', movePrev);
+
+            // Klik area luar modal untuk menutup
+            window.onclick = function(e) {
+                if (e.target == document.getElementById('detail-modal')) closeModalDetail();
+                if (e.target == document.getElementById('galleryModal')) closeModal();
+            }
+
+            // ============================================================
+            // 2. LOGIKA TABEL JADWAL (BAGIAN KIRI)
+            // ============================================================
+
+            // 2.A. Fetch Data dari Database
+            async function loadBookingsFromAPI() {
+                try {
+                    const response = await fetch(API_URL);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Filter hanya yang disetujui/confirmed
+                        bookingsData = result.data
+                            .filter(item => ['approved', 'confirmed'].includes(item.status.toLowerCase()))
+                            .map(item => {
+                                const checkIn = item.check_in.split(' ');
+                                const checkOut = item.check_out.split(' ');
+                                return {
+                                    id: item.id_peminjaman,
+                                    date: checkIn[0],
+                                    startTime: checkIn[1].substring(0, 5), // Ambil HH:MM
+                                    endTime: checkOut[1].substring(0, 5), // Ambil HH:MM
+                                    instansi: item.asal_instansi,
+                                    bookerName: item.nama_akun,
+                                    purpose: item.tujuan,
+                                    status: item.status,
+                                    color: 'rgba(209, 231, 221, 1)', // Warna background kotak (Hijau muda lembut)
+                                    borderColor: 'rgba(25, 135, 84, 1)' // Border hijau tua
+                                };
+                            });
+                        renderAllBookings();
+                    }
+                } catch (e) {
+                    console.error("Gagal memuat data booking:", e);
+                }
+            }
+
+            // 2.B. Generate Struktur Grid (Garis & Jam)
+            function generateTableStructure() {
+                const tableHead = document.querySelector('#booking-table thead tr');
+                const tableBody = document.querySelector('#booking-table tbody');
+
+                // Reset Header & Body
+                while (tableHead.children.length > 1) {
+                    tableHead.removeChild(tableHead.lastChild);
+                }
+                tableBody.innerHTML = '';
+
+                // Hitung Rentang Tanggal (Senin - Jumat)
+                const mondayDate = getMonday(tableCurrentDate);
+                const fridayDate = new Date(mondayDate);
+                fridayDate.setDate(mondayDate.getDate() + 4);
+
+                // Update Teks Judul Tanggal
+                document.getElementById('date-range').textContent =
+                    `${getShortMonthName(mondayDate.getMonth())} ${mondayDate.getDate()} - ${fridayDate.getDate()}, ${fridayDate.getFullYear()}`;
+
+                // Render Header Hari (Senin - Jumat)
+                for (let i = 0; i < 5; i++) {
+                    const date = new Date(mondayDate);
+                    date.setDate(date.getDate() + i);
+                    const th = document.createElement('th');
+                    if (isToday(date)) th.classList.add('today');
+                    th.innerHTML = `<div>${getShortDayName(date.getDay())}</div><div>${date.getDate()}/${date.getMonth() + 1}</div>`;
+                    tableHead.appendChild(th);
+                }
+
+                // Render Body Row (Kolom Waktu + 5 Kolom Hari)
+                const row = document.createElement('tr');
+
+                // --- 1. Kolom Penunjuk Waktu (Kiri) ---
+                const timeCell = document.createElement('td');
+                timeCell.className = 'time-header';
+                const timeList = document.createElement('div');
+                timeList.style.position = 'relative';
+                timeList.style.height = `${TOTAL_HEIGHT}px`; // Tinggi Presisi
+
+                for (let h = START_HOUR; h <= END_HOUR; h++) {
+                    const top = (h - START_HOUR) * PIXELS_PER_HOUR;
+
+                    // Label Jam (07:00, 08:00...)
+                    const lbl = document.createElement('div');
+                    lbl.className = 'time-label';
+                    lbl.textContent = `${String(h).padStart(2,'0')}:00`;
+                    lbl.style.top = `${top}px`;
+                    timeList.appendChild(lbl);
+                }
+                timeCell.appendChild(timeList);
+                row.appendChild(timeCell);
+
+                // --- 2. Kolom Hari (Grid Tempat Booking) ---
+                for (let d = 0; d < 5; d++) {
+                    const cell = document.createElement('td');
+                    cell.className = 'day-cell';
+
+                    const cont = document.createElement('div');
+                    cont.className = 'day-container';
+                    cont.style.height = `${TOTAL_HEIGHT}px`; // Tinggi Presisi
+
+                    // Gambar Garis-Garis
+                    for (let h = START_HOUR; h <= END_HOUR; h++) {
+                        const top = (h - START_HOUR) * PIXELS_PER_HOUR;
+
+                        // Garis Jam Penuh
+                        if (h !== END_HOUR) {
+                            const l = document.createElement('div');
+                            l.className = 'time-line line-hour';
+                            l.style.top = `${top}px`;
+                            cont.appendChild(l);
+                        }
+
+                        // Garis Setengah Jam (Titik-titik)
+                        if (h !== END_HOUR) {
+                            const l2 = document.createElement('div');
+                            l2.className = 'time-line line-half';
+                            l2.style.top = `${top + (PIXELS_PER_HOUR / 2)}px`;
+                            cont.appendChild(l2);
+                        }
+                    }
+                    cell.appendChild(cont);
+                    row.appendChild(cell);
+                }
+                tableBody.appendChild(row);
+
+                // Setelah struktur jadi, render kotak bookingnya
                 renderAllBookings();
             }
-        } catch (e) { 
-            console.error("Gagal memuat data booking:", e); 
-        }
-    }
 
-    // 2.B. Generate Struktur Grid (Garis & Jam)
-    function generateTableStructure() {
-        const tableHead = document.querySelector('#booking-table thead tr');
-        const tableBody = document.querySelector('#booking-table tbody');
-        
-        // Reset Header & Body
-        while (tableHead.children.length > 1) { tableHead.removeChild(tableHead.lastChild); }
-        tableBody.innerHTML = '';
+            // 2.C. Render Kotak Booking (LOGIKA YANG DIPERBAIKI)
+            function renderAllBookings() {
+                // Hapus booking lama agar tidak duplikat
+                document.querySelectorAll('.booking-rectangle').forEach(el => el.remove());
 
-        // Hitung Rentang Tanggal (Senin - Jumat)
-        const mondayDate = getMonday(tableCurrentDate);
-        const fridayDate = new Date(mondayDate); 
-        fridayDate.setDate(mondayDate.getDate() + 4);
-        
-        // Update Teks Judul Tanggal
-        document.getElementById('date-range').textContent = 
-            `${getShortMonthName(mondayDate.getMonth())} ${mondayDate.getDate()} - ${fridayDate.getDate()}, ${fridayDate.getFullYear()}`;
+                bookingsData.forEach(b => {
+                    const date = new Date(b.date);
+                    const mondayDate = getMonday(tableCurrentDate);
 
-        // Render Header Hari (Senin - Jumat)
-        for (let i = 0; i < 5; i++) {
-            const date = new Date(mondayDate); 
-            date.setDate(date.getDate() + i);
-            const th = document.createElement('th'); 
-            if (isToday(date)) th.classList.add('today');
-            th.innerHTML = `<div>${getShortDayName(date.getDay())}</div><div>${date.getDate()}/${date.getMonth() + 1}</div>`;
-            tableHead.appendChild(th);
-        }
+                    // Hitung selisih hari dari Senin minggu ini
+                    // 86400000 = ms dalam 1 hari
+                    const diffDays = Math.floor((date.getTime() - mondayDate.getTime()) / 86400000);
 
-        // Render Body Row (Kolom Waktu + 5 Kolom Hari)
-        const row = document.createElement('tr');
-        
-        // --- 1. Kolom Penunjuk Waktu (Kiri) ---
-        const timeCell = document.createElement('td'); 
-        timeCell.className = 'time-header';
-        const timeList = document.createElement('div'); 
-        timeList.style.position = 'relative'; 
-        timeList.style.height = `${TOTAL_HEIGHT}px`; // Tinggi Presisi
+                    // Skip jika booking bukan di Senin-Jumat minggu yang sedang dilihat
+                    if (diffDays < 0 || diffDays > 4) return;
 
-        for (let h = START_HOUR; h <= END_HOUR; h++) {
-            const top = (h - START_HOUR) * PIXELS_PER_HOUR;
-            
-            // Label Jam (07:00, 08:00...)
-            const lbl = document.createElement('div'); 
-            lbl.className = 'time-label'; 
-            lbl.textContent = `${String(h).padStart(2,'0')}:00`; 
-            lbl.style.top = `${top}px`; 
-            timeList.appendChild(lbl);
-        }
-        timeCell.appendChild(timeList); 
-        row.appendChild(timeCell);
+                    // Parsing Waktu (Jam:Menit)
+                    const [sh, sm] = b.startTime.split(':').map(Number);
+                    const [eh, em] = b.endTime.split(':').map(Number);
 
-        // --- 2. Kolom Hari (Grid Tempat Booking) ---
-        for (let d = 0; d < 5; d++) {
-            const cell = document.createElement('td'); 
-            cell.className = 'day-cell';
-            
-            const cont = document.createElement('div'); 
-            cont.className = 'day-container';
-            cont.style.height = `${TOTAL_HEIGHT}px`; // Tinggi Presisi
+                    // Konversi ke total menit dari jam 00:00
+                    const startTotalMin = (sh * 60) + sm;
+                    const endTotalMin = (eh * 60) + em;
 
-            // Gambar Garis-Garis
-            for (let h = START_HOUR; h <= END_HOUR; h++) {
-                const top = (h - START_HOUR) * PIXELS_PER_HOUR;
-                
-                // Garis Jam Penuh
-                if(h !== END_HOUR) { 
-                    const l = document.createElement('div'); 
-                    l.className = 'time-line line-hour'; 
-                    l.style.top = `${top}px`; 
-                    cont.appendChild(l); 
-                }
-                
-                // Garis Setengah Jam (Titik-titik)
-                if(h !== END_HOUR) { 
-                    const l2 = document.createElement('div'); 
-                    l2.className = 'time-line line-half'; 
-                    l2.style.top = `${top + (PIXELS_PER_HOUR / 2)}px`; 
-                    cont.appendChild(l2); 
-                }
-            }
-            cell.appendChild(cont); 
-            row.appendChild(cell);
-        }
-        tableBody.appendChild(row); 
-        
-        // Setelah struktur jadi, render kotak bookingnya
-        renderAllBookings();
-    }
+                    // Waktu mulai grid dalam menit (07:00 = 420 menit)
+                    const gridStartMin = START_HOUR * 60;
 
-    // 2.C. Render Kotak Booking (LOGIKA YANG DIPERBAIKI)
-    function renderAllBookings() {
-        // Hapus booking lama agar tidak duplikat
-        document.querySelectorAll('.booking-rectangle').forEach(el => el.remove());
-        
-        bookingsData.forEach(b => {
-            const date = new Date(b.date); 
-            const mondayDate = getMonday(tableCurrentDate);
-            
-            // Hitung selisih hari dari Senin minggu ini
-            // 86400000 = ms dalam 1 hari
-            const diffDays = Math.floor((date.getTime() - mondayDate.getTime()) / 86400000);
-            
-            // Skip jika booking bukan di Senin-Jumat minggu yang sedang dilihat
-            if (diffDays < 0 || diffDays > 4) return;
+                    // --- RUMUS POSISI (YANG BENAR) ---
+                    // Top = ((Menit Mulai - Menit Awal Grid) / 60) * Tinggi Per Jam
+                    const topPos = ((startTotalMin - gridStartMin) / 60) * PIXELS_PER_HOUR;
 
-            // Parsing Waktu (Jam:Menit)
-            const [sh, sm] = b.startTime.split(':').map(Number); 
-            const [eh, em] = b.endTime.split(':').map(Number);
-            
-            // Konversi ke total menit dari jam 00:00
-            const startTotalMin = (sh * 60) + sm; 
-            const endTotalMin = (eh * 60) + em;
-            
-            // Waktu mulai grid dalam menit (07:00 = 420 menit)
-            const gridStartMin = START_HOUR * 60;
-            
-            // --- RUMUS POSISI (YANG BENAR) ---
-            // Top = ((Menit Mulai - Menit Awal Grid) / 60) * Tinggi Per Jam
-            const topPos = ((startTotalMin - gridStartMin) / 60) * PIXELS_PER_HOUR;
-            
-            // Tinggi = ((Durasi Menit) / 60) * Tinggi Per Jam
-            const height = ((endTotalMin - startTotalMin) / 60) * PIXELS_PER_HOUR;
+                    // Tinggi = ((Durasi Menit) / 60) * Tinggi Per Jam
+                    const height = ((endTotalMin - startTotalMin) / 60) * PIXELS_PER_HOUR;
 
-            // Validasi agar tidak render di luar jam operasional
-            if (topPos < 0) return; 
+                    // Validasi agar tidak render di luar jam operasional
+                    if (topPos < 0) return;
 
-            // Cari kolom hari yang sesuai
-            const containers = document.querySelectorAll('.day-container');
-            const targetContainer = containers[diffDays];
+                    // Cari kolom hari yang sesuai
+                    const containers = document.querySelectorAll('.day-container');
+                    const targetContainer = containers[diffDays];
 
-            if (targetContainer) {
-                const el = document.createElement('div'); 
-                el.className = 'booking-rectangle';
-                
-                // Set Style Posisi
-                el.style.top = `${topPos}px`; 
-                el.style.height = `${height}px`; 
-                el.style.backgroundColor = b.color; 
-                el.style.borderLeft = `4px solid ${b.borderColor}`; // Aksen border kiri
-                
-                // Isi Konten Kotak
-                el.innerHTML = `
+                    if (targetContainer) {
+                        const el = document.createElement('div');
+                        el.className = 'booking-rectangle';
+
+                        // Set Style Posisi
+                        el.style.top = `${topPos}px`;
+                        el.style.height = `${height}px`;
+                        el.style.backgroundColor = b.color;
+                        el.style.borderLeft = `4px solid ${b.borderColor}`; // Aksen border kiri
+
+                        // Isi Konten Kotak
+                        el.innerHTML = `
                     <div class="booking-time">${b.startTime} - ${b.endTime}</div>
                     <div class="booking-instansi">${b.instansi}</div>
                     <div class="booking-name">${b.bookerName}</div>
                 `;
-                
-                // Klik untuk detail
-                el.onclick = (e) => { 
-                    e.stopPropagation(); 
-                    showDetail(b); 
-                };
-                
-                targetContainer.appendChild(el);
-            }
-        });
-    }
 
-    function changeTableWeek(days) { 
-        tableCurrentDate.setDate(tableCurrentDate.getDate() + days); 
-        generateTableStructure(); 
-    }
-
-    // ============================================================
-    // 3. LOGIKA KALENDER & FORM (BAGIAN KANAN)
-    // ============================================================
-    function initCalendar() {
-        const today = new Date();
-        document.getElementById('selected-date-value').value = formatDate(today);
-        updateDateDisplay(today);
-        generateCalendar(calendarCurrentDate);
-    }
-
-    function generateCalendar(date) {
-        const y = date.getFullYear(); 
-        const m = date.getMonth();
-        const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-        
-        document.getElementById('calendar-month-display').textContent = `${monthNames[m]} ${y}`;
-        
-        const tbody = document.getElementById('calendar-days'); 
-        tbody.innerHTML = '';
-        
-        const firstDay = new Date(y, m, 1); 
-        const lastDay = new Date(y, m + 1, 0); 
-        const today = new Date(); today.setHours(0,0,0,0);
-        
-        // Adjustment agar Senin jadi kolom pertama (0)
-        let startIdx = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-        
-        let dayCount = 1; 
-        let nextMonthCount = 1;
-
-        for (let i = 0; i < 6; i++) {
-            const tr = document.createElement('tr');
-            for (let j = 0; j < 7; j++) {
-                const td = document.createElement('td');
-                
-                if (i === 0 && j < startIdx) { 
-                    td.className = 'other-month'; // Kosongkan hari bulan lalu
-                } else if (dayCount > lastDay.getDate()) { 
-                    td.textContent = nextMonthCount++; 
-                    td.className = 'other-month'; 
-                } else {
-                    const currentCellDate = new Date(y, m, dayCount);
-                    td.textContent = dayCount;
-                    
-                    // Disable tanggal lewat
-                    if (currentCellDate < today) { 
-                        td.className = 'disabled'; 
-                    } else {
-                        // Highlight tanggal terpilih
-                        if (document.getElementById('selected-date-value').value === formatDate(currentCellDate)) {
-                            td.className = 'active';
-                        }
-                        // Event Klik Tanggal
-                        td.onclick = function() {
-                            document.querySelectorAll('#calendar-days td').forEach(c => c.classList.remove('active'));
-                            this.classList.add('active');
-                            document.getElementById('selected-date-value').value = formatDate(currentCellDate);
-                            updateDateDisplay(currentCellDate);
+                        // Klik untuk detail
+                        el.onclick = (e) => {
+                            e.stopPropagation();
+                            showDetail(b);
                         };
+
+                        targetContainer.appendChild(el);
                     }
-                    dayCount++;
-                }
-                tr.appendChild(td);
+                });
             }
-            tbody.appendChild(tr); 
-            if (dayCount > lastDay.getDate()) break;
-        }
-    }
 
-    function updateDateDisplay(d) { 
-        document.getElementById('selected-date-display').textContent = d.toLocaleDateString('id-ID', { 
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-        }); 
-    }
+            function changeTableWeek(days) {
+                tableCurrentDate.setDate(tableCurrentDate.getDate() + days);
+                generateTableStructure();
+            }
 
-    // ============================================================
-    // 4. PROSES SUBMIT BOOKING
-    // ============================================================
-    function processBooking() {
-        if (!isLoggedIn) { 
-            Swal.fire({
-                icon: 'warning', 
-                title: 'Login Diperlukan', 
-                text: 'Silakan login terlebih dahulu untuk melakukan booking.', 
-                confirmButtonText: 'Ke Halaman Login',
-                confirmButtonColor: '#2b95fd'
-            }).then((result)=>{ 
-                if(result.isConfirmed) window.location.href='./admin/login.php'; 
-            }); 
-            return; 
-        }
+            // ============================================================
+            // 3. LOGIKA KALENDER & FORM (BAGIAN KANAN)
+            // ============================================================
+            function initCalendar() {
+                const today = new Date();
+                document.getElementById('selected-date-value').value = formatDate(today);
+                updateDateDisplay(today);
+                generateCalendar(calendarCurrentDate);
+            }
 
-        const dateVal = document.getElementById('selected-date-value').value;
-        const timeIn = document.getElementById('checkin-time').value;
-        const timeOut = document.getElementById('checkout-time').value;
+            function generateCalendar(date) {
+                const y = date.getFullYear();
+                const m = date.getMonth();
+                const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
-        if(!dateVal || !timeIn || !timeOut) { 
-            Swal.fire({icon:'error', text:'Mohon lengkapi tanggal dan jam booking.'}); 
-            return; 
-        }
+                document.getElementById('calendar-month-display').textContent = `${monthNames[m]} ${y}`;
 
-        const [h1, m1] = timeIn.split(':').map(Number); 
-        const [h2, m2] = timeOut.split(':').map(Number);
-        
-        // Konversi ke menit total
-        const t1 = h1 * 60 + m1; 
-        const t2 = h2 * 60 + m2;
-        
-        // Batas Operasional (07:00 - 21:00)
-        const openTime = START_HOUR * 60; 
-        const closeTime = END_HOUR * 60;
+                const tbody = document.getElementById('calendar-days');
+                tbody.innerHTML = '';
 
-        if (t1 < openTime || t2 > closeTime) { 
-            Swal.fire({icon:'warning', text:`Peminjaman hanya dilayani pukul ${String(START_HOUR).padStart(2,'0')}:00 - ${String(END_HOUR).padStart(2,'0')}:00 WIB.`}); 
-            return; 
-        }
-        if (t1 >= t2) { 
-            Swal.fire({icon:'error', text:'Waktu selesai harus lebih besar dari waktu mulai.'}); 
-            return; 
-        }
+                const firstDay = new Date(y, m, 1);
+                const lastDay = new Date(y, m + 1, 0);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
 
-        // Redirect ke form pengisian detail
-        window.location.href = `./pages/formBooking.php?date=${dateVal}&checkin=${timeIn}&checkout=${timeOut}`;
-    }
+                // Adjustment agar Senin jadi kolom pertama (0)
+                let startIdx = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
 
-    // ============================================================
-    // 5. HELPER FUNCTIONS & MODAL
-    // ============================================================
-    function getMonday(d) { 
-        d = new Date(d); 
-        const day = d.getDay(); 
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
-        return new Date(d.setDate(diff)); 
-    }
-    
-    function isToday(d) { 
-        const t = new Date(); 
-        return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear(); 
-    }
-    
-    function getShortMonthName(i) { return ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'][i]; }
-    function getShortDayName(i) { return ['Min','Sen','Sel','Rab','Kam','Jum','Sab'][i]; }
-    
-    function formatDate(d) { 
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; 
-    }
-    
-    function showDetail(b) {
-        document.getElementById('d-date').textContent = b.date; 
-        document.getElementById('d-time').textContent = `${b.startTime} - ${b.endTime}`;
-        document.getElementById('d-instansi').textContent = b.instansi; 
-        document.getElementById('d-booker').textContent = b.bookerName;
-        document.getElementById('d-purpose').textContent = b.purpose; 
-        document.getElementById('d-status').textContent = b.status.toUpperCase();
-        
-        document.getElementById('detail-modal').style.display = 'flex';
-    }
-    
-    window.closeModalDetail = function() { 
-        document.getElementById('detail-modal').style.display = 'none'; 
-    };
+                let dayCount = 1;
+                let nextMonthCount = 1;
 
-    // --- SCRIPT LAIN (NAVBAR MOBILE & GALLERY) ---
-    // Pastikan variabel ini unik atau gunakan scope function
-    let isCarouselAnimating = false;
-    const updateActiveState = () => {
-        const cards = document.querySelectorAll('.custom-card'); 
-        const backdrop = document.getElementById('backdrop-image');
-        if(cards.length > 0 && backdrop) {
-            cards.forEach(c => c.classList.remove('active'));
-            const activeCard = cards[0]; 
-            activeCard.classList.add('active');
-            const newImageSrc = activeCard.getAttribute('data-bg-img');
-            backdrop.classList.add('fade-out'); 
-            setTimeout(() => { 
-                backdrop.src = newImageSrc; 
-                backdrop.classList.remove('fade-out'); 
-            }, 300);
-        }
-    };
+                for (let i = 0; i < 6; i++) {
+                    const tr = document.createElement('tr');
+                    for (let j = 0; j < 7; j++) {
+                        const td = document.createElement('td');
 
-    // Fungsi Navigasi Carousel
-    const track = document.getElementById('track');
-    function moveNext() { 
-        if (isCarouselAnimating || !track) return; 
-        isCarouselAnimating = true; 
-        const cards = document.querySelectorAll('.custom-card'); 
-        if(cards.length === 0) return;
-        
-        const w = cards[0].offsetWidth + 24; 
-        track.style.transition = 'transform 0.5s ease-in-out'; 
-        track.style.transform = `translateX(-${w}px)`; 
-        setTimeout(() => { 
-            track.style.transition = 'none'; 
-            track.appendChild(cards[0]); 
-            track.style.transform = 'translateX(0)'; 
-            updateActiveState(); 
-            isCarouselAnimating = false; 
-        }, 500); 
-    }
-    
-    function movePrev() { 
-        if (isCarouselAnimating || !track) return; 
-        isCarouselAnimating = true; 
-        const cards = document.querySelectorAll('.custom-card'); 
-        if(cards.length === 0) return;
+                        if (i === 0 && j < startIdx) {
+                            td.className = 'other-month'; // Kosongkan hari bulan lalu
+                        } else if (dayCount > lastDay.getDate()) {
+                            td.textContent = nextMonthCount++;
+                            td.className = 'other-month';
+                        } else {
+                            const currentCellDate = new Date(y, m, dayCount);
+                            td.textContent = dayCount;
 
-        const last = cards[cards.length - 1]; 
-        const w = cards[0].offsetWidth + 24; 
-        track.style.transition = 'none'; 
-        track.prepend(last); 
-        track.style.transform = `translateX(-${w}px)`; 
-        void track.offsetWidth; // Force reflow
-        track.style.transition = 'transform 0.5s ease-in-out'; 
-        track.style.transform = 'translateX(0)'; 
-        setTimeout(() => { 
-            updateActiveState(); 
-            isCarouselAnimating = false; 
-        }, 500); 
-    }
+                            // Disable tanggal lewat
+                            if (currentCellDate < today) {
+                                td.className = 'disabled';
+                            } else {
+                                // Highlight tanggal terpilih
+                                if (document.getElementById('selected-date-value').value === formatDate(currentCellDate)) {
+                                    td.className = 'active';
+                                }
+                                // Event Klik Tanggal
+                                td.onclick = function() {
+                                    document.querySelectorAll('#calendar-days td').forEach(c => c.classList.remove('active'));
+                                    this.classList.add('active');
+                                    document.getElementById('selected-date-value').value = formatDate(currentCellDate);
+                                    updateDateDisplay(currentCellDate);
+                                };
+                            }
+                            dayCount++;
+                        }
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                    if (dayCount > lastDay.getDate()) break;
+                }
+            }
 
-    // Init Carousel jika ada elemennya
-    if(document.querySelector('.custom-card')) updateActiveState();
+            function updateDateDisplay(d) {
+                document.getElementById('selected-date-display').textContent = d.toLocaleDateString('id-ID', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
 
-    // Fungsi Global (Window Scope) untuk HTML onclick attribute
-    window.toggleMenu = function() { 
-        const m = document.getElementById('navMenu'); 
-        const icon = document.querySelector('.hamburger i');
-        m.classList.toggle('active'); 
-        if (m.classList.contains('active')) {
-            icon.classList.remove('fa-bars'); icon.classList.add('fa-times');
-        } else {
-            icon.classList.remove('fa-times'); icon.classList.add('fa-bars');
-        }
-    };
-    
-    window.openModal = function(e) { 
-        document.getElementById('modalImg').src = e.getAttribute('data-img'); 
-        document.getElementById('modalTitle').innerText = e.getAttribute('data-judul'); 
-        document.getElementById('modalDesc').innerText = e.getAttribute('data-deskripsi'); 
-        document.getElementById('galleryModal').classList.add('active'); 
-        document.body.style.overflow = 'hidden'; 
-    };
-    
-    window.closeModal = function() { 
-        document.getElementById('galleryModal').classList.remove('active'); 
-        document.body.style.overflow = 'auto'; 
-    };
-});
+            // ============================================================
+            // 4. PROSES SUBMIT BOOKING
+            // ============================================================
+            function processBooking() {
+                if (!isLoggedIn) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Login Diperlukan',
+                        text: 'Silakan login terlebih dahulu untuk melakukan booking.',
+                        confirmButtonText: 'Ke Halaman Login',
+                        confirmButtonColor: '#2b95fd'
+                    }).then((result) => {
+                        if (result.isConfirmed) window.location.href = './admin/login.php';
+                    });
+                    return;
+                }
+
+                const dateVal = document.getElementById('selected-date-value').value;
+                const timeIn = document.getElementById('checkin-time').value;
+                const timeOut = document.getElementById('checkout-time').value;
+
+                if (!dateVal || !timeIn || !timeOut) {
+                    Swal.fire({
+                        icon: 'error',
+                        text: 'Mohon lengkapi tanggal dan jam booking.'
+                    });
+                    return;
+                }
+
+                const [h1, m1] = timeIn.split(':').map(Number);
+                const [h2, m2] = timeOut.split(':').map(Number);
+
+                // Konversi ke menit total
+                const t1 = h1 * 60 + m1;
+                const t2 = h2 * 60 + m2;
+
+                // Batas Operasional (07:00 - 21:00)
+                const openTime = START_HOUR * 60;
+                const closeTime = END_HOUR * 60;
+
+                if (t1 < openTime || t2 > closeTime) {
+                    Swal.fire({
+                        icon: 'warning',
+                        text: `Peminjaman hanya dilayani pukul ${String(START_HOUR).padStart(2,'0')}:00 - ${String(END_HOUR).padStart(2,'0')}:00 WIB.`
+                    });
+                    return;
+                }
+                if (t1 >= t2) {
+                    Swal.fire({
+                        icon: 'error',
+                        text: 'Waktu selesai harus lebih besar dari waktu mulai.'
+                    });
+                    return;
+                }
+
+                // Redirect ke form pengisian detail
+                window.location.href = `./pages/formBooking.php?date=${dateVal}&checkin=${timeIn}&checkout=${timeOut}`;
+            }
+
+            // ============================================================
+            // 5. HELPER FUNCTIONS & MODAL
+            // ============================================================
+            function getMonday(d) {
+                d = new Date(d);
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+                return new Date(d.setDate(diff));
+            }
+
+            function isToday(d) {
+                const t = new Date();
+                return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
+            }
+
+            function getShortMonthName(i) {
+                return ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'][i];
+            }
+
+            function getShortDayName(i) {
+                return ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][i];
+            }
+
+            function formatDate(d) {
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }
+
+            function showDetail(b) {
+                document.getElementById('d-date').textContent = b.date;
+                document.getElementById('d-time').textContent = `${b.startTime} - ${b.endTime}`;
+                document.getElementById('d-instansi').textContent = b.instansi;
+                document.getElementById('d-booker').textContent = b.bookerName;
+                document.getElementById('d-purpose').textContent = b.purpose;
+                document.getElementById('d-status').textContent = b.status.toUpperCase();
+
+                document.getElementById('detail-modal').style.display = 'flex';
+            }
+
+            window.closeModalDetail = function() {
+                document.getElementById('detail-modal').style.display = 'none';
+            };
+
+            // --- SCRIPT LAIN (NAVBAR MOBILE & GALLERY) ---
+            // Pastikan variabel ini unik atau gunakan scope function
+            let isCarouselAnimating = false;
+            const updateActiveState = () => {
+                const cards = document.querySelectorAll('.custom-card');
+                const backdrop = document.getElementById('backdrop-image');
+                if (cards.length > 0 && backdrop) {
+                    cards.forEach(c => c.classList.remove('active'));
+                    const activeCard = cards[0];
+                    activeCard.classList.add('active');
+                    const newImageSrc = activeCard.getAttribute('data-bg-img');
+                    backdrop.classList.add('fade-out');
+                    setTimeout(() => {
+                        backdrop.src = newImageSrc;
+                        backdrop.classList.remove('fade-out');
+                    }, 300);
+                }
+            };
+
+            // Fungsi Navigasi Carousel
+            const track = document.getElementById('track');
+
+            function moveNext() {
+                if (isCarouselAnimating || !track) return;
+                isCarouselAnimating = true;
+                const cards = document.querySelectorAll('.custom-card');
+                if (cards.length === 0) return;
+
+                const w = cards[0].offsetWidth + 24;
+                track.style.transition = 'transform 0.5s ease-in-out';
+                track.style.transform = `translateX(-${w}px)`;
+                setTimeout(() => {
+                    track.style.transition = 'none';
+                    track.appendChild(cards[0]);
+                    track.style.transform = 'translateX(0)';
+                    updateActiveState();
+                    isCarouselAnimating = false;
+                }, 500);
+            }
+
+            function movePrev() {
+                if (isCarouselAnimating || !track) return;
+                isCarouselAnimating = true;
+                const cards = document.querySelectorAll('.custom-card');
+                if (cards.length === 0) return;
+
+                const last = cards[cards.length - 1];
+                const w = cards[0].offsetWidth + 24;
+                track.style.transition = 'none';
+                track.prepend(last);
+                track.style.transform = `translateX(-${w}px)`;
+                void track.offsetWidth; // Force reflow
+                track.style.transition = 'transform 0.5s ease-in-out';
+                track.style.transform = 'translateX(0)';
+                setTimeout(() => {
+                    updateActiveState();
+                    isCarouselAnimating = false;
+                }, 500);
+            }
+
+            // Init Carousel jika ada elemennya
+            if (document.querySelector('.custom-card')) updateActiveState();
+
+            // Fungsi Global (Window Scope) untuk HTML onclick attribute
+            window.toggleMenu = function() {
+                const m = document.getElementById('navMenu');
+                const icon = document.querySelector('.hamburger i');
+                m.classList.toggle('active');
+                if (m.classList.contains('active')) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            };
+
+            window.openModal = function(e) {
+                document.getElementById('modalImg').src = e.getAttribute('data-img');
+                document.getElementById('modalTitle').innerText = e.getAttribute('data-judul');
+                document.getElementById('modalDesc').innerText = e.getAttribute('data-deskripsi');
+                document.getElementById('galleryModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            };
+
+            window.closeModal = function() {
+                document.getElementById('galleryModal').classList.remove('active');
+                document.body.style.overflow = 'auto';
+            };
+        });
     </script>
 </body>
 
