@@ -6,9 +6,135 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 // Role default jika tidak ada session
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+
+// --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
+// Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
+// Gunakan __DIR__ agar path relatifnya aman
+$dbPath = __DIR__ . '/../admin/config/database.php';
+
+if (file_exists($dbPath)) {
+    require_once $dbPath;
+} else {
+    // Fallback jika path beda
+    $dbPathAlternative = $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php';
+    if (file_exists($dbPathAlternative)) {
+        require_once $dbPathAlternative;
+    } else {
+        die("Error: Config database tidak ditemukan. Cek path file.");
+    }
+}
+
+$db = (new Database())->getConnection();
+
+// --- 2. AMBIL DATA SETTING (Logo & Maskot) ---
+$logoSrc = '../assets/images/logo.png';
+$maskotSrc = '../assets/img/MaskotLab.png';
+$maknaLogoText = 'Deskripsi makna logo belum diatur oleh admin.';
+$maknaMaskotText = 'Deskripsi makna maskot belum diatur oleh admin.';
+
+try {
+    // Ambil data berdasarkan key 'logo' dan 'maskot'
+    // Kita ambil 'value' (untuk deskripsi) dan 'file_path' (untuk gambar)
+    $sql = "SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'maskot')";
+
+    $stmt = $db->query($sql);
+    $settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Konversi ke array asosiatif
+    $settings = [];
+    foreach ($settingsRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    // --- LOGIKA PERBAIKAN DI SINI ---
+
+    // 1. SET LOGO (Gambar & Deskripsi)
+    if (isset($settings['logo'])) {
+        // Ambil Gambar
+        if (!empty($settings['logo']['file_path'])) {
+            $logoSrc = '../admin/' . $settings['logo']['file_path'];
+        }
+        // Ambil Deskripsi (dari kolom value milik key 'logo')
+        if (!empty($settings['logo']['value'])) {
+            $maknaLogoText = $settings['logo']['value'];
+        }
+    }
+
+    // 2. SET MASKOT (Gambar & Deskripsi)
+    if (isset($settings['maskot'])) {
+        // Ambil Gambar
+        if (!empty($settings['maskot']['file_path'])) {
+            $maskotSrc = '../admin/' . $settings['maskot']['file_path'];
+        }
+        // Ambil Deskripsi (dari kolom value milik key 'maskot')
+        if (!empty($settings['maskot']['value'])) {
+            $maknaMaskotText = $settings['maskot']['value'];
+        }
+    }
+} catch (Exception $e) {
+    // Silent fail
+}
+
+// --- 3. AMBIL DATA DOSEN / ANGGOTA (QUERY POSTGRESQL) ---
+$dosenList = [];
+try {
+    // Query ini menggabungkan tabel dosen, user, dan anggota
+    // Menggunakan STRING_AGG (PostgreSQL) pengganti GROUP_CONCAT
+    $sql = "SELECT 
+                d.id_dosen,
+                u.nama as nama_lengkap,
+                d.nidn,
+                d.foto,
+                
+                -- Ambil Keahlian (Gabungan dari tabel anak)
+                (
+                    SELECT STRING_AGG(nama_bidang, ', ') 
+                    FROM bidang_keahlian bk 
+                    WHERE bk.id_dosen = d.id_dosen
+                ) as keahlian_list,
+                
+                -- Fallback ke kolom tabel induk
+                d.bidang_keahlian as keahlian_single,
+                
+                -- Ambil Link Scholar (Case Insensitive search 'scholar')
+                (SELECT link_url FROM link_akademik_dosen WHERE id_dosen = d.id_dosen AND platform ILIKE '%scholar%' LIMIT 1) as link_scholar,
+                
+                -- Ambil Link Sinta (Case Insensitive search 'sinta')
+                (SELECT link_url FROM link_akademik_dosen WHERE id_dosen = d.id_dosen AND platform ILIKE '%sinta%' LIMIT 1) as link_sinta
+
+            FROM dosen d
+            JOIN users u ON d.id_user = u.id_user
+            JOIN anggota a ON d.id_dosen = a.id_dosen
+            WHERE a.is_active = true
+            ORDER BY u.nama ASC";
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute();
+    $dosenList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Error fetching dosen: " . $e->getMessage());
+}
+
+try {
+    // Tambahkan 'visi' dan 'misi' ke dalam query IN clause
+    $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'maskot', 'visi', 'misi')");
+    $settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Convert ke array asosiatif biar gampang dipanggil
+    $settings = [];
+    foreach ($settingsRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    if (!empty($settings['logo']['file_path'])) $logoSrc = '../admin/' . $settings['logo']['file_path'];
+    if (!empty($settings['maskot']['file_path'])) $maskotSrc = '../admin/' . $settings['maskot']['file_path'];
+
+    // Ambil value visi misi
+    if (!empty($settings['visi']['value'])) $visiText = $settings['visi']['value'];
+    if (!empty($settings['misi']['value'])) $misiText = $settings['misi']['value'];
+} catch (Exception $e) { /* Ignore */
+}
 ?>
-
-
 <!DOCTYPE html>
 <html lang="id">
 
@@ -30,7 +156,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
                 <div class="lab-name">Laboratorium Business Analytics</div>
@@ -76,56 +202,56 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
             <li class="nav-item mobile-auth-section">
                 <?php if ($isLoggedIn): ?>
-                <div class="mobile-user-profile-modern">
-                    <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="mobile-avatar-modern">
-                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128"
-                                alt="User Avatar">
+                    <div class="mobile-user-profile-modern">
+                        <div class="d-flex align-items-center gap-3 flex-grow-1">
+                            <div class="mobile-avatar-modern">
+                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128"
+                                    alt="User Avatar">
+                            </div>
+                            <div class="mobile-info-modern">
+                                <span class="greeting-text">Halo,</span>
+                                <span class="username-text">
+                                    <?php echo htmlspecialchars($userName); ?>
+                                </span>
+                            </div>
                         </div>
-                        <div class="mobile-info-modern">
-                            <span class="greeting-text">Halo,</span>
-                            <span class="username-text">
-                                <?php echo htmlspecialchars($userName); ?>
-                            </span>
-                        </div>
+                        <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
                     </div>
-                    <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
                 <?php else: ?>
-                <div class="mobile-login-btn">
-                    <a class="nav-link login-link" href="../admin/login.php">Login</a>
-                </div>
+                    <div class="mobile-login-btn">
+                        <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                    </div>
                 <?php endif; ?>
             </li>
         </ul>
 
         <?php if ($isLoggedIn): ?>
-        <div class="desktop-user-action">
+            <div class="desktop-user-action">
 
-            <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
-                <div class="text-end me-2">
-                    <div class="user-name-label">
-                        <?php echo htmlspecialchars($userName); ?>
+                <a class="user-profile-link">
+                    <div class="text-end me-2">
+                        <div class="user-name-label">
+                            <?php echo htmlspecialchars($userName); ?>
+                        </div>
+                        <div class="user-role-label">
+                            <?php echo htmlspecialchars($userRole); ?>
+                        </div>
                     </div>
-                    <div class="user-role-label">
-                        <?php echo htmlspecialchars($userRole); ?>
+                    <div class="avatar-circle">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128"
+                            alt="User Avatar">
                     </div>
-                </div>
-                <div class="avatar-circle">
-                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128"
-                        alt="User Avatar">
-                </div>
-            </a>
+                </a>
 
-            <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
-                <i class="fas fa-sign-out-alt"></i>
-            </a>
+                <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
 
-        </div>
+            </div>
         <?php else: ?>
-        <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+            <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
         <?php endif; ?>
 
     </nav>
@@ -216,19 +342,32 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                 </p>
                 <div class="vision-mission-card mb-4">
                     <h3 class="vision-mission-title">Visi</h3>
-                    <p class="vision-mission-text">Menjadi laboratorium unggul rujukan nasional sebagai inkubator solusi
-                        cerdas
-                        berbasis data.</p>
+                    <p class="vision-mission-text">
+                        <?php echo nl2br(htmlspecialchars($visiText)); ?>
+                    </p>
                 </div>
+
                 <div class="vision-mission-card">
                     <h3 class="vision-mission-title">Misi</h3>
-                    <ol class="vision-mission-list">
-                        <li>Mengembangkan riset terapan</li>
-                        <li>Mengintegrasikan berbagai disiplin ilmu</li>
-                        <li>Membangun kemitraan strategis dengan industri</li>
-                        <li>Mengembangkan talenta (dosen dan mahasiswa)</li>
-                        <li>Menjalankan tata kelola laboratorium yang profesional, etis, dan berkelanjutan</li>
-                    </ol>
+                    <div class="vision-mission-list-container">
+                        <?php
+                        // Cek apakah isi misi mengandung tag HTML list
+                        if (strpos($misiText, '<li>') !== false) {
+                            // Jika user input pake HTML (misal dari summernote/text editor)
+                            echo $misiText;
+                        } else {
+                            // Jika input teks biasa (misal dipisah enter), kita buat list manual
+                            echo '<ol class="vision-mission-list">';
+                            $misiLines = explode("\n", $misiText);
+                            foreach ($misiLines as $line) {
+                                if (trim($line)) {
+                                    echo '<li>' . htmlspecialchars($line) . '</li>';
+                                }
+                            }
+                            echo '</ol>';
+                        }
+                        ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -253,72 +392,25 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
             <div class="col-lg-7">
                 <div class="roadmap-container">
-                    <div class="roadmap-track">
-                        <!-- Kartu Short Term -->
-                        <div class="roadmap-card main-card active" data-period="short">
-                            <div class="roadmap-header">
-                                <span class="dot-indicator"></span>
-                                <h4 class="term-title">Short Term (3-5 years)</h4>
-                            </div>
-                            <hr class="roadmap-divider">
-                            <div class="roadmap-content">
-                                <p class="mb-2"><strong>Kualitas Lulusan:</strong> Proguskan makshan muk-hol jokka
-                                    modeli mkajar akaja</p>
-                                <p class="mb-2"><strong>Ilmu:</strong> Fondasi hale kengnan & renesund danet alkujulna
-                                </p>
-                                <p class="mb-0"><strong>Masyarakat/Industri:</strong> Siqul kasaa awal & porakanohpuan
-                                    ringan</p>
-                            </div>
-                        </div>
 
-                        <!-- Kartu Medium Term -->
-                        <div class="roadmap-card main-card" data-period="medium">
-                            <div class="roadmap-header">
-                                <span class="dot-indicator"></span>
-                                <h4 class="term-title">Medium Term (6-10 years)</h4>
-                            </div>
-                            <hr class="roadmap-divider">
-                            <div class="roadmap-content">
-                                <p class="mb-2"><strong>Kualitas Lulusan:</strong> Konsistensi asesmen & sertifikasi
-                                    propuk tintea anita-kualita</p>
-                                <p class="mb-2"><strong>Ilmu:</strong> Jongta Patsang (>10 tahun) Kualitas Lukanar
-                                    linni, kaatan rnet & datasat maksaan</p>
-                                <p class="mb-0"><strong>Masyarakat/Industri:</strong> Kemiraan multi-tahun & magang
-                                    teatraktaz</p>
-                            </div>
-                        </div>
-
-                        <!-- Kartu Long Term -->
-                        <div class="roadmap-card main-card" data-period="long">
-                            <div class="roadmap-header">
-                                <span class="dot-indicator"></span>
-                                <h4 class="term-title">Long Term (>10 years)</h4>
-                            </div>
-                            <hr class="roadmap-divider">
-                            <div class="roadmap-content">
-                                <p class="mb-2"><strong>Kualitas Lulusan:</strong> Proguskan tantasek - titturautaneik
-                                </p>
-                                <p class="mb-2"><strong>Ilmu:</strong> Finset kernogulla & kurasi data tematik nagusta
-                                </p>
-                                <p class="mb-0"><strong>Masyarakat/Industri:</strong> Lagawan solusi stip pakai &
-                                    berbusta data</p>
+                    <div class="roadmap-track" id="roadmapTrack">
+                        <div class="text-center p-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Indicators -->
-                    <div class="roadmap-indicators">
-                        <button class="indicator active" data-period="short"></button>
-                        <button class="indicator" data-period="medium"></button>
-                        <button class="indicator" data-period="long"></button>
+                    <div class="roadmap-indicators" id="roadmapIndicators">
                     </div>
+
                 </div>
             </div>
         </div>
 
         <div class="py-4"></div>
 
-        <!-- Struktur Organisasi Section -->
+        <!-- SECTION ANGGOTA LABORATORY (DYNAMIC) -->
         <div class="org-structure py-5" id="struktur-organisasi">
             <h2 class="section-title mb-3">Struktur Organisasi</h2>
             <p class="section-description mb-5">
@@ -335,7 +427,6 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                                 <span>Kepala Laboratory</span>
                             </div>
                             <ul>
-                                <!-- Baris pertama: Sekretaris dan Bendahara -->
                                 <li class="support-row">
                                     <div class="org-node child-node">
                                         <span>Sekretaris</span>
@@ -345,7 +436,6 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                                     </div>
                                 </li>
 
-                                <!-- Baris kedua: Semua Koordinator -->
                                 <li class="coordinator-row">
                                     <div class="coordinator-container">
                                         <div class="org-node child-node">
@@ -390,7 +480,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
                 <div class="row">
                     <div class="col-12">
-                        
+
                         <div class="table-responsive shadow-sm rounded-3">
                             <table class="table table-hover custom-table mb-0">
                                 <thead>
@@ -401,670 +491,623 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Rakhmat+Arianto&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Rakhmat Arianto</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Natural Language Processing,
-                                            Data Science</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
+                                    <?php if (empty($dosenList)): ?>
+                                        <tr>
+                                            <td colspan="3" class="text-center py-4">Belum ada data dosen.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($dosenList as $dosen): ?>
+                                            <?php
+                                            // Tentukan bidang keahlian (prioritas dari tabel relasi, fallback ke kolom dosen)
+                                            $keahlian = !empty($dosen['keahlian_list']) ? $dosen['keahlian_list'] : $dosen['keahlian_single'];
 
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Rudy+Ariyanto&background=eef2f7&color=345482&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Rudy Ariyanto</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Data Analytics</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
+                                            // Jika masih kosong atau hanya angka (foreign key mentah), tampilkan dash
+                                            if (empty($keahlian) || is_numeric($keahlian)) {
+                                                $keahlian = '-';
+                                            }
 
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Ahmadi+Yuli+Ananta&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Ahmadi Yuli Ananta</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Enterprise System, Business
-                                            Process Reengineering</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
+                                            // Logika Foto
+                                            $fotoPath = !empty($dosen['foto'])
+                                                ? '../admin/' . htmlspecialchars($dosen['foto']) // Asumsi path relatif sama dengan logo
+                                                : 'https://ui-avatars.com/api/?name=' . urlencode($dosen['nama_lengkap']) . '&background=eef2f7&color=1f3a60&bold=true';
+                                            ?>
+                                            <tr>
+                                                <td class="ps-4">
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="<?php echo $fotoPath; ?>"
+                                                            alt="<?php echo htmlspecialchars($dosen['nama_lengkap']); ?>"
+                                                            class="table-avatar me-3"
+                                                            onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($dosen['nama_lengkap']); ?>&background=eef2f7&color=1f3a60&bold=true';">
+                                                        <div>
+                                                            <h6 class="mb-0 fw-bold text-dark"><?php echo htmlspecialchars($dosen['nama_lengkap']); ?></h6>
+                                                            <small class="text-muted">NIDN: <?php echo htmlspecialchars($dosen['nidn'] ?? '-'); ?></small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="align-middle text-primary fw-semibold">
+                                                    <?php echo htmlspecialchars($keahlian); ?>
+                                                </td>
+                                                <td class="align-middle text-end pe-4">
+                                                    <?php if (!empty($dosen['link_scholar'])): ?>
+                                                        <a href="<?php echo htmlspecialchars($dosen['link_scholar']); ?>" target="_blank" class="btn-link-custom">Scholar</a>
+                                                    <?php else: ?>
+                                                        <span class="btn-link-custom disabled" style="opacity: 0.5; cursor: default;">Scholar</span>
+                                                    <?php endif; ?>
 
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Candra+Bella+Vista&background=eef2f7&color=345482&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Candra Bella Vista</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Natural Language Processing,
-                                            Business Intelligence</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Endah+Septa+Sintiya&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Endah Septa Sintiya</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Data Driven Decision Making
-                                        </td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Dhebys+Suryani+Hormansyah&background=eef2f7&color=345482&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Dhebys Suryani Hormansyah</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Digital Marketing Analysis
-                                        </td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Farid+Angga+Pribadi&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Farid Angga Pribadi</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Business Analytics</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Hendra+Pradibta&background=eef2f7&color=345482&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Hendra Pradibta</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">Manajemen Bisnis</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <img src="https://ui-avatars.com/api/?name=Rokhimatul+Wakhidah&background=eef2f7&color=1f3a60&bold=true"
-                                                    alt="User" class="table-avatar me-3">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold text-dark">Rokhimatul Wakhidah</h6>
-                                                    <small class="text-muted">NIDN: 12345</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="align-middle text-primary fw-semibold">IT Governance, Business
-                                            Intelligence</td>
-                                        <td class="align-middle text-end pe-4">
-                                            <a href="#" class="btn-link-custom">Scholar</a>
-                                            <a href="#" class="btn-link-custom">Sinta</a>
-                                        </td>
-                                    </tr>
-
+                                                    <?php if (!empty($dosen['link_sinta'])): ?>
+                                                        <a href="<?php echo htmlspecialchars($dosen['link_sinta']); ?>" target="_blank" class="btn-link-custom">Sinta</a>
+                                                    <?php else: ?>
+                                                        <span class="btn-link-custom disabled" style="opacity: 0.5; cursor: default;">Sinta</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
+
                         <div class="mobile-researcher-grid">
-                            
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Rakhmat+Arianto&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Rakhmat Arianto">
-                                </div>
-                                <h3 class="res-card-name">Rakhmat Arianto</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Natural Language Processing, Data Science</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
+                            <?php if (empty($dosenList)): ?>
+                                <div class="col-12 text-center">Belum ada data.</div>
+                            <?php else: ?>
+                                <?php foreach ($dosenList as $dosen): ?>
+                                    <?php
+                                    $keahlian = !empty($dosen['keahlian_list']) ? $dosen['keahlian_list'] : $dosen['keahlian_single'];
+                                    if (empty($keahlian) || is_numeric($keahlian)) {
+                                        $keahlian = '-';
+                                    }
 
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Rudy+Ariyanto&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Rudy Ariyanto">
-                                </div>
-                                <h3 class="res-card-name">Rudy Ariyanto</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Data Analytics</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
+                                    $fotoPath = !empty($dosen['foto'])
+                                        ? '../admin/' . htmlspecialchars($dosen['foto'])
+                                        : 'https://ui-avatars.com/api/?name=' . urlencode($dosen['nama_lengkap']) . '&background=eef2f7&color=1f3a60&bold=true';
+                                    ?>
+                                    <div class="res-card">
+                                        <div class="res-card-img-wrapper">
+                                            <img src="<?php echo $fotoPath; ?>" class="res-card-img"
+                                                alt="<?php echo htmlspecialchars($dosen['nama_lengkap']); ?>"
+                                                onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($dosen['nama_lengkap']); ?>&background=eef2f7&color=1f3a60&bold=true';">
+                                        </div>
+                                        <h3 class="res-card-name"><?php echo htmlspecialchars($dosen['nama_lengkap']); ?></h3>
+                                        <span class="res-card-nidn">NIDN: <?php echo htmlspecialchars($dosen['nidn'] ?? '-'); ?></span>
+                                        <p class="res-card-role"><?php echo htmlspecialchars($keahlian); ?></p>
+                                        <div class="res-card-links">
+                                            <?php if (!empty($dosen['link_scholar'])): ?>
+                                                <a href="<?php echo htmlspecialchars($dosen['link_scholar']); ?>" target="_blank" class="btn-link-custom">Scholar</a>
+                                            <?php else: ?>
+                                                <span class="btn-link-custom disabled" style="opacity: 0.5;">Scholar</span>
+                                            <?php endif; ?>
 
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Ahmadi+Yuli+Ananta&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Ahmadi Yuli Ananta">
-                                </div>
-                                <h3 class="res-card-name">Ahmadi Yuli Ananta</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Enterprise System, Business Process Reengineering</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Candra+Bella+Vista&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Candra Bella Vista">
-                                </div>
-                                <h3 class="res-card-name">Candra Bella Vista</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Natural Language Processing, Business Intelligence</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Endah+Septa+Sintiya&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Endah Septa Sintiya">
-                                </div>
-                                <h3 class="res-card-name">Endah Septa Sintiya</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Data Driven Decision Making</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Dhebys+Suryani+Hormansyah&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Dhebys Suryani Hormansyah">
-                                </div>
-                                <h3 class="res-card-name">Dhebys Suryani Hormansyah</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Digital Marketing Analysis</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Farid+Angga+Pribadi&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Farid Angga Pribadi">
-                                </div>
-                                <h3 class="res-card-name">Farid Angga Pribadi</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Business Analytics</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Hendra+Pradibta&background=eef2f7&color=345482&bold=true" class="res-card-img" alt="Hendra Pradibta">
-                                </div>
-                                <h3 class="res-card-name">Hendra Pradibta</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">Manajemen Bisnis</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
-                            <div class="res-card">
-                                <div class="res-card-img-wrapper">
-                                    <img src="https://ui-avatars.com/api/?name=Rokhimatul+Wakhidah&background=eef2f7&color=1f3a60&bold=true" class="res-card-img" alt="Rokhimatul Wakhidah">
-                                </div>
-                                <h3 class="res-card-name">Rokhimatul Wakhidah</h3>
-                                <span class="res-card-nidn">NIDN: 12345</span>
-                                <p class="res-card-role">IT Governance, Business Intelligence</p>
-                                <div class="res-card-links">
-                                    <a href="#" class="btn-link-custom">Scholar</a>
-                                    <a href="#" class="btn-link-custom">Sinta</a>
-                                </div>
-                            </div>
-
+                                            <?php if (!empty($dosen['link_sinta'])): ?>
+                                                <a href="<?php echo htmlspecialchars($dosen['link_sinta']); ?>" target="_blank" class="btn-link-custom">Sinta</a>
+                                            <?php else: ?>
+                                                <span class="btn-link-custom disabled" style="opacity: 0.5;">Sinta</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
-                        
+
                         <div class="mobile-pagination mt-4" id="mobilePagination">
-                           </div>
                         </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+    </div>
+    <div class="py-5"></div>
+
+    <!-- Makna Logo & Maskot Section -->
+    <div class="container py-2"> <section class="researcher-section py-4" id="makna-logo-maskot">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2 class="section-title mb-3">Makna Logo & Maskot</h2>
+                    <p class="section-description">
+                        Berikut adalah filosofi di balik identitas visual Laboratorium Business Analytics.
+                        Logo dan maskot kami merepresentasikan nilai-nilai inti dan visi kami dalam dunia analitik data.
+                    </p>
+                </div>
             </div>
-        </div>
 
-        <div class="py-5"></div>
-
-        <!-- Makna Logo & Maskot Section -->
-        <div class="row mb-5" id="makna-logo-maskot">
-            <div class="col-12">
-                <h2 class="section-title mb-3">Makna Logo & Maskot</h2>
-                <p class="section-description mb-5">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua. Ut enim ad minim
-                    veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                </p>
-            </div>
-
-            <div class="row align-items-start">
-                <!-- Makna Logo Section - Kiri -->
-                <div class="col-lg-6 mb-5 mb-lg-0">
-                    <div class="logo-section">
-                        <!-- Kotak Logo dipindah ke bawah sub judul -->
-                        <div class="symbol-preview-large mb-4">
-                            <div class="symbol-placeholder-large logo-placeholder">
-                                <span class="symbol-text-large">LOGO</span>
+            <div class="row align-items-stretch">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <div class="logo-section h-100">
+                        <div class="symbol-preview-large mb-4 text-center">
+                            <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Logo" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                        </div>
+                        <h3 class="symbol-title mb-3">Makna Logo</h3>
+                        <div class="symbol-content mb-4">
+                            <div class="symbol-description">
+                                <?php echo nl2br(htmlspecialchars($maknaLogoText)); ?>
                             </div>
                         </div>
-                        <h3 class="symbol-title mb-4">Makna Logo</h3>
-                        <div class="symbol-content mb-4">
-                            <p class="symbol-description">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-                                veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                                consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
-                                eu fugiat nulla pariatur.
-                            </p>
-                            <p class="symbol-description">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                                exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                            </p>
-                        </div>
-                        <div class="text-start">
+                        <div class="mt-auto">
                             <a href="maknaLogo.html" class="btn-read-more">Read More</a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Makna Maskot Section - Kanan -->
                 <div class="col-lg-6">
-                    <div class="mascot-section">
-                        <h3 class="symbol-title mb-4">Makna Maskot</h3>
+                    <div class="mascot-section h-100">
+                        <div class="symbol-preview-large mb-4 text-center">
+                            <img src="<?php echo htmlspecialchars($maskotSrc); ?>" alt="Maskot" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                        </div>
+                        <h3 class="symbol-title mb-3">Makna Maskot</h3>
                         <div class="symbol-content mb-4">
-                            <p class="symbol-description">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut enim
-                                ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                                consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
-                                eu fugiat nulla pariatur.
-                            </p>
-                            <p class="symbol-description">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                                exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                            </p>
-                        </div>
-                        <div class="text-start mb-4">
-                            <a href="maknaMaskot.html" class="btn-read-more">Read More</a>
-                        </div>
-                        <!-- Kotak Maskot dipindah ke bawah tombol Read More -->
-                        <div class="symbol-preview-large">
-                            <div class="symbol-placeholder-large mascot-placeholder">
-                                <span class="symbol-text-large">MASKOT</span>
+                            <div class="symbol-description">
+                                <?php echo nl2br(htmlspecialchars($maknaMaskotText)); ?>
                             </div>
+                        </div>
+                        <div class="mt-auto">
+                            <a href="maknaMaskot.html" class="btn-read-more">Read More</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </section>
+</div>
 
-        <div class="py-5"></div>
+    <div class="py-5"></div>
 
-        <!-- research focus -->
-        <div class="row mb-5" id="research-focus">
-            <div class="col-12">
-                <h2 class="section-title mb-3">Research Focus</h2>
-                <p class="section-description mb-5">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                    aliquip ex ea commodo consequat.
-                </p>
-                <!-- Research Focus -->
-                <section class="profile-carousel-section">
-                    <div class="custom-container-relative">
-                        <div class="gray-backdrop-box">
-                            <img id="backdrop-image"
-                                src="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg"
-                                alt="Research Project Image" class="backdrop-img-content">
-                        </div>
-                        <div class="carousel-wrapper">
-                            <div class="carousel-track" id="track">
-                                <div class="custom-card"
-                                    data-bg-img="../assets/img/458531279_1176666466900859_283584463979911102_n.jpg">
-                                    <div class="card-content">
-                                        <h3>Data Analytics Platform</h3>
-                                        <p>Platform analisis data terintegrasi untuk bisnis intelligence</p>
-                                    </div>
-                                </div>
-                                <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-03-24 124657.png">
-                                    <div class="card-content">
-                                        <h3>Machine Learning Research</h3>
-                                        <p>Pengembangan model machine learning untuk prediksi bisnis</p>
-                                    </div>
-                                </div>
-                                <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-04-08 013511.png">
-                                    <div class="card-content">
-                                        <h3>Visualization Dashboard</h3>
-                                        <p>Dashboard interaktif untuk visualisasi data real-time</p>
-                                    </div>
-                                </div>
-                                <div class="custom-card" data-bg-img="../assets/img/Screenshot 2025-03-20 102632.png">
-                                    <div class="card-content">
-                                        <h3>Business Intelligence</h3>
-                                        <p>Solusi BI untuk pengambilan keputusan berbasis data</p>
-                                    </div>
-                                </div>
+    <!-- research focus -->
+    <div class="container py-2"> <section class="researcher-section py-4" id="research-focus">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2 class="section-title mb-3">Research Focus</h2>
+                    <p class="section-description">
+                        Berikut adalah fokus penelitian utama di Laboratorium Business Analytics, 
+                        mencakup pengembangan platform data hingga penerapan machine learning.
+                    </p>
+                </div>
+            </div>
+
+            <section class="profile-carousel-section">
+                <div class="custom-container-relative">
+                    <div class="gray-backdrop-box">
+                        <img id="backdrop-image" 
+                             src="assets/img/default-research.jpg" 
+                             alt="Research Background" 
+                             class="backdrop-img-content"
+                             onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+                    </div>
+
+                    <div class="carousel-wrapper">
+                        <div class="carousel-track" id="track">
+                            <div class="text-center w-100 mt-5 text-white">
+                                <div class="spinner-border" role="status"></div>
                             </div>
                         </div>
-                        <div class="carousel-nav">
-                            <button class="nav-btn prev-btn" id="prevBtn">
-                                <i class="fa fa-arrow-left"></i>
-                            </button>
-                            <button class="nav-btn next-btn" id="nextBtn">
-                                <i class="fa fa-arrow-right"></i>
-                            </button>
-                        </div>
                     </div>
-                </section>
-            </div>
+
+                    <div class="carousel-nav">
+                        <button class="nav-btn prev-btn" id="prevBtn">
+                            <i class="fa fa-arrow-left"></i>
+                        </button>
+                        <button class="nav-btn next-btn" id="nextBtn">
+                            <i class="fa fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
         </div>
+    </section>
+    </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        /* ========================================= */
-        /* ROADMAP CAROUSEL FUNCTIONALITY */
-        /* ========================================= */
-        class RoadmapCarousel {
-            constructor() {
-                this.cards = document.querySelectorAll('.roadmap-card');
-                this.indicators = document.querySelectorAll('.indicator');
-                this.track = document.querySelector('.roadmap-track');
-                this.currentIndex = 0;
-                this.totalCards = this.cards.length;
-                this.autoSlideInterval = null;
-                this.slideDuration = 3000; // 3 detik
+    /* ========================================= */
+    /* 1. ROADMAP CAROUSEL CLASS                 */
+    /* ========================================= */
+    class RoadmapCarousel {
+        constructor() {
+            this.cards = document.querySelectorAll('.roadmap-card');
+            this.indicators = document.querySelectorAll('.indicator');
+            this.track = document.querySelector('.roadmap-track');
+            this.currentIndex = 0;
+            this.totalCards = this.cards.length;
+            this.autoSlideInterval = null;
+            this.slideDuration = 3000; 
 
+            // Cek elemen ada sebelum jalan
+            if (this.cards.length > 0 && this.track) {
                 this.init();
-            }
-
-            /* ========================================= */
-            /* INITIALIZE ROADMAP CAROUSEL */
-            /* ========================================= */
-            init() {
-                // Set initial positions
-                this.updateCardPositions();
-
-                // Start auto slide
-                this.startAutoSlide();
-
-                // Add click events to indicators
-                this.indicators.forEach((indicator, index) => {
-                    indicator.addEventListener('click', () => {
-                        this.goToSlide(index);
-                    });
-                });
-
-                // Pause on hover
-                this.track.addEventListener('mouseenter', () => {
-                    this.stopAutoSlide();
-                });
-
-                this.track.addEventListener('mouseleave', () => {
-                    this.startAutoSlide();
-                });
-            }
-
-            /* ========================================= */
-            /* UPDATE CARD POSITIONS AND STATES */
-            /* ========================================= */
-            updateCardPositions() {
-                this.cards.forEach((card, index) => {
-                    card.classList.remove('active', 'prev', 'next');
-
-                    if (index === this.currentIndex) {
-                        card.classList.add('active');
-                    } else if (index === (this.currentIndex + 1) % this.totalCards) {
-                        card.classList.add('next');
-                    } else if (index === (this.currentIndex - 1 + this.totalCards) % this.totalCards) {
-                        card.classList.add('prev');
-                    }
-                });
-
-                // Update indicators
-                this.indicators.forEach((indicator, index) => {
-                    indicator.classList.toggle('active', index === this.currentIndex);
-                });
-            }
-
-            /* ========================================= */
-            /* NAVIGATE TO NEXT SLIDE */
-            /* ========================================= */
-            nextSlide() {
-                this.currentIndex = (this.currentIndex + 1) % this.totalCards;
-                this.updateCardPositions();
-            }
-
-            /* ========================================= */
-            /* NAVIGATE TO PREVIOUS SLIDE */
-            /* ========================================= */
-            prevSlide() {
-                this.currentIndex = (this.currentIndex - 1 + this.totalCards) % this.totalCards;
-                this.updateCardPositions();
-            }
-
-            /* ========================================= */
-            /* GO TO SPECIFIC SLIDE */
-            /* ========================================= */
-            goToSlide(index) {
-                this.currentIndex = index;
-                this.updateCardPositions();
-                this.restartAutoSlide();
-            }
-
-            /* ========================================= */
-            /* AUTO SLIDE CONTROLS */
-            /* ========================================= */
-            startAutoSlide() {
-                this.stopAutoSlide();
-                this.autoSlideInterval = setInterval(() => {
-                    this.nextSlide();
-                }, this.slideDuration);
-            }
-
-            stopAutoSlide() {
-                if (this.autoSlideInterval) {
-                    clearInterval(this.autoSlideInterval);
-                    this.autoSlideInterval = null;
-                }
-            }
-
-            restartAutoSlide() {
-                this.stopAutoSlide();
-                this.startAutoSlide();
             }
         }
 
-        /* ========================================= */
-        /* RESEARCH FOCUS CAROUSEL FUNCTIONALITY */
-        /* ========================================= */
+        init() {
+            this.updateCardPositions();
+            this.startAutoSlide();
 
-        class ResearchFocusCarousel {
-            constructor() {
-                this.track = document.getElementById('track');
-                this.prevBtn = document.getElementById('prevBtn');
-                this.nextBtn = document.getElementById('nextBtn');
-                this.backdropImage = document.getElementById('backdrop-image');
-                this.isAnimating = false;
+            this.indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    this.goToSlide(index);
+                });
+            });
 
-                if (this.track) {
-                    this.init();
+            if (this.track) {
+                this.track.addEventListener('mouseenter', () => this.stopAutoSlide());
+                this.track.addEventListener('mouseleave', () => this.startAutoSlide());
+            }
+        }
+
+        updateCardPositions() {
+            this.cards.forEach((card, index) => {
+                card.classList.remove('active', 'prev', 'next');
+                if (index === this.currentIndex) {
+                    card.classList.add('active');
+                } else if (index === (this.currentIndex + 1) % this.totalCards) {
+                    card.classList.add('next');
+                } else if (index === (this.currentIndex - 1 + this.totalCards) % this.totalCards) {
+                    card.classList.add('prev');
+                }
+            });
+
+            this.indicators.forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === this.currentIndex);
+            });
+        }
+
+        nextSlide() {
+            this.currentIndex = (this.currentIndex + 1) % this.totalCards;
+            this.updateCardPositions();
+        }
+
+        goToSlide(index) {
+            this.currentIndex = index;
+            this.updateCardPositions();
+            this.restartAutoSlide();
+        }
+
+        startAutoSlide() {
+            this.stopAutoSlide();
+            this.autoSlideInterval = setInterval(() => this.nextSlide(), this.slideDuration);
+        }
+
+        stopAutoSlide() {
+            if (this.autoSlideInterval) {
+                clearInterval(this.autoSlideInterval);
+                this.autoSlideInterval = null;
+            }
+        }
+
+        restartAutoSlide() {
+            this.stopAutoSlide();
+            this.startAutoSlide();
+        }
+    }
+
+    /* ========================================= */
+    /* 2. RESEARCH FOCUS CAROUSEL CLASS          */
+    /* ========================================= */
+    class ResearchFocusCarousel {
+        constructor() {
+            this.track = document.getElementById('track');
+            this.prevBtn = document.getElementById('prevBtn');
+            this.nextBtn = document.getElementById('nextBtn');
+            this.backdropImage = document.getElementById('backdrop-image');
+            this.isAnimating = false;
+
+            // Pastikan track ada dan memiliki kartu di dalamnya
+            if (this.track && this.track.querySelectorAll('.custom-card').length > 0) {
+                this.init();
+            }
+        }
+
+        init() {
+            // Hapus event listener lama (cloning node) agar tidak double klik
+            const newNext = this.nextBtn.cloneNode(true);
+            const newPrev = this.prevBtn.cloneNode(true);
+            this.nextBtn.parentNode.replaceChild(newNext, this.nextBtn);
+            this.prevBtn.parentNode.replaceChild(newPrev, this.prevBtn);
+            this.nextBtn = newNext;
+            this.prevBtn = newPrev;
+
+            this.nextBtn.addEventListener('click', () => this.moveNext());
+            this.prevBtn.addEventListener('click', () => this.movePrev());
+            
+            this.updateActiveState();
+        }
+
+        getCards() {
+            return this.track.querySelectorAll('.custom-card');
+        }
+
+        updateActiveState() {
+            const cards = this.getCards();
+            cards.forEach(c => c.classList.remove('active'));
+
+            // Kartu pertama di DOM adalah yang aktif
+            const activeCard = cards[0];
+            if (activeCard) {
+                activeCard.classList.add('active');
+                
+                // Ganti Background sesuai data-bg-img kartu aktif
+                const newImageSrc = activeCard.getAttribute('data-bg-img');
+                if (this.backdropImage && newImageSrc) {
+                    this.backdropImage.classList.add('fade-out');
+                    setTimeout(() => {
+                        this.backdropImage.src = newImageSrc;
+                        this.backdropImage.classList.remove('fade-out');
+                    }, 300);
                 }
             }
+        }
 
-            init() {
-                this.nextBtn.addEventListener('click', () => this.moveNext());
-                this.prevBtn.addEventListener('click', () => this.movePrev());
-                this.updateActiveState();
-            }
+        moveNext() {
+            if (this.isAnimating) return;
+            this.isAnimating = true;
 
-            getCards() {
-                return document.querySelectorAll('.custom-card');
-            }
+            const cards = this.getCards();
+            if (cards.length === 0) return;
 
-            updateActiveState() {
-                const cards = this.getCards();
+            const cardWidth = cards[0].offsetWidth;
+            const gap = 24; // Sesuaikan dengan CSS gap: 1.5rem (24px)
+            const moveDistance = cardWidth + gap;
 
-                // Reset semua class active
-                cards.forEach(c => c.classList.remove('active'));
+            this.track.style.transition = 'transform 0.5s ease-in-out';
+            this.track.style.transform = `translateX(-${moveDistance}px)`;
 
-                // Kartu PERTAMA di DOM selalu menjadi yang 'Active' (tengah)
-                const activeCard = cards[0];
-                if (activeCard) {
-                    activeCard.classList.add('active');
-
-                    // Update Gambar Background
-                    const newImageSrc = activeCard.getAttribute('data-bg-img');
-                    if (this.backdropImage && newImageSrc) {
-                        this.backdropImage.classList.add('fade-out');
-                        setTimeout(() => {
-                            this.backdropImage.src = newImageSrc;
-                            this.backdropImage.classList.remove('fade-out');
-                        }, 300);
-                    }
-                }
-            }
-
-            moveNext() {
-                if (this.isAnimating) return;
-                this.isAnimating = true;
-
-                const cards = this.getCards();
-                if (cards.length === 0) return;
-
-                const cardWidth = cards[0].offsetWidth;
-                // PENTING: Gap harus sama dengan CSS (24px)
-                const gap = 24;
-                const moveDistance = cardWidth + gap;
-
-                // 1. Geser Track ke Kiri
-                this.track.style.transition = 'transform 0.5s ease-in-out';
-                this.track.style.transform = `translateX(-${moveDistance}px)`;
-
-                // 2. Setelah animasi, pindahkan DOM
-                setTimeout(() => {
-                    this.track.style.transition = 'none';
-                    // Pindahkan kartu pertama ke belakang
-                    this.track.appendChild(cards[0]);
-                    // Reset posisi track
-                    this.track.style.transform = 'translateX(0)';
-
-                    this.updateActiveState();
-                    this.isAnimating = false;
-                }, 500);
-            }
-
-            movePrev() {
-                if (this.isAnimating) return;
-                this.isAnimating = true;
-
-                const cards = this.getCards();
-                if (cards.length === 0) return;
-
-                const lastCard = cards[cards.length - 1];
-                const cardWidth = cards[0].offsetWidth;
-                const gap = 24;
-                const moveDistance = cardWidth + gap;
-
-                // 1. Pindahkan kartu terakhir ke depan (Instan)
+            setTimeout(() => {
                 this.track.style.transition = 'none';
-                this.track.prepend(lastCard);
-
-                // 2. Geser track ke posisi minus (seolah belum pindah)
-                this.track.style.transform = `translateX(-${moveDistance}px)`;
-
-                // 3. Force Reflow
-                void this.track.offsetWidth;
-
-                // 4. Animasi kembali ke 0
-                this.track.style.transition = 'transform 0.5s ease-in-out';
+                this.track.appendChild(cards[0]); // Pindah kartu pertama ke belakang
                 this.track.style.transform = 'translateX(0)';
+                this.updateActiveState();
+                this.isAnimating = false;
+            }, 500);
+        }
 
-                setTimeout(() => {
-                    this.updateActiveState();
-                    this.isAnimating = false;
-                }, 500);
+        movePrev() {
+            if (this.isAnimating) return;
+            this.isAnimating = true;
+
+            const cards = this.getCards();
+            if (cards.length === 0) return;
+
+            const lastCard = cards[cards.length - 1];
+            const cardWidth = cards[0].offsetWidth;
+            const gap = 24;
+            const moveDistance = cardWidth + gap;
+
+            this.track.style.transition = 'none';
+            this.track.prepend(lastCard); // Pindah kartu terakhir ke depan
+            this.track.style.transform = `translateX(-${moveDistance}px)`;
+            
+            // Force Reflow
+            void this.track.offsetWidth;
+
+            this.track.style.transition = 'transform 0.5s ease-in-out';
+            this.track.style.transform = 'translateX(0)';
+
+            setTimeout(() => {
+                this.updateActiveState();
+                this.isAnimating = false;
+            }, 500);
+        }
+    }
+
+    /* ========================================= */
+    /* 3. INISIALISASI & FETCH DATA (GABUNGAN)   */
+    /* ========================================= */
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRoadmapData();
+        loadResearchData();
+    });
+
+    // --- A. LOAD RESEARCH FOCUS ---
+    function loadResearchData() {
+        const apiUrl = '../admin/api/research_focus.php';
+        const track = document.getElementById('track');
+
+        fetch(apiUrl)
+            .then(res => {
+                if (!res.ok) throw new Error('Jaringan bermasalah / File tidak ditemukan');
+                return res.json();
+            })
+            .then(response => {
+                if(response.success) {
+                    renderResearch(response.data);
+                } else {
+                    console.error("API Research Error:", response.message);
+                    track.innerHTML = '<div class="text-white text-center py-5">Gagal memuat data research.</div>';
+                }
+            })
+            .catch(err => {
+                console.error("Fetch Research Error:", err);
+                if(track) track.innerHTML = '<div class="text-white text-center py-5">Koneksi Error: ' + err.message + '</div>';
+            });
+    }
+
+    function renderResearch(data) {
+        const track = document.getElementById('track');
+        track.innerHTML = ''; // Bersihkan spinner loading
+
+        if (data.length === 0) {
+            track.innerHTML = '<div class="text-white py-5">Belum ada data research.</div>';
+            return;
+        }
+
+        data.forEach(item => {
+            // Path Gambar: Tambahkan 'admin/' di depan karena file index ada di root
+            // Fallback ke gambar default jika file_path kosong
+            const imgSrc = item.file_path ? `../admin/${item.file_path}` : 'assets/img/default.jpg';
+            
+            const cardHtml = `
+                <div class="custom-card" data-bg-img="${imgSrc}">
+                    <div class="card-content">
+                        <h3>${item.judul}</h3>
+                        <p>${nl2br(item.deskripsi)}</p>
+                    </div>
+                </div>
+            `;
+            track.innerHTML += cardHtml;
+        });
+
+        // Set Background Awal (item pertama)
+        if (data.length > 0) {
+            const firstImg = data[0].file_path ? `../admin/${data[0].file_path}` : 'assets/img/default.jpg';
+            const backdrop = document.getElementById('backdrop-image');
+            if (backdrop) backdrop.src = firstImg;
+        }
+
+        // Jalankan Carousel Research setelah data masuk
+        new ResearchFocusCarousel();
+    }
+
+    // --- B. LOAD ROADMAP ---
+    function loadRoadmapData() {
+        const apiUrl = 'admin/api/roadmap.php'; 
+        fetch(apiUrl) 
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) renderRoadmap(res.data);
+                else document.getElementById('roadmapTrack').innerHTML = `<p class="text-center text-muted">${res.message}</p>`;
+            })
+            .catch(err => console.error('Fetch Roadmap Error:', err));
+    }
+
+    function renderRoadmap(data) {
+        const track = document.getElementById('roadmapTrack');
+        const indicators = document.getElementById('roadmapIndicators');
+        
+        if(!track || !indicators) return;
+
+        track.innerHTML = '';
+        indicators.innerHTML = '';
+
+        if (data.length === 0) {
+            track.innerHTML = '<p class="text-center text-muted">Belum ada data roadmap.</p>';
+            return;
+        }
+
+        const periods = ['short', 'medium', 'long'];
+        data.forEach((item, index) => {
+            const periodStyle = periods[index % periods.length];
+            const activeClass = index === 0 ? 'active' : ''; 
+            
+            track.innerHTML += `
+                <div class="roadmap-card main-card ${activeClass}" data-period="${periodStyle}">
+                    <div class="roadmap-header">
+                        <span class="dot-indicator"></span>
+                        <h4 class="term-title">${item.judul} <small class="text-muted ms-1" style="font-size: 0.8em;">(${item.tahun})</small></h4>
+                    </div>
+                    <hr class="roadmap-divider">
+                    <div class="roadmap-content">
+                        <div class="mb-0 roadmap-desc">${nl2br(item.deskripsi)}</div>
+                    </div>
+                </div>`;
+            
+            indicators.innerHTML += `<button class="indicator ${activeClass}" data-period="${periodStyle}"></button>`;
+        });
+
+        // Jalankan Carousel Roadmap setelah data masuk
+        new RoadmapCarousel();
+    }
+
+    // Helper: Ubah enter (\n) jadi <br>
+    function nl2br(str) {
+        return str ? str.replace(/(?:\r\n|\r|\n)/g, '<br>') : '';
+    }
+        /* ========================================= */
+        /* 3. INISIALISASI & FETCH DATA              */
+        /* ========================================= */
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Jalankan Research Focus (Slider Bawah)
+            new ResearchFocusCarousel();
+
+            // 2. Jalankan Roadmap (Ambil Data Dulu)
+            loadRoadmapData();
+        });
+
+        function loadRoadmapData() {
+            // Ganti path ini jika perlu
+            const apiUrl = '../admin/api/roadmap.php';
+
+            console.log("Memulai fetch data dari:", apiUrl);
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(res => {
+                    if (res.success) {
+                        renderRoadmap(res.data);
+                    } else {
+                        console.error('API Error:', res.message);
+                        document.getElementById('roadmapTrack').innerHTML = `<p class="text-center text-muted">Gagal: ${res.message}</p>`;
+                    }
+                })
+                .catch(err => {
+                    console.error('Fetch Error:', err);
+                    const track = document.getElementById('roadmapTrack');
+                    if (track) {
+                        track.innerHTML = `<div class="alert alert-danger text-center">Gagal memuat data.<br><small>${err}</small></div>`;
+                    }
+                });
+        }
+
+        function renderRoadmap(data) {
+            const track = document.getElementById('roadmapTrack');
+            const indicatorsContainer = document.getElementById('roadmapIndicators');
+
+            // HAPUS LOADING SPINNER
+            track.innerHTML = '';
+            indicatorsContainer.innerHTML = '';
+
+            if (data.length === 0) {
+                track.innerHTML = '<p class="text-center text-muted">Belum ada data roadmap.</p>';
+                return;
             }
+
+            const periods = ['short', 'medium', 'long'];
+
+            data.forEach((item, index) => {
+                const periodStyle = periods[index % periods.length];
+                const activeClass = index === 0 ? 'active' : '';
+
+                // Render Kartu
+                const cardHtml = `
+                <div class="roadmap-card main-card ${activeClass}" data-period="${periodStyle}">
+                    <div class="roadmap-header">
+                        <span class="dot-indicator"></span>
+                        <h4 class="term-title">${item.judul} <small class="text-muted ms-1" style="font-size: 0.8em;">(${item.tahun})</small></h4>
+                    </div>
+                    <hr class="roadmap-divider">
+                    <div class="roadmap-content">
+                        <div class="mb-0 roadmap-desc">
+                            ${nl2br(item.deskripsi)} 
+                        </div>
+                    </div>
+                </div>
+            `;
+                track.innerHTML += cardHtml;
+
+                // Render Indikator
+                const indicatorHtml = `<button class="indicator ${activeClass}" data-period="${periodStyle}"></button>`;
+                indicatorsContainer.innerHTML += indicatorHtml;
+            });
+
+            // Jalankan Carousel Roadmap setelah data masuk
+            try {
+                new RoadmapCarousel();
+            } catch (e) {
+                console.error("Gagal menjalankan Roadmap Carousel:", e);
+            }
+        }
+
+        function nl2br(str) {
+            return str ? str.replace(/(?:\r\n|\r|\n)/g, '<br>') : '';
         }
 
         /* ========================================= */
@@ -1346,7 +1389,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
             // Initialize navigation components
             new SectionNavigation();
-                // new NavbarScrollBehavior();
+            // new NavbarScrollBehavior();
             new CompactNavbar();
 
             console.log('All JavaScript components initialized successfully');
@@ -1357,7 +1400,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
         /* ========================================= */
         if (!('scrollBehavior' in document.documentElement.style)) {
             document.querySelectorAll('.section-nav-link').forEach(link => {
-                link.addEventListener('click', function (e) {
+                link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const targetId = this.getAttribute('href').substring(1);
                     const targetSection = document.getElementById(targetId);
@@ -1378,151 +1421,150 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
         /* ========================================= */
         /* MOBILE PAGINATION LOGIC                   */
         /* ========================================= */
-            document.addEventListener('DOMContentLoaded', function() {
-        const gridContainer = document.querySelector('.mobile-researcher-grid');
-        const cards = document.querySelectorAll('.mobile-researcher-grid .res-card');
-        const paginationContainer = document.getElementById('mobilePagination');
-        
-        let currentPage = 1;
-        let itemsPerPage = 3; 
-        let totalPages = 1;
-        let isAnimating = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            const gridContainer = document.querySelector('.mobile-researcher-grid');
+            const cards = document.querySelectorAll('.mobile-researcher-grid .res-card');
+            const paginationContainer = document.getElementById('mobilePagination');
 
-        function updateConfig() {
-            const width = window.innerWidth;
-            if (width <= 576) {
-                itemsPerPage = 2; // HP: 2 Kartu
-            } else {
-                itemsPerPage = 3; // Tablet: 3 Kartu
-            }
-            
-            totalPages = Math.ceil(cards.length / itemsPerPage);
-            if (currentPage > totalPages) currentPage = 1;
-            
-            renderPagination();
-            // Load awal langsung tanpa animasi exit, tapi tetap stagger masuk
-            swapCards(currentPage, true); 
-        }
+            let currentPage = 1;
+            let itemsPerPage = 3;
+            let totalPages = 1;
+            let isAnimating = false;
 
-        // FUNGSI UTAMA: EXIT -> SWAP -> STAGGER ENTER
-        function showPage(page) {
-            if (isAnimating) return;
-            isAnimating = true;
-
-            // 1. Fase Exit: Container menghilang (Fade Out)
-            gridContainer.classList.add('is-exiting');
-
-            // 2. Tunggu 200ms (sesuai CSS transition opacity)
-            setTimeout(() => {
-                
-                // 3. Fase Swap & Enter
-                swapCards(page, true); // true = aktifkan animasi masuk
-                
-                // Kembalikan Opacity Container
-                gridContainer.classList.remove('is-exiting');
-
-                // Kunci animasi sebentar sampai efek selesai semua
-                setTimeout(() => {
-                    isAnimating = false;
-                }, 600); // Buffer aman
-
-            }, 200);
-        }
-
-        function swapCards(page, triggerAnimation = false) {
-            const start = (page - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            
-            let visibleIndex = 0; // Counter untuk urutan animasi (0, 1, 2...)
-
-            cards.forEach((card, index) => {
-                // Reset animasi lama dulu
-                card.classList.remove('card-animate-enter');
-                card.style.animationDelay = '0s';
-                card.style.opacity = ''; // Reset opacity inline
-
-                if (index >= start && index < end) {
-                    card.style.display = 'flex';
-                    
-                    if (triggerAnimation) {
-                        // Trik Force Reflow agar animasi bisa restart
-                        void card.offsetWidth; 
-                        
-                        // Tambah class animasi
-                        card.classList.add('card-animate-enter');
-                        
-                        // LOGIKA "KIRI KE KANAN":
-                        // Beri delay bertingkat: 0ms, 100ms, 200ms...
-                        card.style.animationDelay = `${visibleIndex * 0.1}s`;
-                        visibleIndex++;
-                    }
+            function updateConfig() {
+                const width = window.innerWidth;
+                if (width <= 576) {
+                    itemsPerPage = 2; // HP: 2 Kartu
                 } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        // --- Bagian Pagination (Tetap Sama) ---
-        function renderPagination() {
-            paginationContainer.innerHTML = ''; 
-            if (totalPages > 1) {
-                // Prev
-                const prevBtn = createBtn('<i class="fas fa-chevron-left"></i>', () => {
-                    let nextPage = currentPage > 1 ? currentPage - 1 : totalPages;
-                    changePage(nextPage);
-                });
-                paginationContainer.appendChild(prevBtn);
-
-                // Angka
-                for (let i = 1; i <= totalPages; i++) {
-                    const link = createBtn(i, () => changePage(i));
-                    if (i === currentPage) link.classList.add('active');
-                    paginationContainer.appendChild(link);
+                    itemsPerPage = 3; // Tablet: 3 Kartu
                 }
 
-                // Next
-                const nextBtn = createBtn('<i class="fas fa-chevron-right"></i>', () => {
-                    let nextPage = currentPage < totalPages ? currentPage + 1 : 1;
-                    changePage(nextPage);
-                });
-                paginationContainer.appendChild(nextBtn);
-            }
-        }
+                totalPages = Math.ceil(cards.length / itemsPerPage);
+                if (currentPage > totalPages) currentPage = 1;
 
-        function createBtn(content, onClick) {
-            const btn = document.createElement('a');
-            btn.href = 'javascript:void(0)';
-            btn.className = 'page-link-custom';
-            btn.innerHTML = content;
-            btn.addEventListener('click', onClick);
-            return btn;
-        }
-
-        function changePage(newPage) {
-            if (newPage !== currentPage) {
-                currentPage = newPage;
-                showPage(currentPage);
                 renderPagination();
+                // Load awal langsung tanpa animasi exit, tapi tetap stagger masuk
+                swapCards(currentPage, true);
             }
-        }
 
-        updateConfig();
+            // FUNGSI UTAMA: EXIT -> SWAP -> STAGGER ENTER
+            function showPage(page) {
+                if (isAnimating) return;
+                isAnimating = true;
 
-        window.addEventListener('resize', () => {
-            clearTimeout(window.resizeTimer);
-            window.resizeTimer = setTimeout(updateConfig, 100);
+                // 1. Fase Exit: Container menghilang (Fade Out)
+                gridContainer.classList.add('is-exiting');
+
+                // 2. Tunggu 200ms (sesuai CSS transition opacity)
+                setTimeout(() => {
+
+                    // 3. Fase Swap & Enter
+                    swapCards(page, true); // true = aktifkan animasi masuk
+
+                    // Kembalikan Opacity Container
+                    gridContainer.classList.remove('is-exiting');
+
+                    // Kunci animasi sebentar sampai efek selesai semua
+                    setTimeout(() => {
+                        isAnimating = false;
+                    }, 600); // Buffer aman
+
+                }, 200);
+            }
+
+            function swapCards(page, triggerAnimation = false) {
+                const start = (page - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+
+                let visibleIndex = 0; // Counter untuk urutan animasi (0, 1, 2...)
+
+                cards.forEach((card, index) => {
+                    // Reset animasi lama dulu
+                    card.classList.remove('card-animate-enter');
+                    card.style.animationDelay = '0s';
+                    card.style.opacity = ''; // Reset opacity inline
+
+                    if (index >= start && index < end) {
+                        card.style.display = 'flex';
+
+                        if (triggerAnimation) {
+                            // Trik Force Reflow agar animasi bisa restart
+                            void card.offsetWidth;
+
+                            // Tambah class animasi
+                            card.classList.add('card-animate-enter');
+
+                            // LOGIKA "KIRI KE KANAN":
+                            // Beri delay bertingkat: 0ms, 100ms, 200ms...
+                            card.style.animationDelay = `${visibleIndex * 0.1}s`;
+                            visibleIndex++;
+                        }
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            // --- Bagian Pagination (Tetap Sama) ---
+            function renderPagination() {
+                paginationContainer.innerHTML = '';
+                if (totalPages > 1) {
+                    // Prev
+                    const prevBtn = createBtn('<i class="fas fa-chevron-left"></i>', () => {
+                        let nextPage = currentPage > 1 ? currentPage - 1 : totalPages;
+                        changePage(nextPage);
+                    });
+                    paginationContainer.appendChild(prevBtn);
+
+                    // Angka
+                    for (let i = 1; i <= totalPages; i++) {
+                        const link = createBtn(i, () => changePage(i));
+                        if (i === currentPage) link.classList.add('active');
+                        paginationContainer.appendChild(link);
+                    }
+
+                    // Next
+                    const nextBtn = createBtn('<i class="fas fa-chevron-right"></i>', () => {
+                        let nextPage = currentPage < totalPages ? currentPage + 1 : 1;
+                        changePage(nextPage);
+                    });
+                    paginationContainer.appendChild(nextBtn);
+                }
+            }
+
+            function createBtn(content, onClick) {
+                const btn = document.createElement('a');
+                btn.href = 'javascript:void(0)';
+                btn.className = 'page-link-custom';
+                btn.innerHTML = content;
+                btn.addEventListener('click', onClick);
+                return btn;
+            }
+
+            function changePage(newPage) {
+                if (newPage !== currentPage) {
+                    currentPage = newPage;
+                    showPage(currentPage);
+                    renderPagination();
+                }
+            }
+
+            updateConfig();
+
+            window.addEventListener('resize', () => {
+                clearTimeout(window.resizeTimer);
+                window.resizeTimer = setTimeout(updateConfig, 100);
+            });
         });
-    });
     </script>
 
     <script>
-        
-    // --- 0. NAV MENU LOGIC (HAMBURGER) ---
+        // --- 0. NAV MENU LOGIC (HAMBURGER) ---
         function toggleMenu() {
             const navMenu = document.getElementById('navMenu');
             const hamburgerIcon = document.querySelector('.hamburger i');
             navMenu.classList.toggle('active');
-            
+
             if (navMenu.classList.contains('active')) {
                 hamburgerIcon.classList.remove('fa-bars');
                 hamburgerIcon.classList.add('fa-times');
@@ -1536,19 +1578,19 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
         // const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
         function toggleMenu() {
-    const navMenu = document.getElementById('navMenu');
-    const icon = document.querySelector('.hamburger i');
+            const navMenu = document.getElementById('navMenu');
+            const icon = document.querySelector('.hamburger i');
 
-    navMenu.classList.toggle('active');
+            navMenu.classList.toggle('active');
 
-    if (navMenu.classList.contains('active')) {
-        icon.classList.remove('fa-bars');
-        icon.classList.add('fa-times');
-    } else {
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
-    }
-}
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
     </script>
 </body>
 
