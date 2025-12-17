@@ -54,6 +54,44 @@ function renderGalleryItem($item) {
         </div>
     </div>';
 }
+
+// --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
+// Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
+// Gunakan __DIR__ agar path relatifnya aman
+$dbPath = __DIR__ . '/../admin/config/database.php';
+
+if (file_exists($dbPath)) {
+    require_once $dbPath;
+} else {
+    // Fallback jika path beda
+    $dbPathAlternative = $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php';
+    if (file_exists($dbPathAlternative)) {
+        require_once $dbPathAlternative;
+    } else {
+        die("Error: Config database tidak ditemukan. Cek path file.");
+    }
+}
+
+$db = (new Database())->getConnection();
+
+// Logika User Session
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+
+// --- 2. AMBIL DATA SETTING (Logo & Maskot) ---
+$logoSrc = '../assets/images/logo.png';
+$maskotSrc = '../assets/img/MaskotLab.png';
+
+try {
+    $stmt = $db->query("SELECT key, file_path FROM settings WHERE key IN ('logo', 'maskot')");
+    $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    if (!empty($settings['logo'])) $logoSrc = '../admin/' . $settings['logo'];
+    if (!empty($settings['maskot'])) $maskotSrc = '../admin/' . $settings['maskot'];
+} catch (Exception $e) { /* Ignore */
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -73,7 +111,7 @@ function renderGalleryItem($item) {
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="../assets/images/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
                 <div class="lab-name">Laboratorium Business Analytics</div>

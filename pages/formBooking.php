@@ -25,6 +25,44 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 // Role default jika tidak ada session
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+
+// --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
+// Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
+// Gunakan __DIR__ agar path relatifnya aman
+$dbPath = __DIR__ . '/../admin/config/database.php';
+
+if (file_exists($dbPath)) {
+    require_once $dbPath;
+} else {
+    // Fallback jika path beda
+    $dbPathAlternative = $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php';
+    if (file_exists($dbPathAlternative)) {
+        require_once $dbPathAlternative;
+    } else {
+        die("Error: Config database tidak ditemukan. Cek path file.");
+    }
+}
+
+$db = (new Database())->getConnection();
+
+// Logika User Session
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+
+// --- 2. AMBIL DATA SETTING (Logo & Maskot) ---
+$logoSrc = '../assets/images/logo.png';
+$maskotSrc = '../assets/img/MaskotLab.png';
+
+try {
+    $stmt = $db->query("SELECT key, file_path FROM settings WHERE key IN ('logo', 'maskot')");
+    $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    if (!empty($settings['logo'])) $logoSrc = '../admin/' . $settings['logo'];
+    if (!empty($settings['maskot'])) $maskotSrc = '../admin/' . $settings['maskot'];
+} catch (Exception $e) { /* Ignore */
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -45,7 +83,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
                 <div class="lab-name">Laboratorium Business Analytics</div>
@@ -173,12 +211,11 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                                 <option selected disabled value="">Pilih status</option>
                                 <option value="Mahasiswa">Mahasiswa</option>
                                 <option value="Dosen">Dosen</option>
-                                <option value="Umum">Umum</option>
                             </select>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="nim-nip" class="form-label">NIM/NIP/Instansi</label>
+                            <label for="nim-nip" class="form-label">NIM/NIP</label>
                             <input type="text" class="form-control" id="nim-nip" name="nomor_identitas" placeholder="Masukkan NIM/NIP/Instansi" required>
                         </div>
                         
@@ -189,7 +226,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                         
                         <div class="mb-3">
                             <label for="phone" class="form-label">No. Handphone</label>
-                            <input type="tel" class="form-control" id="phone" name="no_handphone" placeholder="Masukkan nomor handphone" required>
+                            <input type="tel" class="form-control" id="phone" name="no_hp" placeholder="Masukkan nomor handphone" required>
                         </div>
                         
                         <div class="mb-3">
@@ -343,7 +380,7 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 // Redirect ke Dashboard User (jika ada) atau kembali ke beranda
-                                window.location.href = '../admin/index.php'; 
+                                window.location.href = '../index.php'; 
                             }
                         });
                     } else {
