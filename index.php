@@ -764,7 +764,7 @@ function formatTanggalIndo($tanggal) {
             <div class="row mt-4">
                 <div class="col-md-4 mb-4">
                     <div class="card card-preview-profile bg-dark text-white overflow-hidden shadow">
-                        <img src="./assets/img/untitled.jpeg" class="card-bg-img" alt="Publikasi">
+                        <img src="./admin/uploads/index/speaker.jpeg" class="card-bg-img" alt="Publikasi">
                         <div class="card-img-overlay d-flex flex-column justify-content-end p-4">
                             <h5 class="card-title fw-bold mb-1">Publikasi</h5>
                             <h6 class="card-subtitle mb-2 text-white">Photo About Lab</h6>
@@ -787,7 +787,7 @@ function formatTanggalIndo($tanggal) {
 
                 <div class="col-md-4 mb-4">
                     <div class="card card-preview-profile bg-dark text-white overflow-hidden shadow">
-                        <img src="./assets/img/untitled.jpeg" class="card-bg-img" alt="Peninjarman Lab">
+                        <img src="./admin/uploads/index/speaker.jpeg" class="card-bg-img" alt="Peninjarman Lab">
                         <div class="card-img-overlay d-flex flex-column justify-content-end p-4">
                             <h5 class="card-title fw-bold mb-1">Peminjaman Lab</h5>
                             <h6 class="card-subtitle mb-2 text-white">Laboratory Borrowing</h6>
@@ -809,7 +809,7 @@ function formatTanggalIndo($tanggal) {
 
                 <div class="col-md-4 mb-4">
                     <div class="card card-preview-profile bg-dark text-white overflow-hidden shadow">
-                        <img src="./assets/img/untitled.jpeg" class="card-bg-img" alt="Berita">
+                        <img src="./admin/uploads/index/speaker.jpeg" class="card-bg-img" alt="Berita">
                         <div class="card-img-overlay d-flex flex-column justify-content-end p-4">
                             <h5 class="card-title fw-bold mb-1">Publikasi</h5>
                             <h6 class="card-subtitle mb-2 text-white">News Input Service</h6>
