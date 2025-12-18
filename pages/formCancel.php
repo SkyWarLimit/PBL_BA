@@ -1,16 +1,25 @@
 <?php
 // =================================================================
-// 1. SYSTEM DEBUGGING & ANTI-CRASH
+// 1. SESSION START (WAJIB PALING ATAS)
+// =================================================================
+session_start();
+
+// 2. Cek Login (Sekarang session sudah terbaca, jadi aman)
+if (!isset($_SESSION['user_id'])) {
+    echo "<script>alert('Silakan login terlebih dahulu!'); window.location.href='../admin/login.php';</script>";
+    exit;
+}
+
+// =================================================================
+// 3. SYSTEM DEBUGGING & ANTI-CRASH
 // =================================================================
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 try {
-    session_start();
-
     // =================================================================
-    // 2. KONEKSI DATABASE
+    // 4. KONEKSI DATABASE
     // =================================================================
     $dbPath = __DIR__ . '/../admin/config/database.php';
 
@@ -35,41 +44,34 @@ try {
     }
 
     // =================================================================
-    // 3. LOGIKA UTAMA
+    // 5. LOGIKA UTAMA
     // =================================================================
-
-    // Cek Login
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ../admin/login.php");
-        exit;
-    }
 
     $userId = $_SESSION['user_id'];
     $userName = $_SESSION['nama'] ?? 'User';
     $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+    $isLoggedIn = true; // Flag untuk HTML
 
-    // --- QUERY DIPERBAIKI DI SINI (PostgreSQL Friendly) ---
-    // 1. Menggunakan 'p.nomor_identitas' sesuai database
-    // 2. Mengubah 'request_pembatalan = 0' menjadi 'IS FALSE' agar tidak error tipe data
+    // --- QUERY DATA BOOKING AKTIF ---
     $sqlActive = "SELECT p.id_peminjaman, p.tujuan, p.tanggal_peminjaman, 
-                         dp.waktu_mulai, dp.waktu_selesai, 
-                         u.nama, u.email, 
-                         p.nomor_identitas AS nim_nip,
-                         p.no_hp, p.asal_instansi, p.kategori_pemohon
-                  FROM peminjaman p
-                  JOIN detail_peminjaman dp ON p.id_peminjaman = dp.id_peminjaman
-                  JOIN users u ON p.id_user = u.id_user
-                  WHERE p.id_user = ? 
-                  AND p.status IN ('Pending', 'Approved', 'Confirmed') 
-                  AND (p.request_pembatalan IS NULL OR p.request_pembatalan IS FALSE) -- PERBAIKAN: Gunakan IS FALSE
-                  ORDER BY p.created_at DESC";
+                          dp.waktu_mulai, dp.waktu_selesai, 
+                          u.nama, u.email, 
+                          p.nomor_identitas AS nim_nip,
+                          p.no_hp, p.asal_instansi, p.kategori_pemohon
+                   FROM peminjaman p
+                   JOIN detail_peminjaman dp ON p.id_peminjaman = dp.id_peminjaman
+                   JOIN users u ON p.id_user = u.id_user
+                   WHERE p.id_user = ? 
+                   AND p.status IN ('Pending', 'Approved', 'Confirmed') 
+                   AND (p.request_pembatalan IS NULL OR p.request_pembatalan IS FALSE)
+                   ORDER BY p.created_at DESC";
 
     $stmt = $db->prepare($sqlActive);
     $stmt->execute([$userId]);
     $activeBookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $count = count($activeBookings);
 
-    // Logic Tampilan
+    // Logic Tampilan (Auto Redirect / Select Option)
     $jsAction = 'none';
     $targetId = null;
     $bookingData = [];
@@ -90,6 +92,7 @@ try {
         if ($count === 0) {
             $jsAction = 'show_empty';
         } elseif ($count === 1) {
+            // Jika cuma ada 1 booking, langsung redirect ke formnya
             header("Location: formCancel.php?id=" . $activeBookings[0]['id_peminjaman']);
             exit;
         } else {
@@ -97,33 +100,34 @@ try {
         }
     }
 
-    // --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
+    // --- 6. AMBIL DATA SETTING (Logo & Nama Lab) ---
     $logoSrc = '../assets/images/logo.png';
     $namaLabText = 'Laboratorium Business Analytics'; // Default text
 
     try {
-        // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
+        // Ambil kolom 'value' (teks) DAN 'file_path' (gambar)
         $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
         $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
+        // Mapping array
         $settings = [];
         foreach ($resultRaw as $row) {
             $settings[$row['key']] = $row;
         }
 
-        // 1. Set Logo (Ambil dari kolom file_path)
+        // 1. Set Logo
         if (!empty($settings['logo']['file_path'])) {
             $logoSrc = '../admin/' . $settings['logo']['file_path'];
         }
 
-        // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
+        // 2. Set Nama Lab
         if (!empty($settings['nama_lab']['value'])) {
             $namaLabText = $settings['nama_lab']['value'];
         }
     } catch (Exception $e) {
-        /* Ignore error agar web tetap jalan pakai default */
+        /* Ignore error setting */
     }
+
 } catch (Throwable $e) {
     die('<div style="background:#f8d7da; padding:20px; font-family:sans-serif; border:1px solid #f5c6cb; margin:20px;">
             <h3>Error Sistem:</h3>
@@ -138,7 +142,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Pembatalan - Lab Business Analytics</title>
+    <title>Form Pembatalan - <?php echo htmlspecialchars($namaLabText); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -159,27 +163,96 @@ try {
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
+                  <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
-            <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
-            <ul class="nav-menu" id="navMenu">
-                <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
-                <li class="nav-item"><a class="nav-link" href="booking.php">Booking</a></li>
-                <li class="nav-item desktop-user-action">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="text-end">
-                            <div class="user-name-label" style="font-weight:bold; font-size:0.9rem;"><?php echo htmlspecialchars($userName); ?></div>
-                            <div class="user-role-label" style="font-size:0.8rem; color:#ccc;"><?php echo htmlspecialchars($userRole); ?></div>
+        </div>
+
+        <div class="hamburger" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <ul class="nav-menu" id="navMenu">
+            <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
+            
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span>Publikasi</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="berita.php">Berita</a></li>
+                    <li><a class="dropdown-item" href="galeri.php">Gallery</a></li>
+                    <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span>Peminjaman Lab</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="infoPeminjaman.php">Informasi Laboratorium</a></li>
+                    <li><a class="dropdown-item" href="tableBooking.php">Table Peminjaman</a></li>
+                    <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
+            
+            <li class="nav-item mobile-auth-section">
+                <?php if ($isLoggedIn): ?>
+                    <div class="mobile-user-profile-modern">
+                        <div class="d-flex align-items-center gap-3 flex-grow-1">
+                            <div class="mobile-avatar-modern">
+                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128" alt="User Avatar">
+                            </div>
+                            <div class="mobile-info-modern">
+                                <span class="greeting-text">Halo,</span>
+                                <span class="username-text"><?php echo htmlspecialchars($userName); ?></span>
+                            </div>
                         </div>
-                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=40" class="rounded-circle">
+                        <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
                     </div>
-                </li>
-            </ul>
+                <?php else: ?>
+                    <div class="mobile-login-btn">
+                        <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                    </div>
+                <?php endif; ?>
+            </li>
+        </ul>
+        
+        <?php if ($isLoggedIn): ?>
+            <div class="desktop-user-action">
+                
+                <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
+                    <div class="text-end me-2">
+                        <div class="user-name-label"><?php echo htmlspecialchars($userName); ?></div>
+                        <div class="user-role-label"><?php echo htmlspecialchars($userRole); ?></div>
+                    </div>
+                    <div class="avatar-circle">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128" alt="User Avatar">
+                    </div>
+                </a>
+
+                <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+
+            </div>
+        <?php else: ?>
+            <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php endif; ?>
+
     </nav>
+
 
     <div class="container-fluid main-content">
         <div class="breadcrumb-container">
@@ -402,5 +475,4 @@ try {
         }
     </script>
 </body>
-
 </html>
