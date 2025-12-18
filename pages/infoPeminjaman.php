@@ -31,17 +31,33 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
-// --- 2. AMBIL DATA SETTING (Logo & Maskot) ---
+// --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
 $logoSrc = '../assets/images/logo.png';
-$maskotSrc = '../assets/img/MaskotLab.png';
+$namaLabText = 'Laboratorium Business Analytics'; // Default text
 
 try {
-    $stmt = $db->query("SELECT key, file_path FROM settings WHERE key IN ('logo', 'maskot')");
-    $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
+    $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
+    $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!empty($settings['logo'])) $logoSrc = '../admin/' . $settings['logo'];
-    if (!empty($settings['maskot'])) $maskotSrc = '../admin/' . $settings['maskot'];
-} catch (Exception $e) { /* Ignore */
+    // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
+    $settings = [];
+    foreach ($resultRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    // 1. Set Logo (Ambil dari kolom file_path)
+    if (!empty($settings['logo']['file_path'])) {
+        $logoSrc = '../admin/' . $settings['logo']['file_path'];
+    }
+
+    // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
+    if (!empty($settings['nama_lab']['value'])) {
+        $namaLabText = $settings['nama_lab']['value'];
+    }
+    
+} catch (Exception $e) { 
+    /* Ignore error agar web tetap jalan pakai default */
 }
 ?>
 
@@ -69,7 +85,7 @@ try {
                 <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
         </div>

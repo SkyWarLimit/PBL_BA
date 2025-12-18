@@ -31,19 +31,34 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
-// --- 2. AMBIL DATA SETTING (Logo & Maskot) ---
+// --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
 $logoSrc = '../assets/images/logo.png';
-$maskotSrc = '../assets/img/MaskotLab.png';
+$namaLabText = 'Laboratorium Business Analytics'; // Default text
 
 try {
-    $stmt = $db->query("SELECT key, file_path FROM settings WHERE key IN ('logo', 'maskot')");
-    $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
+    $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
+    $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!empty($settings['logo'])) $logoSrc = '../admin/' . $settings['logo'];
-    if (!empty($settings['maskot'])) $maskotSrc = '../admin/' . $settings['maskot'];
-} catch (Exception $e) { /* Ignore */
+    // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
+    $settings = [];
+    foreach ($resultRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    // 1. Set Logo (Ambil dari kolom file_path)
+    if (!empty($settings['logo']['file_path'])) {
+        $logoSrc = '../admin/' . $settings['logo']['file_path'];
+    }
+
+    // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
+    if (!empty($settings['nama_lab']['value'])) {
+        $namaLabText = $settings['nama_lab']['value'];
+    }
+    
+} catch (Exception $e) { 
+    /* Ignore error agar web tetap jalan pakai default */
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -53,11 +68,11 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input Berita - Laboratorium Business Analytics</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="../assets/css/newsInputServiceStyle.css?v=<?php echo time(); ?>">
 </head>
 
@@ -69,7 +84,7 @@ try {
                 <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
         </div>
@@ -81,7 +96,7 @@ try {
         <ul class="nav-menu" id="navMenu">
             <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
             <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
-            
+
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <span>Publikasi</span>
@@ -107,7 +122,7 @@ try {
             </li>
 
             <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
-            
+
             <li class="nav-item mobile-auth-section">
                 <?php if ($isLoggedIn): ?>
                     <div class="mobile-user-profile-modern">
@@ -131,7 +146,7 @@ try {
                 <?php endif; ?>
             </li>
         </ul>
-        
+
         <?php if ($isLoggedIn): ?>
             <div class="desktop-user-action">
                 <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
@@ -153,10 +168,10 @@ try {
         <?php endif; ?>
 
     </nav>
-    
+
     <div class="container-fluid news-input-container">
         <div class="row">
-            
+
             <div class="col-lg-8 order-2 order-lg-1">
                 <h1 class="news-input-title">News Input From Users</h1>
                 <p class="news-input-subtitle">enter the following content :</p>
@@ -164,10 +179,10 @@ try {
                 <form id="newsForm">
                     <div class="mb-3">
                         <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name" name="name" 
-                               value="<?php echo htmlspecialchars($userName); ?>" 
-                               <?php echo $isLoggedIn ? 'readonly style="background-color: #f1f5f9; cursor: not-allowed;"' : ''; ?> 
-                               placeholder="Nama User">
+                        <input type="text" class="form-control" id="name" name="name"
+                            value="<?php echo htmlspecialchars($userName); ?>"
+                            <?php echo $isLoggedIn ? 'readonly style="background-color: #f1f5f9; cursor: not-allowed;"' : ''; ?>
+                            placeholder="Nama User">
                     </div>
 
                     <div class="mb-3">
@@ -260,7 +275,7 @@ try {
             const navMenu = document.getElementById('navMenu');
             const hamburgerIcon = document.querySelector('.hamburger i');
             navMenu.classList.toggle('active');
-            
+
             if (navMenu.classList.contains('active')) {
                 hamburgerIcon.classList.remove('fa-bars');
                 hamburgerIcon.classList.add('fa-times');
@@ -329,7 +344,11 @@ try {
 
         function handleFile(file) {
             if (!file.type.startsWith('image/')) {
-                Swal.fire({ icon: 'error', title: 'File Tidak Valid', text: 'Format harus JPG, JPEG, atau PNG.' });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Tidak Valid',
+                    text: 'Format harus JPG, JPEG, atau PNG.'
+                });
                 return;
             }
             uploadedFile = file;
@@ -345,50 +364,79 @@ try {
         }
 
         removeAllImagesBtn.addEventListener('click', () => {
-            uploadedFile = null; fileInput.value = ''; imagesPreviewContainer.innerHTML = '';
-            uploadPlaceholder.style.display = 'flex'; imagesPreviewContainer.style.display = 'none'; uploadInfo.style.display = 'none';
+            uploadedFile = null;
+            fileInput.value = '';
+            imagesPreviewContainer.innerHTML = '';
+            uploadPlaceholder.style.display = 'flex';
+            imagesPreviewContainer.style.display = 'none';
+            uploadInfo.style.display = 'none';
         });
-        
+
         addMoreImagesBtn.addEventListener('click', () => fileInput.click());
 
         // --- 3. Logic Submit Form ---
         document.getElementById('newsForm').addEventListener('submit', function(e) {
             e.preventDefault();
             if (!uploadedFile) {
-                Swal.fire({ icon: 'warning', title: 'Foto Belum Ada', text: 'Sertakan minimal satu foto.' });
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Foto Belum Ada',
+                    text: 'Sertakan minimal satu foto.'
+                });
                 return;
             }
 
             const btn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
             const btnSpinner = document.getElementById('btnSpinner');
-            
-            btn.disabled = true; btnText.textContent = 'Sedang Mengirim...'; btnSpinner.classList.remove('d-none');
+
+            btn.disabled = true;
+            btnText.textContent = 'Sedang Mengirim...';
+            btnSpinner.classList.remove('d-none');
 
             const formData = new FormData();
-            formData.append('name', document.getElementById('name').value); 
+            formData.append('name', document.getElementById('name').value);
             formData.append('judul', document.getElementById('newsTitle').value);
             formData.append('kategori', document.getElementById('newsCategory').value);
             formData.append('deskripsi', document.getElementById('newsDescription').value);
             formData.append('tanggal', document.getElementById('newsDate').value);
-            formData.append('foto', uploadedFile); 
+            formData.append('foto', uploadedFile);
 
-            fetch('../admin/api/submit_news.php', { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.message }).then(() => {
-                        document.getElementById('newsForm').reset(); removeAllImagesBtn.click();
-                    });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
-                }
-            })
-            .catch(error => Swal.fire({ icon: 'error', title: 'Error', text: 'Kesalahan server.' }))
-            .finally(() => {
-                btn.disabled = false; btnText.textContent = 'Kirim Berita'; btnSpinner.classList.add('d-none');
-            });
+            fetch('../admin/api/submit_news.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: data.message
+                        }).then(() => {
+                            document.getElementById('newsForm').reset();
+                            removeAllImagesBtn.click();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: data.message
+                        });
+                    }
+                })
+                .catch(error => Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Kesalahan server.'
+                }))
+                .finally(() => {
+                    btn.disabled = false;
+                    btnText.textContent = 'Kirim Berita';
+                    btnSpinner.classList.add('d-none');
+                });
         });
     </script>
 </body>
+
 </html>

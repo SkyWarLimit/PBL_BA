@@ -31,11 +31,11 @@ $logoSrc = '../assets/images/logo.png';
 $maskotSrc = '../assets/img/MaskotLab.png';
 $maknaLogoText = 'Deskripsi makna logo belum diatur oleh admin.';
 $maknaMaskotText = 'Deskripsi makna maskot belum diatur oleh admin.';
-
+$namaLabText = 'Laboratorium Business Analytics'; // Default jika db kosong
 try {
-    // Ambil data berdasarkan key 'logo' dan 'maskot'
+    // Ambil data berdasarkan key 'logo', 'maskot', dan 'nama_lab'
     // Kita ambil 'value' (untuk deskripsi) dan 'file_path' (untuk gambar)
-    $sql = "SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'maskot')";
+    $sql = "SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'maskot', 'nama_lab')";
 
     $stmt = $db->query($sql);
     $settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -71,6 +71,10 @@ try {
             $maknaMaskotText = $settings['maskot']['value'];
         }
     }
+
+    if (!empty($settings['nama_lab']['value'])) {
+        $namaLabText = $settings['nama_lab']['value'];
+    }
 } catch (Exception $e) {
     // Silent fail
 }
@@ -79,7 +83,6 @@ try {
 $dosenList = [];
 try {
     // Query ini menggabungkan tabel dosen, user, dan anggota
-    // Menggunakan STRING_AGG (PostgreSQL) pengganti GROUP_CONCAT
     $sql = "SELECT 
                 d.id_dosen,
                 u.nama as nama_lengkap,
@@ -96,43 +99,25 @@ try {
                 -- Fallback ke kolom tabel induk
                 d.bidang_keahlian as keahlian_single,
                 
-                -- Ambil Link Scholar (Case Insensitive search 'scholar')
+                -- Ambil Link Scholar
                 (SELECT link_url FROM link_akademik_dosen WHERE id_dosen = d.id_dosen AND platform ILIKE '%scholar%' LIMIT 1) as link_scholar,
                 
-                -- Ambil Link Sinta (Case Insensitive search 'sinta')
+                -- Ambil Link Sinta
                 (SELECT link_url FROM link_akademik_dosen WHERE id_dosen = d.id_dosen AND platform ILIKE '%sinta%' LIMIT 1) as link_sinta
 
             FROM dosen d
             JOIN users u ON d.id_user = u.id_user
             JOIN anggota a ON d.id_dosen = a.id_dosen
             WHERE a.is_active = true
-            ORDER BY u.nama ASC";
+            
+            -- BAGIAN INI YANG DIUBAH:
+            ORDER BY d.id_dosen ASC";
 
     $stmt = $db->prepare($sql);
     $stmt->execute();
     $dosenList = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("Error fetching dosen: " . $e->getMessage());
-}
-
-try {
-    // Tambahkan 'visi' dan 'misi' ke dalam query IN clause
-    $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'maskot', 'visi', 'misi')");
-    $settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Convert ke array asosiatif biar gampang dipanggil
-    $settings = [];
-    foreach ($settingsRaw as $row) {
-        $settings[$row['key']] = $row;
-    }
-
-    if (!empty($settings['logo']['file_path'])) $logoSrc = '../admin/' . $settings['logo']['file_path'];
-    if (!empty($settings['maskot']['file_path'])) $maskotSrc = '../admin/' . $settings['maskot']['file_path'];
-
-    // Ambil value visi misi
-    if (!empty($settings['visi']['value'])) $visiText = $settings['visi']['value'];
-    if (!empty($settings['misi']['value'])) $misiText = $settings['misi']['value'];
-} catch (Exception $e) { /* Ignore */
 }
 ?>
 <!DOCTYPE html>
@@ -153,13 +138,15 @@ try {
 
 <body>
 
-    <nav class="sticky-navbar" id ="mainNavbar">
+    <nav class="sticky-navbar" id="mainNavbar">
         <div class="logo-container">
             <div class="logo">
                 <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-name">
+                    <?php echo htmlspecialchars($namaLabText); ?>
+                </div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
         </div>
@@ -596,350 +583,351 @@ try {
             </div>
         </div>
     </div>
-    </div>
     <div class="py-5"></div>
 
     <!-- Makna Logo & Maskot Section -->
-    <div class="container py-2"> <section class="researcher-section py-4" id="makna-logo-maskot">
-        <div class="container">
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h2 class="section-title mb-3">Makna Logo & Maskot</h2>
-                    <p class="section-description">
-                        Berikut adalah filosofi di balik identitas visual Laboratorium Business Analytics.
-                        Logo dan maskot kami merepresentasikan nilai-nilai inti dan visi kami dalam dunia analitik data.
-                    </p>
-                </div>
-            </div>
-
-            <div class="row align-items-stretch">
-                <div class="col-lg-6 mb-4 mb-lg-0">
-                    <div class="logo-section h-100">
-                        <div class="symbol-preview-large mb-4 text-center">
-                            <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Logo" class="img-fluid" style="max-height: 200px; object-fit: contain;">
-                        </div>
-                        <h3 class="symbol-title mb-3">Makna Logo</h3>
-                        <div class="symbol-content mb-4">
-                            <div class="symbol-description">
-                                <?php echo nl2br(htmlspecialchars($maknaLogoText)); ?>
-                            </div>
-                        </div>
-                        <div class="mt-auto">
-                            <a href="maknaLogo.html" class="btn-read-more">Read More</a>
-                        </div>
+    <div class="container py-2">
+        <section class="researcher-section py-4" id="makna-logo-maskot">
+            <div class="container">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h2 class="section-title mb-3">Makna Logo & Maskot</h2>
+                        <p class="section-description">
+                            Berikut adalah filosofi di balik identitas visual Laboratorium Business Analytics.
+                            Logo dan maskot kami merepresentasikan nilai-nilai inti dan visi kami dalam dunia analitik data.
+                        </p>
                     </div>
                 </div>
 
-                <div class="col-lg-6">
-                    <div class="mascot-section h-100">
-                        <div class="symbol-preview-large mb-4 text-center">
-                            <img src="<?php echo htmlspecialchars($maskotSrc); ?>" alt="Maskot" class="img-fluid" style="max-height: 200px; object-fit: contain;">
-                        </div>
-                        <h3 class="symbol-title mb-3">Makna Maskot</h3>
-                        <div class="symbol-content mb-4">
-                            <div class="symbol-description">
-                                <?php echo nl2br(htmlspecialchars($maknaMaskotText)); ?>
+                <div class="row align-items-stretch">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <div class="logo-section h-100">
+                            <div class="symbol-preview-large mb-4 text-center">
+                                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Logo" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                            </div>
+                            <h3 class="symbol-title mb-3">Makna Logo</h3>
+                            <div class="symbol-content mb-4">
+                                <div class="symbol-description">
+                                    <?php echo nl2br(htmlspecialchars($maknaLogoText)); ?>
+                                </div>
+                            </div>
+                            <div class="mt-auto">
+                                <a href="maknaLogo.html" class="btn-read-more">Read More</a>
                             </div>
                         </div>
-                        <div class="mt-auto">
-                            <a href="maknaMaskot.html" class="btn-read-more">Read More</a>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="mascot-section h-100">
+                            <div class="symbol-preview-large mb-4 text-center">
+                                <img src="<?php echo htmlspecialchars($maskotSrc); ?>" alt="Maskot" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                            </div>
+                            <h3 class="symbol-title mb-3">Makna Maskot</h3>
+                            <div class="symbol-content mb-4">
+                                <div class="symbol-description">
+                                    <?php echo nl2br(htmlspecialchars($maknaMaskotText)); ?>
+                                </div>
+                            </div>
+                            <div class="mt-auto">
+                                <a href="maknaMaskot.html" class="btn-read-more">Read More</a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-</div>
+        </section>
+    </div>
 
     <div class="py-5"></div>
 
     <!-- research focus -->
-    <div class="container py-2"> <section class="researcher-section py-4" id="research-focus">
-        <div class="container">
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h2 class="section-title mb-3">Research Focus</h2>
-                    <p class="section-description">
-                        Berikut adalah fokus penelitian utama di Laboratorium Business Analytics, 
-                        mencakup pengembangan platform data hingga penerapan machine learning.
-                    </p>
-                </div>
-            </div>
-
-            <section class="profile-carousel-section">
-                <div class="custom-container-relative">
-                    <div class="gray-backdrop-box">
-                        <img id="backdrop-image" 
-                             src="assets/img/default-research.jpg" 
-                             alt="Research Background" 
-                             class="backdrop-img-content"
-                             onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+    <div class="container py-2">
+        <section class="researcher-section py-4" id="research-focus">
+            <div class="container">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h2 class="section-title mb-3">Research Focus</h2>
+                        <p class="section-description">
+                            Berikut adalah fokus penelitian utama di Laboratorium Business Analytics,
+                            mencakup pengembangan platform data hingga penerapan machine learning.
+                        </p>
                     </div>
+                </div>
 
-                    <div class="carousel-wrapper">
-                        <div class="carousel-track" id="track">
-                            <div class="text-center w-100 mt-5 text-white">
-                                <div class="spinner-border" role="status"></div>
+                <section class="profile-carousel-section">
+                    <div class="custom-container-relative">
+                        <div class="gray-backdrop-box">
+                            <img id="backdrop-image"
+                                src="assets/img/default-research.jpg"
+                                alt="Research Background"
+                                class="backdrop-img-content"
+                                onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+                        </div>
+
+                        <div class="carousel-wrapper">
+                            <div class="carousel-track" id="track">
+                                <div class="text-center w-100 mt-5 text-white">
+                                    <div class="spinner-border" role="status"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="carousel-nav">
-                        <button class="nav-btn prev-btn" id="prevBtn">
-                            <i class="fa fa-arrow-left"></i>
-                        </button>
-                        <button class="nav-btn next-btn" id="nextBtn">
-                            <i class="fa fa-arrow-right"></i>
-                        </button>
+                        <div class="carousel-nav">
+                            <button class="nav-btn prev-btn" id="prevBtn">
+                                <i class="fa fa-arrow-left"></i>
+                            </button>
+                            <button class="nav-btn next-btn" id="nextBtn">
+                                <i class="fa fa-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </section>
-        </div>
-    </section>
+                </section>
+            </div>
+        </section>
     </div>
     </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    /* ========================================= */
-    /* 1. ROADMAP CAROUSEL CLASS                 */
-    /* ========================================= */
-    class RoadmapCarousel {
-        constructor() {
-            this.cards = document.querySelectorAll('.roadmap-card');
-            this.indicators = document.querySelectorAll('.indicator');
-            this.track = document.querySelector('.roadmap-track');
-            this.currentIndex = 0;
-            this.totalCards = this.cards.length;
-            this.autoSlideInterval = null;
-            this.slideDuration = 3000; 
-
-            // Cek elemen ada sebelum jalan
-            if (this.cards.length > 0 && this.track) {
-                this.init();
-            }
-        }
-
-        init() {
-            this.updateCardPositions();
-            this.startAutoSlide();
-
-            this.indicators.forEach((indicator, index) => {
-                indicator.addEventListener('click', () => {
-                    this.goToSlide(index);
-                });
-            });
-
-            if (this.track) {
-                this.track.addEventListener('mouseenter', () => this.stopAutoSlide());
-                this.track.addEventListener('mouseleave', () => this.startAutoSlide());
-            }
-        }
-
-        updateCardPositions() {
-            this.cards.forEach((card, index) => {
-                card.classList.remove('active', 'prev', 'next');
-                if (index === this.currentIndex) {
-                    card.classList.add('active');
-                } else if (index === (this.currentIndex + 1) % this.totalCards) {
-                    card.classList.add('next');
-                } else if (index === (this.currentIndex - 1 + this.totalCards) % this.totalCards) {
-                    card.classList.add('prev');
-                }
-            });
-
-            this.indicators.forEach((indicator, index) => {
-                indicator.classList.toggle('active', index === this.currentIndex);
-            });
-        }
-
-        nextSlide() {
-            this.currentIndex = (this.currentIndex + 1) % this.totalCards;
-            this.updateCardPositions();
-        }
-
-        goToSlide(index) {
-            this.currentIndex = index;
-            this.updateCardPositions();
-            this.restartAutoSlide();
-        }
-
-        startAutoSlide() {
-            this.stopAutoSlide();
-            this.autoSlideInterval = setInterval(() => this.nextSlide(), this.slideDuration);
-        }
-
-        stopAutoSlide() {
-            if (this.autoSlideInterval) {
-                clearInterval(this.autoSlideInterval);
+        /* ========================================= */
+        /* 1. ROADMAP CAROUSEL CLASS                 */
+        /* ========================================= */
+        class RoadmapCarousel {
+            constructor() {
+                this.cards = document.querySelectorAll('.roadmap-card');
+                this.indicators = document.querySelectorAll('.indicator');
+                this.track = document.querySelector('.roadmap-track');
+                this.currentIndex = 0;
+                this.totalCards = this.cards.length;
                 this.autoSlideInterval = null;
-            }
-        }
+                this.slideDuration = 3000;
 
-        restartAutoSlide() {
-            this.stopAutoSlide();
-            this.startAutoSlide();
-        }
-    }
-
-    /* ========================================= */
-    /* 2. RESEARCH FOCUS CAROUSEL CLASS          */
-    /* ========================================= */
-    class ResearchFocusCarousel {
-        constructor() {
-            this.track = document.getElementById('track');
-            this.prevBtn = document.getElementById('prevBtn');
-            this.nextBtn = document.getElementById('nextBtn');
-            this.backdropImage = document.getElementById('backdrop-image');
-            this.isAnimating = false;
-
-            // Pastikan track ada dan memiliki kartu di dalamnya
-            if (this.track && this.track.querySelectorAll('.custom-card').length > 0) {
-                this.init();
-            }
-        }
-
-        init() {
-            // Hapus event listener lama (cloning node) agar tidak double klik
-            const newNext = this.nextBtn.cloneNode(true);
-            const newPrev = this.prevBtn.cloneNode(true);
-            this.nextBtn.parentNode.replaceChild(newNext, this.nextBtn);
-            this.prevBtn.parentNode.replaceChild(newPrev, this.prevBtn);
-            this.nextBtn = newNext;
-            this.prevBtn = newPrev;
-
-            this.nextBtn.addEventListener('click', () => this.moveNext());
-            this.prevBtn.addEventListener('click', () => this.movePrev());
-            
-            this.updateActiveState();
-        }
-
-        getCards() {
-            return this.track.querySelectorAll('.custom-card');
-        }
-
-        updateActiveState() {
-            const cards = this.getCards();
-            cards.forEach(c => c.classList.remove('active'));
-
-            // Kartu pertama di DOM adalah yang aktif
-            const activeCard = cards[0];
-            if (activeCard) {
-                activeCard.classList.add('active');
-                
-                // Ganti Background sesuai data-bg-img kartu aktif
-                const newImageSrc = activeCard.getAttribute('data-bg-img');
-                if (this.backdropImage && newImageSrc) {
-                    this.backdropImage.classList.add('fade-out');
-                    setTimeout(() => {
-                        this.backdropImage.src = newImageSrc;
-                        this.backdropImage.classList.remove('fade-out');
-                    }, 300);
+                // Cek elemen ada sebelum jalan
+                if (this.cards.length > 0 && this.track) {
+                    this.init();
                 }
             }
+
+            init() {
+                this.updateCardPositions();
+                this.startAutoSlide();
+
+                this.indicators.forEach((indicator, index) => {
+                    indicator.addEventListener('click', () => {
+                        this.goToSlide(index);
+                    });
+                });
+
+                if (this.track) {
+                    this.track.addEventListener('mouseenter', () => this.stopAutoSlide());
+                    this.track.addEventListener('mouseleave', () => this.startAutoSlide());
+                }
+            }
+
+            updateCardPositions() {
+                this.cards.forEach((card, index) => {
+                    card.classList.remove('active', 'prev', 'next');
+                    if (index === this.currentIndex) {
+                        card.classList.add('active');
+                    } else if (index === (this.currentIndex + 1) % this.totalCards) {
+                        card.classList.add('next');
+                    } else if (index === (this.currentIndex - 1 + this.totalCards) % this.totalCards) {
+                        card.classList.add('prev');
+                    }
+                });
+
+                this.indicators.forEach((indicator, index) => {
+                    indicator.classList.toggle('active', index === this.currentIndex);
+                });
+            }
+
+            nextSlide() {
+                this.currentIndex = (this.currentIndex + 1) % this.totalCards;
+                this.updateCardPositions();
+            }
+
+            goToSlide(index) {
+                this.currentIndex = index;
+                this.updateCardPositions();
+                this.restartAutoSlide();
+            }
+
+            startAutoSlide() {
+                this.stopAutoSlide();
+                this.autoSlideInterval = setInterval(() => this.nextSlide(), this.slideDuration);
+            }
+
+            stopAutoSlide() {
+                if (this.autoSlideInterval) {
+                    clearInterval(this.autoSlideInterval);
+                    this.autoSlideInterval = null;
+                }
+            }
+
+            restartAutoSlide() {
+                this.stopAutoSlide();
+                this.startAutoSlide();
+            }
         }
 
-        moveNext() {
-            if (this.isAnimating) return;
-            this.isAnimating = true;
+        /* ========================================= */
+        /* 2. RESEARCH FOCUS CAROUSEL CLASS          */
+        /* ========================================= */
+        class ResearchFocusCarousel {
+            constructor() {
+                this.track = document.getElementById('track');
+                this.prevBtn = document.getElementById('prevBtn');
+                this.nextBtn = document.getElementById('nextBtn');
+                this.backdropImage = document.getElementById('backdrop-image');
+                this.isAnimating = false;
 
-            const cards = this.getCards();
-            if (cards.length === 0) return;
+                // Pastikan track ada dan memiliki kartu di dalamnya
+                if (this.track && this.track.querySelectorAll('.custom-card').length > 0) {
+                    this.init();
+                }
+            }
 
-            const cardWidth = cards[0].offsetWidth;
-            const gap = 24; // Sesuaikan dengan CSS gap: 1.5rem (24px)
-            const moveDistance = cardWidth + gap;
+            init() {
+                // Hapus event listener lama (cloning node) agar tidak double klik
+                const newNext = this.nextBtn.cloneNode(true);
+                const newPrev = this.prevBtn.cloneNode(true);
+                this.nextBtn.parentNode.replaceChild(newNext, this.nextBtn);
+                this.prevBtn.parentNode.replaceChild(newPrev, this.prevBtn);
+                this.nextBtn = newNext;
+                this.prevBtn = newPrev;
 
-            this.track.style.transition = 'transform 0.5s ease-in-out';
-            this.track.style.transform = `translateX(-${moveDistance}px)`;
+                this.nextBtn.addEventListener('click', () => this.moveNext());
+                this.prevBtn.addEventListener('click', () => this.movePrev());
 
-            setTimeout(() => {
+                this.updateActiveState();
+            }
+
+            getCards() {
+                return this.track.querySelectorAll('.custom-card');
+            }
+
+            updateActiveState() {
+                const cards = this.getCards();
+                cards.forEach(c => c.classList.remove('active'));
+
+                // Kartu pertama di DOM adalah yang aktif
+                const activeCard = cards[0];
+                if (activeCard) {
+                    activeCard.classList.add('active');
+
+                    // Ganti Background sesuai data-bg-img kartu aktif
+                    const newImageSrc = activeCard.getAttribute('data-bg-img');
+                    if (this.backdropImage && newImageSrc) {
+                        this.backdropImage.classList.add('fade-out');
+                        setTimeout(() => {
+                            this.backdropImage.src = newImageSrc;
+                            this.backdropImage.classList.remove('fade-out');
+                        }, 300);
+                    }
+                }
+            }
+
+            moveNext() {
+                if (this.isAnimating) return;
+                this.isAnimating = true;
+
+                const cards = this.getCards();
+                if (cards.length === 0) return;
+
+                const cardWidth = cards[0].offsetWidth;
+                const gap = 24; // Sesuaikan dengan CSS gap: 1.5rem (24px)
+                const moveDistance = cardWidth + gap;
+
+                this.track.style.transition = 'transform 0.5s ease-in-out';
+                this.track.style.transform = `translateX(-${moveDistance}px)`;
+
+                setTimeout(() => {
+                    this.track.style.transition = 'none';
+                    this.track.appendChild(cards[0]); // Pindah kartu pertama ke belakang
+                    this.track.style.transform = 'translateX(0)';
+                    this.updateActiveState();
+                    this.isAnimating = false;
+                }, 500);
+            }
+
+            movePrev() {
+                if (this.isAnimating) return;
+                this.isAnimating = true;
+
+                const cards = this.getCards();
+                if (cards.length === 0) return;
+
+                const lastCard = cards[cards.length - 1];
+                const cardWidth = cards[0].offsetWidth;
+                const gap = 24;
+                const moveDistance = cardWidth + gap;
+
                 this.track.style.transition = 'none';
-                this.track.appendChild(cards[0]); // Pindah kartu pertama ke belakang
+                this.track.prepend(lastCard); // Pindah kartu terakhir ke depan
+                this.track.style.transform = `translateX(-${moveDistance}px)`;
+
+                // Force Reflow
+                void this.track.offsetWidth;
+
+                this.track.style.transition = 'transform 0.5s ease-in-out';
                 this.track.style.transform = 'translateX(0)';
-                this.updateActiveState();
-                this.isAnimating = false;
-            }, 500);
+
+                setTimeout(() => {
+                    this.updateActiveState();
+                    this.isAnimating = false;
+                }, 500);
+            }
         }
 
-        movePrev() {
-            if (this.isAnimating) return;
-            this.isAnimating = true;
+        /* ========================================= */
+        /* 3. INISIALISASI & FETCH DATA (GABUNGAN)   */
+        /* ========================================= */
 
-            const cards = this.getCards();
-            if (cards.length === 0) return;
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRoadmapData();
+            loadResearchData();
+        });
 
-            const lastCard = cards[cards.length - 1];
-            const cardWidth = cards[0].offsetWidth;
-            const gap = 24;
-            const moveDistance = cardWidth + gap;
+        // --- A. LOAD RESEARCH FOCUS ---
+        function loadResearchData() {
+            const apiUrl = '../admin/api/research_focus.php';
+            const track = document.getElementById('track');
 
-            this.track.style.transition = 'none';
-            this.track.prepend(lastCard); // Pindah kartu terakhir ke depan
-            this.track.style.transform = `translateX(-${moveDistance}px)`;
-            
-            // Force Reflow
-            void this.track.offsetWidth;
-
-            this.track.style.transition = 'transform 0.5s ease-in-out';
-            this.track.style.transform = 'translateX(0)';
-
-            setTimeout(() => {
-                this.updateActiveState();
-                this.isAnimating = false;
-            }, 500);
-        }
-    }
-
-    /* ========================================= */
-    /* 3. INISIALISASI & FETCH DATA (GABUNGAN)   */
-    /* ========================================= */
-
-    document.addEventListener('DOMContentLoaded', function() {
-        loadRoadmapData();
-        loadResearchData();
-    });
-
-    // --- A. LOAD RESEARCH FOCUS ---
-    function loadResearchData() {
-        const apiUrl = '../admin/api/research_focus.php';
-        const track = document.getElementById('track');
-
-        fetch(apiUrl)
-            .then(res => {
-                if (!res.ok) throw new Error('Jaringan bermasalah / File tidak ditemukan');
-                return res.json();
-            })
-            .then(response => {
-                if(response.success) {
-                    renderResearch(response.data);
-                } else {
-                    console.error("API Research Error:", response.message);
-                    track.innerHTML = '<div class="text-white text-center py-5">Gagal memuat data research.</div>';
-                }
-            })
-            .catch(err => {
-                console.error("Fetch Research Error:", err);
-                if(track) track.innerHTML = '<div class="text-white text-center py-5">Koneksi Error: ' + err.message + '</div>';
-            });
-    }
-
-    function renderResearch(data) {
-        const track = document.getElementById('track');
-        track.innerHTML = ''; // Bersihkan spinner loading
-
-        if (data.length === 0) {
-            track.innerHTML = '<div class="text-white py-5">Belum ada data research.</div>';
-            return;
+            fetch(apiUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error('Jaringan bermasalah / File tidak ditemukan');
+                    return res.json();
+                })
+                .then(response => {
+                    if (response.success) {
+                        renderResearch(response.data);
+                    } else {
+                        console.error("API Research Error:", response.message);
+                        track.innerHTML = '<div class="text-white text-center py-5">Gagal memuat data research.</div>';
+                    }
+                })
+                .catch(err => {
+                    console.error("Fetch Research Error:", err);
+                    if (track) track.innerHTML = '<div class="text-white text-center py-5">Koneksi Error: ' + err.message + '</div>';
+                });
         }
 
-        data.forEach(item => {
-            // Path Gambar: Tambahkan 'admin/' di depan karena file index ada di root
-            // Fallback ke gambar default jika file_path kosong
-            const imgSrc = item.file_path ? `../admin/${item.file_path}` : 'assets/img/default.jpg';
-            
-            const cardHtml = `
+        function renderResearch(data) {
+            const track = document.getElementById('track');
+            track.innerHTML = ''; // Bersihkan spinner loading
+
+            if (data.length === 0) {
+                track.innerHTML = '<div class="text-white py-5">Belum ada data research.</div>';
+                return;
+            }
+
+            data.forEach(item => {
+                // Path Gambar: Tambahkan 'admin/' di depan karena file index ada di root
+                // Fallback ke gambar default jika file_path kosong
+                const imgSrc = item.file_path ? `../admin/${item.file_path}` : 'assets/img/default.jpg';
+
+                const cardHtml = `
                 <div class="custom-card" data-bg-img="${imgSrc}">
                     <div class="card-content">
                         <h3>${item.judul}</h3>
@@ -947,52 +935,52 @@ try {
                     </div>
                 </div>
             `;
-            track.innerHTML += cardHtml;
-        });
+                track.innerHTML += cardHtml;
+            });
 
-        // Set Background Awal (item pertama)
-        if (data.length > 0) {
-            const firstImg = data[0].file_path ? `../admin/${data[0].file_path}` : 'assets/img/default.jpg';
-            const backdrop = document.getElementById('backdrop-image');
-            if (backdrop) backdrop.src = firstImg;
+            // Set Background Awal (item pertama)
+            if (data.length > 0) {
+                const firstImg = data[0].file_path ? `../admin/${data[0].file_path}` : 'assets/img/default.jpg';
+                const backdrop = document.getElementById('backdrop-image');
+                if (backdrop) backdrop.src = firstImg;
+            }
+
+            // Jalankan Carousel Research setelah data masuk
+            new ResearchFocusCarousel();
         }
 
-        // Jalankan Carousel Research setelah data masuk
-        new ResearchFocusCarousel();
-    }
-
-    // --- B. LOAD ROADMAP ---
-    function loadRoadmapData() {
-        const apiUrl = 'admin/api/roadmap.php'; 
-        fetch(apiUrl) 
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) renderRoadmap(res.data);
-                else document.getElementById('roadmapTrack').innerHTML = `<p class="text-center text-muted">${res.message}</p>`;
-            })
-            .catch(err => console.error('Fetch Roadmap Error:', err));
-    }
-
-    function renderRoadmap(data) {
-        const track = document.getElementById('roadmapTrack');
-        const indicators = document.getElementById('roadmapIndicators');
-        
-        if(!track || !indicators) return;
-
-        track.innerHTML = '';
-        indicators.innerHTML = '';
-
-        if (data.length === 0) {
-            track.innerHTML = '<p class="text-center text-muted">Belum ada data roadmap.</p>';
-            return;
+        // --- B. LOAD ROADMAP ---
+        function loadRoadmapData() {
+            const apiUrl = 'admin/api/roadmap.php';
+            fetch(apiUrl)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) renderRoadmap(res.data);
+                    else document.getElementById('roadmapTrack').innerHTML = `<p class="text-center text-muted">${res.message}</p>`;
+                })
+                .catch(err => console.error('Fetch Roadmap Error:', err));
         }
 
-        const periods = ['short', 'medium', 'long'];
-        data.forEach((item, index) => {
-            const periodStyle = periods[index % periods.length];
-            const activeClass = index === 0 ? 'active' : ''; 
-            
-            track.innerHTML += `
+        function renderRoadmap(data) {
+            const track = document.getElementById('roadmapTrack');
+            const indicators = document.getElementById('roadmapIndicators');
+
+            if (!track || !indicators) return;
+
+            track.innerHTML = '';
+            indicators.innerHTML = '';
+
+            if (data.length === 0) {
+                track.innerHTML = '<p class="text-center text-muted">Belum ada data roadmap.</p>';
+                return;
+            }
+
+            const periods = ['short', 'medium', 'long'];
+            data.forEach((item, index) => {
+                const periodStyle = periods[index % periods.length];
+                const activeClass = index === 0 ? 'active' : '';
+
+                track.innerHTML += `
                 <div class="roadmap-card main-card ${activeClass}" data-period="${periodStyle}">
                     <div class="roadmap-header">
                         <span class="dot-indicator"></span>
@@ -1003,18 +991,18 @@ try {
                         <div class="mb-0 roadmap-desc">${nl2br(item.deskripsi)}</div>
                     </div>
                 </div>`;
-            
-            indicators.innerHTML += `<button class="indicator ${activeClass}" data-period="${periodStyle}"></button>`;
-        });
 
-        // Jalankan Carousel Roadmap setelah data masuk
-        new RoadmapCarousel();
-    }
+                indicators.innerHTML += `<button class="indicator ${activeClass}" data-period="${periodStyle}"></button>`;
+            });
 
-    // Helper: Ubah enter (\n) jadi <br>
-    function nl2br(str) {
-        return str ? str.replace(/(?:\r\n|\r|\n)/g, '<br>') : '';
-    }
+            // Jalankan Carousel Roadmap setelah data masuk
+            new RoadmapCarousel();
+        }
+
+        // Helper: Ubah enter (\n) jadi <br>
+        function nl2br(str) {
+            return str ? str.replace(/(?:\r\n|\r|\n)/g, '<br>') : '';
+        }
         /* ========================================= */
         /* 3. INISIALISASI & FETCH DATA              */
         /* ========================================= */
