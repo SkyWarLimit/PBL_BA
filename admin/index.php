@@ -3248,6 +3248,10 @@ try {
                     }
 
                     allAnggotaData = result.data || [];
+                    // --- TAMBAHAN KODE: SORTING (LAMA KE BARU) ---
+                    // Mengurutkan berdasarkan id_dosen dari kecil ke besar
+                    allAnggotaData.sort((a, b) => a.id_dosen - b.id_dosen);
+                    // ---------------------------------------------
 
                     const html = `
                     <div class="fade-in">
@@ -3607,9 +3611,7 @@ try {
             div.className = 'input-group mb-2';
             div.innerHTML = `
                 <select name="link_platform[]" class="form-select" style="max-width: 130px;">
-                    <option value="">Platform</option>
                     <option value="Sinta" ${platform=='Sinta'?'selected':''}>Sinta</option>
-                    <option value="Scopus" ${platform=='Scopus'?'selected':''}>Scopus</option>
                     <option value="Google Scholar" ${platform=='Google Scholar'?'selected':''}>Scholar</option>
                 </select>
                 <input type="text" name="link_url[]" class="form-control" placeholder="URL..." value="${url}">

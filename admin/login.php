@@ -1,7 +1,14 @@
 <?php
-// ===== FILE: login.php (Animated) =====
+// Debugging (Bisa dimatikan nanti jika sudah fix)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
-require_once __DIR__ . '/config/database.php'; 
+
+// --- PERBAIKAN 1: Path Database ---
+// Menggunakan dirname(__DIR__) untuk mundur satu folder dari 'admin' ke root
+require_once (__DIR__) . '/config/database.php';
 
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] == 'admin') header('Location: index.php');
@@ -10,43 +17,81 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $error = '';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
-    
+
     if (empty($email) || empty($password)) {
         $error = 'Email dan password harus diisi';
     } else {
-        $database = new Database();
-        $db = $database->getConnection();
-        
-        $query = "SELECT * FROM users WHERE email = :email AND is_active = true";
-        $stmt = $db->prepare($query);
-        $stmt->bindParam(':email', $email);
-        $stmt->execute();
-        $user = $stmt->fetch();
-        
-        if ($user && $user['password'] === $password) {
-            $_SESSION['user_id'] = $user['id_user'];
-            $_SESSION['nama'] = $user['nama'];
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['role'] = $user['role']; 
-            
-            try {
-                $db->prepare("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id_user = ?")->execute([$user['id_user']]);
-                $log_query = "INSERT INTO log (id_user, aktivitas, deskripsi, ip_address) VALUES (?, 'LOGIN', ?, ?)";
-                $deskripsi = "User role " . $user['role'] . " berhasil login";
-                $ip = function_exists('getClientIP') ? getClientIP() : ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
-                $db->prepare($log_query)->execute([$user['id_user'], $deskripsi, $ip]);
-            } catch (PDOException $e) {}
-            
-            if ($user['role'] == 'admin') header('Location: index.php');
-            else header('Location: ../index.php');
-            exit;
-        } else {
-            $error = 'Email atau password salah';
+        try {
+            $database = new Database();
+            $db = $database->getConnection();
+
+            $query = "SELECT * FROM users WHERE email = :email AND is_active = true";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':email', $email);
+            $stmt->execute();
+            $user = $stmt->fetch();
+
+            if ($user && $user['password'] === $password) {
+                $_SESSION['user_id'] = $user['id_user'];
+                $_SESSION['nama'] = $user['nama'];
+                $_SESSION['email'] = $user['email'];
+                $_SESSION['role'] = $user['role'];
+
+                // Update Last Login & Log
+                try {
+                    $db->prepare("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id_user = ?")->execute([$user['id_user']]);
+                    
+                    $log_query = "INSERT INTO log (id_user, aktivitas, deskripsi, ip_address) VALUES (?, 'LOGIN', ?, ?)";
+                    $deskripsi = "User role " . $user['role'] . " berhasil login";
+                    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'; // Sederhanakan IP untuk mencegah error function not found
+                    
+                    $db->prepare($log_query)->execute([$user['id_user'], $deskripsi, $ip]);
+                } catch (PDOException $e) {
+                    // Ignore log error
+                }
+
+                if ($user['role'] == 'admin') header('Location: index.php');
+                else header('Location: ../index.php');
+                exit;
+            } else {
+                $error = 'Email atau password salah';
+            }
+        } catch (PDOException $e) {
+            $error = "Database Error: " . $e->getMessage();
         }
     }
+}
+
+// --- 2. AMBIL DATA SETTING (Logo) ---
+$logoSrc = '../assets/images/logo.png';
+
+try {
+    $database = new Database(); // Pastikan inisialisasi ulang jika belum ada
+    $db = $database->getConnection();
+
+    // --- PERBAIKAN 2: SQL Query untuk PostgreSQL ---
+    // Kata "key" harus dibungkus kutip dua ("key") karena itu reserved word di Postgres
+    $sql = 'SELECT "key", value, file_path FROM settings WHERE "key" IN (\'logo\')';
+
+    $stmt = $db->query($sql);
+    $settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $settings = [];
+    foreach ($settingsRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    if (isset($settings['logo'])) {
+        if (!empty($settings['logo']['file_path'])) {
+            $logoSrc =  $settings['logo']['file_path']; // Path relatif mungkin perlu disesuaikan
+        }
+    }
+} catch (Exception $e) {
+    // Silent fail agar login tetap bisa tampil meski gambar error
 }
 ?>
 
@@ -68,27 +113,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             align-items: center;
             justify-content: center;
             padding: 20px;
-            overflow-x: hidden; /* Mencegah scrollbar saat animasi */
+            overflow-x: hidden;
         }
-
         .login-container {
             background: #fff;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             width: 100%;
             max-width: 900px;
             min-height: 550px;
             display: flex;
-            opacity: 0; /* Hidden awal untuk animasi fade in container */
+            opacity: 0;
             animation: fadeInContainer 0.8s ease-out forwards;
         }
-
-        /* ANIMASI */
         @keyframes fadeInContainer { to { opacity: 1; } }
-        @keyframes slideInLeft { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
+        @keyframes slideInLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
         .login-left {
             width: 50%;
             padding: 50px;
@@ -96,11 +143,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             flex-direction: column;
             justify-content: center;
             background-color: #ffffff;
-            /* Animasi masuk dari Kiri */
             animation: slideInLeft 0.8s 0.2s ease-out forwards;
-            opacity: 0; 
+            opacity: 0;
         }
-
         .login-right {
             width: 50%;
             background: linear-gradient(135deg, #2B95FD 0%, #0d6efd 100%);
@@ -112,34 +157,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             text-align: center;
             color: white;
             position: relative;
-            /* Animasi masuk dari Kanan */
             animation: slideInRight 0.8s 0.2s ease-out forwards;
             opacity: 0;
         }
-        
-        .login-right::before { content: ''; position: absolute; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%; top: -50px; right: -50px; }
-        .login-right::after { content: ''; position: absolute; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; bottom: 30px; left: -30px; }
-
-        .login-logo {
-            max-width: 180px;
+        .login-right img {
+            max-width: 180px; /* Ukuran logo dibatasi agar rapi */
             height: auto;
-            margin-bottom: 25px;
-            z-index: 2;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
         }
-
+        .login-right::before {
+            content: ''; position: absolute; width: 200px; height: 200px;
+            background: rgba(255, 255, 255, 0.1); border-radius: 50%; top: -50px; right: -50px;
+        }
+        .login-right::after {
+            content: ''; position: absolute; width: 150px; height: 150px;
+            background: rgba(255, 255, 255, 0.1); border-radius: 50%; bottom: 30px; left: -30px;
+        }
         .welcome-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; z-index: 2; }
         .welcome-text { font-size: 0.95rem; opacity: 0.9; z-index: 2; }
         .form-title { font-size: 1.5rem; font-weight: 700; color: #333; margin-bottom: 5px; }
         .form-subtitle { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
         .form-control { padding: 12px 15px; border-radius: 8px; border: 1px solid #ddd; background-color: #f9f9f9; }
         .form-control:focus { background-color: #fff; border-color: #2B95FD; box-shadow: 0 0 0 4px rgba(43, 149, 253, 0.1); }
-        .btn-login { background: #2B95FD; border: none; padding: 12px; font-weight: 600; border-radius: 8px; width: 100%; color: white; margin-top: 10px; transition: all 0.3s; }
+        .btn-login {
+            background: #2B95FD; border: none; padding: 12px; font-weight: 600;
+            border-radius: 8px; width: 100%; color: white; margin-top: 10px; transition: all 0.3s;
+        }
         .btn-login:hover { background: #1a84e6; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(43, 149, 253, 0.3); }
         .auth-links { margin-top: 25px; font-size: 0.9rem; }
         .text-primary-custom { color: #2B95FD; font-weight: 600; text-decoration: none; }
         .text-primary-custom:hover { text-decoration: underline; }
-
         @media (max-width: 768px) {
             .login-container { flex-direction: column-reverse; min-height: auto; max-width: 400px; }
             .login-left, .login-right { width: 100%; padding: 30px; }
@@ -157,8 +205,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'registered'): ?>
                 <div class="alert alert-success py-2 small"><i class="fas fa-check me-1"></i>Registrasi berhasil! Silakan login.</div>
             <?php endif; ?>
+            
             <?php if ($error): ?>
-                <div class="alert alert-danger py-2 small"><i class="fas fa-exclamation-circle me-1"></i> <?= $error ?></div>
+                <div class="alert alert-danger py-2 small"><i class="fas fa-exclamation-circle me-1"></i> <?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
 
             <form method="POST" action="">
@@ -169,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <input type="email" class="form-control border-start-0 ps-0" name="email" required placeholder="user@contoh.com">
                     </div>
                 </div>
-                
+
                 <div class="mb-4">
                     <label class="form-label small fw-bold text-muted">Password</label>
                     <div class="input-group">
@@ -177,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <input type="password" class="form-control border-start-0 ps-0" name="password" required placeholder="••••••••">
                     </div>
                 </div>
-                
+
                 <button type="submit" class="btn btn-login">Masuk Sekarang <i class="fas fa-arrow-right ms-2"></i></button>
             </form>
 
@@ -190,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
 
         <div class="login-right">
-            <img src="../assets/images/logo.png" alt="Logo Lab" class="login-logo">
+            <img src="<?= htmlspecialchars($logoSrc); ?>" alt="Logo Laboratorium">
             <h3 class="welcome-title">Lab Business Analytics</h3>
             <p class="welcome-text">Transforming Data into Decisions.<br>Kelola data dan aktivitas laboratorium Anda dengan mudah dan aman.</p>
         </div>
