@@ -572,21 +572,23 @@ body {
 
 .contact-hero {
   position: relative;
-  padding: 60px 0 40px;
+  padding: 80px 20px;
   margin-bottom: 40px;
 }
 
 .contact-hero-bg {
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;          /* Diubah dari 50% menjadi 0 */
+  right: 0;         /* Ditambahkan agar menarik ke sisi kanan */
+  bottom: 0;        /* Ditambahkan agar menarik ke sisi bawah */
   width: 100%;
   height: 100%;
   background-color: #d5e0ec;
   opacity: 0.5;
   z-index: -1;
-  border-radius: 10px;
+  border-radius: 0;
+  /* Hapus baris transform: translateX(-50%); jika sebelumnya ada */
 }
 
 .contact-hero-content {
@@ -792,6 +794,17 @@ textarea.form-control {
     gap: 40px;
   }
 
+  /* Tambahkan margin pada hero agar tidak menempel pinggir layar */
+  .contact-hero {
+    margin-left: 0;  /* Dibuat 0 agar background fit ke ujung layar */
+    margin-right: 0; /* Dibuat 0 agar background fit ke ujung layar */
+    padding: 60px 20px;
+  }
+
+  .contact-hero-bg {
+    border-radius: 0; /* Memastikan tidak ada lengkungan di pinggir layar tablet */
+  }
+
   .contact-hero h1 {
     font-size: 36px;
   }
@@ -806,12 +819,18 @@ textarea.form-control {
 }
 
 @media (max-width: 768px) {
+  .contact-hero {
+    padding: 50px 15px;
+    margin-top: 0; /* Memastikan mepet ke navbar */
+  }
+  
   .contact-hero-bg {
-    width: 90%;
+    width: 100%;
+    border-radius: 0;
   }
 
   .contact-hero h1 {
-    font-size: 32px;
+    font-size: 30px;
   }
 
   .contact-header h3 {

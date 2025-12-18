@@ -5,6 +5,59 @@ session_start();
 $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+
+// --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
+// Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
+// Gunakan __DIR__ agar path relatifnya aman
+$dbPath = __DIR__ . '/../admin/config/database.php';
+
+if (file_exists($dbPath)) {
+    require_once $dbPath;
+} else {
+    // Fallback jika path beda
+    $dbPathAlternative = $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php';
+    if (file_exists($dbPathAlternative)) {
+        require_once $dbPathAlternative;
+    } else {
+        die("Error: Config database tidak ditemukan. Cek path file.");
+    }
+}
+
+$db = (new Database())->getConnection();
+
+// Logika User Session
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+
+// --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
+$logoSrc = '../assets/images/logo.png';
+$namaLabText = 'Laboratorium Business Analytics'; // Default text
+
+try {
+    // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
+    $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
+    $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
+    $settings = [];
+    foreach ($resultRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    // 1. Set Logo (Ambil dari kolom file_path)
+    if (!empty($settings['logo']['file_path'])) {
+        $logoSrc = '../admin/' . $settings['logo']['file_path'];
+    }
+
+    // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
+    if (!empty($settings['nama_lab']['value'])) {
+        $namaLabText = $settings['nama_lab']['value'];
+    }
+    
+} catch (Exception $e) { 
+    /* Ignore error agar web tetap jalan pakai default */
+}
 ?>
 
 <!DOCTYPE html>
@@ -66,10 +119,10 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
         </div>
