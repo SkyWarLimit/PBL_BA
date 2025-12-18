@@ -19,26 +19,33 @@ $apiPath = $isLoggedIn ? '../admin/api/berita.php' : '../api/berita.php';
 // maka path yang benar dari pages/ adalah ../admin/api/berita.php.
 // Saya berasumsi struktur anda: /pages/berita.php dan /admin/api/berita.php
 
+// --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
+$logoSrc = '../assets/images/logo.png';
+$namaLabText = 'Laboratorium Business Analytics'; // Default text
+
 try {
-    $querySetting = 'SELECT "key", file_path FROM settings WHERE "key" IN (\'logo\', \'maskot\')';
-    $stmtSetting = $db->prepare($querySetting);
-    $stmtSetting->execute();
-    $settingsData = $stmtSetting->fetchAll(PDO::FETCH_KEY_PAIR); 
+    // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
+    $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
+    $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // --- PERBAIKAN PATH ---
-    // Gunakan "../admin/" agar browser keluar dari folder 'pages' dulu
+    // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
+    $settings = [];
+    foreach ($resultRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    // 1. Set Logo (Ambil dari kolom file_path)
+    if (!empty($settings['logo']['file_path'])) {
+        $logoSrc = '../admin/' . $settings['logo']['file_path'];
+    }
+
+    // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
+    if (!empty($settings['nama_lab']['value'])) {
+        $namaLabText = $settings['nama_lab']['value'];
+    }
     
-    $logoSrc = !empty($settingsData['logo']) 
-        ? '../admin/' . $settingsData['logo']  // BENAR: ../admin/uploads/...
-        : '../assets/images/logo.png';         // Fallback juga pakai ../
-
-    $maskotSrc = !empty($settingsData['maskot']) 
-        ? '../admin/' . $settingsData['maskot'] 
-        : '../assets/img/MaskotLab.png';
-
-} catch (PDOException $e) {
-    $logoSrc = '../assets/images/logo.png';
-    $maskotSrc = '../assets/img/MaskotLab.png';
+} catch (Exception $e) { 
+    /* Ignore error agar web tetap jalan pakai default */
 }
 ?>
 
@@ -64,7 +71,7 @@ try {
                 <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
         </div>

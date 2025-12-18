@@ -13,7 +13,7 @@ try {
     // 2. KONEKSI DATABASE
     // =================================================================
     $dbPath = __DIR__ . '/../admin/config/database.php';
-    
+
     if (!file_exists($dbPath)) {
         throw new Exception("File database tidak ditemukan di: " . realpath(__DIR__ . '/../admin/') . "/config/database.php");
     }
@@ -22,9 +22,13 @@ try {
 
     // Deteksi Variabel Koneksi
     $db = null;
-    if (isset($conn)) { $db = $conn; } 
-    elseif (isset($pdo)) { $db = $pdo; } 
-    elseif (class_exists('Database')) { $db = (new Database())->getConnection(); }
+    if (isset($conn)) {
+        $db = $conn;
+    } elseif (isset($pdo)) {
+        $db = $pdo;
+    } elseif (class_exists('Database')) {
+        $db = (new Database())->getConnection();
+    }
 
     if (!$db) {
         throw new Exception("Koneksi Database Gagal: Variabel \$conn/\$pdo tidak ditemukan.");
@@ -33,7 +37,7 @@ try {
     // =================================================================
     // 3. LOGIKA UTAMA
     // =================================================================
-    
+
     // Cek Login
     if (!isset($_SESSION['user_id'])) {
         header("Location: ../admin/login.php");
@@ -80,7 +84,7 @@ try {
             }
         }
         if (empty($bookingData)) $jsAction = 'show_invalid_id';
-    } 
+    }
     // Skenario 2: Belum ada ID
     else {
         if ($count === 0) {
@@ -93,16 +97,33 @@ try {
         }
     }
 
-    // Ambil Logo
+    // --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
     $logoSrc = '../assets/images/logo.png';
-    try {
-        $stmtS = $db->query("SELECT file_path FROM settings WHERE key = 'logo' LIMIT 1");
-        if ($stmtS) {
-            $res = $stmtS->fetch(PDO::FETCH_ASSOC);
-            if (!empty($res['file_path'])) $logoSrc = '../admin/' . $res['file_path'];
-        }
-    } catch (Exception $e) {}
+    $namaLabText = 'Laboratorium Business Analytics'; // Default text
 
+    try {
+        // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
+        $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
+        $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
+        $settings = [];
+        foreach ($resultRaw as $row) {
+            $settings[$row['key']] = $row;
+        }
+
+        // 1. Set Logo (Ambil dari kolom file_path)
+        if (!empty($settings['logo']['file_path'])) {
+            $logoSrc = '../admin/' . $settings['logo']['file_path'];
+        }
+
+        // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
+        if (!empty($settings['nama_lab']['value'])) {
+            $namaLabText = $settings['nama_lab']['value'];
+        }
+    } catch (Exception $e) {
+        /* Ignore error agar web tetap jalan pakai default */
+    }
 } catch (Throwable $e) {
     die('<div style="background:#f8d7da; padding:20px; font-family:sans-serif; border:1px solid #f5c6cb; margin:20px;">
             <h3>Error Sistem:</h3>
@@ -113,6 +134,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -122,7 +144,7 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="../assets/css/formCancelBookStyle.css?v=<?php echo time(); ?>">
-    
+
     <style>
         .form-control[readonly] {
             background-color: #e9ecef;
@@ -137,27 +159,26 @@ try {
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
-        </div>
-        <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
-        <ul class="nav-menu" id="navMenu">
-            <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
-            <li class="nav-item"><a class="nav-link" href="booking.php">Booking</a></li>
-            <li class="nav-item desktop-user-action">
-                 <div class="d-flex align-items-center gap-2">
-                    <div class="text-end">
-                        <div class="user-name-label" style="font-weight:bold; font-size:0.9rem;"><?php echo htmlspecialchars($userName); ?></div>
-                        <div class="user-role-label" style="font-size:0.8rem; color:#ccc;"><?php echo htmlspecialchars($userRole); ?></div>
+            <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
+                <li class="nav-item"><a class="nav-link" href="booking.php">Booking</a></li>
+                <li class="nav-item desktop-user-action">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="text-end">
+                            <div class="user-name-label" style="font-weight:bold; font-size:0.9rem;"><?php echo htmlspecialchars($userName); ?></div>
+                            <div class="user-role-label" style="font-size:0.8rem; color:#ccc;"><?php echo htmlspecialchars($userRole); ?></div>
+                        </div>
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=40" class="rounded-circle">
                     </div>
-                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=40" class="rounded-circle">
-                 </div>
-            </li>
-        </ul>
+                </li>
+            </ul>
     </nav>
 
     <div class="container-fluid main-content">
@@ -170,88 +191,88 @@ try {
         </div>
 
         <?php if (!empty($bookingData)): ?>
-        <div class="row">
-            <div class="col-md-7 order-2 order-md-1">
-                <div class="form-container">
-                    <h1 class="page-title">Form Pembatalan</h1>
-                    <div class="alert alert-warning d-flex align-items-center" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <div>Mohon isi alasan pembatalan dengan jelas.</div>
-                    </div>
-                    
-                    <h2 class="section-title mt-4">Informasi Kontak & Booking:</h2>
-                    
-                    <form id="cancelForm">
-                        <input type="hidden" name="id_peminjaman" value="<?php echo $bookingData['id_peminjaman']; ?>">
-                        <input type="hidden" name="action" value="request_cancel">
-
-                        <div class="mb-3">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input type="text" class="form-control" value="<?php echo htmlspecialchars($bookingData['nama']); ?>" readonly>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" value="<?php echo htmlspecialchars($bookingData['email']); ?>" readonly>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">NIM/NIP</label>
-                                <input type="text" class="form-control" value="<?php echo htmlspecialchars($bookingData['nim_nip'] ?? '-'); ?>" readonly>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">No. Handphone</label>
-                                <input type="text" class="form-control" value="<?php echo htmlspecialchars($bookingData['no_hp'] ?? '-'); ?>" readonly>
-                            </div>
+            <div class="row">
+                <div class="col-md-7 order-2 order-md-1">
+                    <div class="form-container">
+                        <h1 class="page-title">Form Pembatalan</h1>
+                        <div class="alert alert-warning d-flex align-items-center" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>Mohon isi alasan pembatalan dengan jelas.</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Kategori / Instansi</label>
-                            <input type="text" class="form-control" value="<?php echo htmlspecialchars(($bookingData['kategori_pemohon'] ?? '') . ' - ' . ($bookingData['asal_instansi'] ?? '')); ?>" readonly>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="alasan" class="form-label fw-bold text-danger">Alasan Pembatalan Booking <span class="text-danger">*</span></label>
-                            <textarea class="form-control border-danger" id="alasan" name="alasan_pembatalan" rows="4" placeholder="Jelaskan secara rinci mengapa Anda ingin membatalkan booking ini..." required></textarea>
-                        </div>
-                        
-                        <div class="form-actions d-flex gap-2">
-                            <button type="button" class="btn btn-secondary" onclick="window.history.back()">Kembali</button>
-                            <button type="submit" class="btn btn-danger confirm-btn flex-grow-1">Ajukan Pembatalan</button>
-                        </div>
-                    </form>
+                        <h2 class="section-title mt-4">Informasi Kontak & Booking:</h2>
+
+                        <form id="cancelForm">
+                            <input type="hidden" name="id_peminjaman" value="<?php echo $bookingData['id_peminjaman']; ?>">
+                            <input type="hidden" name="action" value="request_cancel">
+
+                            <div class="mb-3">
+                                <label class="form-label">Nama Lengkap</label>
+                                <input type="text" class="form-control" value="<?php echo htmlspecialchars($bookingData['nama']); ?>" readonly>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" value="<?php echo htmlspecialchars($bookingData['email']); ?>" readonly>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">NIM/NIP</label>
+                                    <input type="text" class="form-control" value="<?php echo htmlspecialchars($bookingData['nim_nip'] ?? '-'); ?>" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">No. Handphone</label>
+                                    <input type="text" class="form-control" value="<?php echo htmlspecialchars($bookingData['no_hp'] ?? '-'); ?>" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Kategori / Instansi</label>
+                                <input type="text" class="form-control" value="<?php echo htmlspecialchars(($bookingData['kategori_pemohon'] ?? '') . ' - ' . ($bookingData['asal_instansi'] ?? '')); ?>" readonly>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="alasan" class="form-label fw-bold text-danger">Alasan Pembatalan Booking <span class="text-danger">*</span></label>
+                                <textarea class="form-control border-danger" id="alasan" name="alasan_pembatalan" rows="4" placeholder="Jelaskan secara rinci mengapa Anda ingin membatalkan booking ini..." required></textarea>
+                            </div>
+
+                            <div class="form-actions d-flex gap-2">
+                                <button type="button" class="btn btn-secondary" onclick="window.history.back()">Kembali</button>
+                                <button type="submit" class="btn btn-danger confirm-btn flex-grow-1">Ajukan Pembatalan</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="col-md-5 order-1 order-md-2 mb-4">
-                <div class="booking-summary position-sticky" style="top: 100px;">
-                    <h3 class="summary-title">Booking Summary</h3>
-                    <div class="summary-content">
-                        <div class="booking-details">
-                            <div class="detail-item">
-                                <span class="detail-label">ID Booking:</span>
-                                <span class="detail-value fw-bold">#<?php echo $bookingData['id_peminjaman']; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Tujuan:</span>
-                                <span class="detail-value"><?php echo htmlspecialchars($bookingData['tujuan']); ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Tanggal:</span>
-                                <span class="detail-value"><?php echo date('d F Y', strtotime($bookingData['tanggal_peminjaman'])); ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Waktu:</span>
-                                <span class="detail-value text-primary">
-                                    <?php echo date('H:i', strtotime($bookingData['waktu_mulai'])) . ' - ' . date('H:i', strtotime($bookingData['waktu_selesai'])); ?> WIB
-                                </span>
+
+                <div class="col-md-5 order-1 order-md-2 mb-4">
+                    <div class="booking-summary position-sticky" style="top: 100px;">
+                        <h3 class="summary-title">Booking Summary</h3>
+                        <div class="summary-content">
+                            <div class="booking-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">ID Booking:</span>
+                                    <span class="detail-value fw-bold">#<?php echo $bookingData['id_peminjaman']; ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Tujuan:</span>
+                                    <span class="detail-value"><?php echo htmlspecialchars($bookingData['tujuan']); ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Tanggal:</span>
+                                    <span class="detail-value"><?php echo date('d F Y', strtotime($bookingData['tanggal_peminjaman'])); ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Waktu:</span>
+                                    <span class="detail-value text-primary">
+                                        <?php echo date('H:i', strtotime($bookingData['waktu_mulai'])) . ' - ' . date('H:i', strtotime($bookingData['waktu_selesai'])); ?> WIB
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
         <?php else: ?>
             <div class="d-flex justify-content-center align-items-center" style="height: 60vh;">
                 <div class="spinner-border text-primary" role="status">
@@ -271,7 +292,7 @@ try {
 
         document.addEventListener('DOMContentLoaded', function() {
             const action = "<?php echo $jsAction; ?>";
-            
+
             if (action === 'show_empty') {
                 Swal.fire({
                     icon: 'info',
@@ -296,7 +317,7 @@ try {
                 const options = {};
                 bookings.forEach(b => {
                     const date = new Date(b.tanggal_peminjaman).toLocaleDateString('id-ID');
-                    const time = b.waktu_mulai.substring(0,5);
+                    const time = b.waktu_mulai.substring(0, 5);
                     options[b.id_peminjaman] = `[${date} ${time}] ${b.tujuan}`;
                 });
 
@@ -349,34 +370,37 @@ try {
             Swal.fire({
                 title: 'Memproses...',
                 allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
 
             fetch('../admin/api/peminjaman.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: data.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        window.location.href = 'tableBooking.php'; 
-                    });
-                } else {
-                    Swal.fire('Gagal', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                Swal.fire('Error', 'Terjadi kesalahan sistem. Cek konsol browser.', 'error');
-            });
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: data.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = 'tableBooking.php';
+                        });
+                    } else {
+                        Swal.fire('Gagal', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire('Error', 'Terjadi kesalahan sistem. Cek konsol browser.', 'error');
+                });
         }
     </script>
 </body>
+
 </html>

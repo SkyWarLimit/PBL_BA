@@ -72,33 +72,57 @@ function renderGalleryItem($item)
         </div>
     </div>';
 }
-// --- [BARU] LOGIKA DINAMIS LOGO & MASKOT (POSTGRESQL) ---
+// --- 2. AMBIL DATA SETTING (Logo & Maskot) ---
+$logoSrc = '../assets/images/logo.png';
+$maskotSrc = '../assets/img/MaskotLab.png';
+$maknaLogoText = 'Deskripsi makna logo belum diatur oleh admin.';
+$maknaMaskotText = 'Deskripsi makna maskot belum diatur oleh admin.';
+$namaLabText = 'Laboratorium Business Analytics'; // Default jika db kosong
 try {
-    // 1. Ambil data dari tabel settings
-    // Kita cari baris dimana kolom "key" adalah 'logo' atau 'maskot'
-    // PENTING: Gunakan tanda kutip dua (") pada kata "key" karena ini PostgreSQL
-    $querySetting = 'SELECT "key", file_path FROM settings WHERE "key" IN (\'logo\', \'maskot\')';
+    // Ambil data berdasarkan key 'logo', 'maskot', dan 'nama_lab'
+    // Kita ambil 'value' (untuk deskripsi) dan 'file_path' (untuk gambar)
+    $sql = "SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'maskot', 'nama_lab')";
 
-    $stmtSetting = $db->prepare($querySetting);
-    $stmtSetting->execute();
+    $stmt = $db->query($sql);
+    $settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Hasil jadi array asosiatif: ['logo' => 'uploads/logo/...', 'maskot' => 'uploads/maskot/...']
-    $settingsData = $stmtSetting->fetchAll(PDO::FETCH_KEY_PAIR);
+    // Konversi ke array asosiatif
+    $settings = [];
+    foreach ($settingsRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
 
-    // 2. SETUP VARIABEL LOGO
-    // Jika ada data di DB, gabungkan dengan path './admin/'. Jika tidak, pakai default.
-    $logoSrc = !empty($settingsData['logo'])
-        ? './admin/' . $settingsData['logo']
-        : './assets/images/logo.png';
+    // --- LOGIKA PERBAIKAN DI SINI ---
 
-    // 3. SETUP VARIABEL MASKOT
-    $maskotSrc = !empty($settingsData['maskot'])
-        ? './admin/' . $settingsData['maskot']
-        : './assets/img/MaskotLab.png';
-} catch (PDOException $e) {
-    // Fallback jika terjadi error koneksi
-    $logoSrc = './assets/images/logo.png';
-    $maskotSrc = './assets/img/MaskotLab.png';
+    // 1. SET LOGO (Gambar & Deskripsi)
+    if (isset($settings['logo'])) {
+        // Ambil Gambar
+        if (!empty($settings['logo']['file_path'])) {
+            $logoSrc = './admin/' . $settings['logo']['file_path'];
+        }
+        // Ambil Deskripsi (dari kolom value milik key 'logo')
+        if (!empty($settings['logo']['value'])) {
+            $maknaLogoText = $settings['logo']['value'];
+        }
+    }
+
+    // 2. SET MASKOT (Gambar & Deskripsi)
+    if (isset($settings['maskot'])) {
+        // Ambil Gambar
+        if (!empty($settings['maskot']['file_path'])) {
+            $maskotSrc = './admin/' . $settings['maskot']['file_path'];
+        }
+        // Ambil Deskripsi (dari kolom value milik key 'maskot')
+        if (!empty($settings['maskot']['value'])) {
+            $maknaMaskotText = $settings['maskot']['value'];
+        }
+    }
+
+    if (!empty($settings['nama_lab']['value'])) {
+        $namaLabText = $settings['nama_lab']['value'];
+    }
+} catch (Exception $e) {
+    // Silent fail
 }
 
 // --- AMBIL DATA RESEARCH FOCUS ---
@@ -542,7 +566,9 @@ function formatTanggalIndo($tanggal) {
                 <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-name">
+                    <?php echo htmlspecialchars($namaLabText); ?>
+                </div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
         </div>

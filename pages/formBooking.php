@@ -50,19 +50,33 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
-// --- 2. AMBIL DATA SETTING (Logo & Maskot) ---
+// --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
 $logoSrc = '../assets/images/logo.png';
-$maskotSrc = '../assets/img/MaskotLab.png';
+$namaLabText = 'Laboratorium Business Analytics'; // Default text
 
 try {
-    $stmt = $db->query("SELECT key, file_path FROM settings WHERE key IN ('logo', 'maskot')");
-    $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
+    $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
+    $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!empty($settings['logo'])) $logoSrc = '../admin/' . $settings['logo'];
-    if (!empty($settings['maskot'])) $maskotSrc = '../admin/' . $settings['maskot'];
-} catch (Exception $e) { /* Ignore */
+    // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
+    $settings = [];
+    foreach ($resultRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    // 1. Set Logo (Ambil dari kolom file_path)
+    if (!empty($settings['logo']['file_path'])) {
+        $logoSrc = '../admin/' . $settings['logo']['file_path'];
+    }
+
+    // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
+    if (!empty($settings['nama_lab']['value'])) {
+        $namaLabText = $settings['nama_lab']['value'];
+    }
+} catch (Exception $e) {
+    /* Ignore error agar web tetap jalan pakai default */
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -86,90 +100,89 @@ try {
                 <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
-        </div>
 
-        <div class="hamburger" onclick="toggleMenu()">
-            <i class="fas fa-bars"></i>
-        </div>
-
-        <ul class="nav-menu" id="navMenu">
-            <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
-            <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
-            
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span>Publikasi</span>
-                    <i class="fas fa-chevron-down dropdown-icon"></i>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="berita.php">Berita</a></li>
-                    <li><a class="dropdown-item" href="galeri.php">Gallery</a></li>
-                    <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
-                </ul>
-            </li>
-
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span>Peminjaman Lab</span>
-                    <i class="fas fa-chevron-down dropdown-icon"></i>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="infoPeminjaman.php">Informasi Laboratorium</a></li>
-                    <li><a class="dropdown-item" href="tableBooking.php">Table Peminjaman</a></li>
-                    <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
-                </ul>
-            </li>
-
-            <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
-            
-            <li class="nav-item mobile-auth-section">
-                <?php if ($isLoggedIn): ?>
-                    <div class="mobile-user-profile-modern">
-                        <div class="d-flex align-items-center gap-3 flex-grow-1">
-                            <div class="mobile-avatar-modern">
-                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128" alt="User Avatar">
-                            </div>
-                            <div class="mobile-info-modern">
-                                <span class="greeting-text">Halo,</span>
-                                <span class="username-text"><?php echo htmlspecialchars($userName); ?></span>
-                            </div>
-                        </div>
-                        <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </a>
-                    </div>
-                <?php else: ?>
-                    <div class="mobile-login-btn">
-                        <a class="nav-link login-link" href="../admin/login.php">Login</a>
-                    </div>
-                <?php endif; ?>
-            </li>
-        </ul>
-        
-        <?php if ($isLoggedIn): ?>
-            <div class="desktop-user-action">
-                
-                <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
-                    <div class="text-end me-2">
-                        <div class="user-name-label"><?php echo htmlspecialchars($userName); ?></div>
-                        <div class="user-role-label"><?php echo htmlspecialchars($userRole); ?></div>
-                    </div>
-                    <div class="avatar-circle">
-                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128" alt="User Avatar">
-                    </div>
-                </a>
-
-                <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-
+            <div class="hamburger" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
             </div>
-        <?php else: ?>
-            <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
-        <?php endif; ?>
+
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
+                <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span>Publikasi</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="berita.php">Berita</a></li>
+                        <li><a class="dropdown-item" href="galeri.php">Gallery</a></li>
+                        <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span>Peminjaman Lab</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="infoPeminjaman.php">Informasi Laboratorium</a></li>
+                        <li><a class="dropdown-item" href="tableBooking.php">Table Peminjaman</a></li>
+                        <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
+
+                <li class="nav-item mobile-auth-section">
+                    <?php if ($isLoggedIn): ?>
+                        <div class="mobile-user-profile-modern">
+                            <div class="d-flex align-items-center gap-3 flex-grow-1">
+                                <div class="mobile-avatar-modern">
+                                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128" alt="User Avatar">
+                                </div>
+                                <div class="mobile-info-modern">
+                                    <span class="greeting-text">Halo,</span>
+                                    <span class="username-text"><?php echo htmlspecialchars($userName); ?></span>
+                                </div>
+                            </div>
+                            <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <div class="mobile-login-btn">
+                            <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                        </div>
+                    <?php endif; ?>
+                </li>
+            </ul>
+
+            <?php if ($isLoggedIn): ?>
+                <div class="desktop-user-action">
+
+                    <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
+                        <div class="text-end me-2">
+                            <div class="user-name-label"><?php echo htmlspecialchars($userName); ?></div>
+                            <div class="user-role-label"><?php echo htmlspecialchars($userRole); ?></div>
+                        </div>
+                        <div class="avatar-circle">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128" alt="User Avatar">
+                        </div>
+                    </a>
+
+                    <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+
+                </div>
+            <?php else: ?>
+                <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+            <?php endif; ?>
 
     </nav>
 
@@ -189,7 +202,7 @@ try {
                 <div class="form-container">
                     <h1 class="page-title">Review Your Booking</h1>
                     <h2 class="section-title">Contact Information :</h2>
-                    
+
                     <form id="bookingForm">
                         <input type="hidden" name="action" value="create">
                         <input type="hidden" name="check_in" value="<?php echo $apiCheckin; ?>">
@@ -199,12 +212,12 @@ try {
                             <label for="name" class="form-label">Name</label>
                             <input type="text" class="form-control" id="name" value="<?php echo htmlspecialchars($_SESSION['nama'] ?? ''); ?>" readonly style="background-color: #e9ecef;">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" value="<?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?>" readonly style="background-color: #e9ecef;">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="status" class="form-label">Status/Kategori Pemohon</label>
                             <select class="form-select" id="status" name="kategori_pemohon" required>
@@ -213,34 +226,34 @@ try {
                                 <option value="Dosen">Dosen</option>
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="nim-nip" class="form-label">NIM/NIP</label>
                             <input type="text" class="form-control" id="nim-nip" name="nomor_identitas" placeholder="Masukkan NIM/NIP/Instansi" required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="program" class="form-label">Program Studi/Departemen</label>
                             <input type="text" class="form-control" id="program" name="asal_instansi" placeholder="Masukkan program studi/departemen" required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="phone" class="form-label">No. Handphone</label>
                             <input type="tel" class="form-control" id="phone" name="no_hp" placeholder="Masukkan nomor handphone" required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="purpose" class="form-label">Tujuan Peminjaman</label>
                             <textarea class="form-control" id="purpose" name="tujuan" rows="3" placeholder="Jelaskan tujuan peminjaman laboratorium" required></textarea>
                         </div>
-                        
+
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary confirm-btn">Confirm Booking</button>
                         </div>
                     </form>
                 </div>
             </div>
-            
+
             <div class="col-md-5 order-1 order-md-2 mb-4 mb-md-0">
                 <div class="booking-summary">
                     <h3 class="summary-title">Booking Summary</h3>
@@ -248,7 +261,7 @@ try {
                         <p class="summary-text">
                             Silakan periksa kembali detail peminjaman Anda di bawah ini. Pastikan tanggal dan waktu yang dipilih sudah sesuai dengan rencana kegiatan Anda.
                         </p>
-                        
+
                         <div class="booking-details">
                             <div class="detail-item">
                                 <span class="detail-label">Tanggal:</span>
@@ -276,7 +289,7 @@ try {
             const navMenu = document.getElementById('navMenu');
             const hamburgerIcon = document.querySelector('.hamburger i');
             navMenu.classList.toggle('active');
-            
+
             if (navMenu.classList.contains('active')) {
                 hamburgerIcon.classList.remove('fa-bars');
                 hamburgerIcon.classList.add('fa-times');
@@ -290,22 +303,22 @@ try {
         const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
 
         function toggleMenu() {
-    const navMenu = document.getElementById('navMenu');
-    const icon = document.querySelector('.hamburger i');
+            const navMenu = document.getElementById('navMenu');
+            const icon = document.querySelector('.hamburger i');
 
-    navMenu.classList.toggle('active');
+            navMenu.classList.toggle('active');
 
-    if (navMenu.classList.contains('active')) {
-        icon.classList.remove('fa-bars');
-        icon.classList.add('fa-times');
-    } else {
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
-    }
-}
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
 
         // JavaScript untuk Sticky Navbar
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const allNavLinks = document.querySelectorAll('.nav-link');
             const dropdownItems = document.querySelectorAll('.dropdown-item');
 
@@ -321,7 +334,7 @@ try {
             }
 
             allNavLinks.forEach(link => {
-                link.addEventListener('click', function (e) {
+                link.addEventListener('click', function(e) {
                     if (!this.classList.contains('dropdown-toggle')) {
                         setActiveMenu(this);
                     }
@@ -329,14 +342,14 @@ try {
             });
 
             dropdownItems.forEach(item => {
-                item.addEventListener('click', function (e) {
+                item.addEventListener('click', function(e) {
                     setActiveMenu(this);
                 });
             });
 
             // LOGIKA SUBMIT FORM KE API ADMIN
             const bookingForm = document.getElementById('bookingForm');
-            
+
             bookingForm.addEventListener('submit', function(e) {
                 e.preventDefault(); // Mencegah reload halaman
 
@@ -366,43 +379,44 @@ try {
 
                 // Fetch ke API Admin
                 fetch('../admin/api/peminjaman.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: 'Permohonan peminjaman berhasil dikirim. Silakan cek status di dashboard.',
-                            confirmButtonColor: '#4361ee'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // Redirect ke Dashboard User (jika ada) atau kembali ke beranda
-                                window.location.href = '../index.php'; 
-                            }
-                        });
-                    } else {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'Permohonan peminjaman berhasil dikirim. Silakan cek status di dashboard.',
+                                confirmButtonColor: '#4361ee'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Redirect ke Dashboard User (jika ada) atau kembali ke beranda
+                                    window.location.href = '../index.php';
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: data.message || 'Terjadi kesalahan saat menyimpan data.',
+                                confirmButtonColor: '#d33'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal!',
-                            text: data.message || 'Terjadi kesalahan saat menyimpan data.',
+                            title: 'Error Koneksi',
+                            text: 'Gagal menghubungi server.',
                             confirmButtonColor: '#d33'
                         });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error Koneksi',
-                        text: 'Gagal menghubungi server.',
-                        confirmButtonColor: '#d33'
                     });
-                });
             });
         });
     </script>
 </body>
+
 </html>
