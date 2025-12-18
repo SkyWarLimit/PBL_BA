@@ -153,7 +153,7 @@ try {
 
 <body>
 
-    <nav class="sticky-navbar">
+    <nav class="sticky-navbar" id ="mainNavbar">
         <div class="logo-container">
             <div class="logo">
                 <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
