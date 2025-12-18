@@ -66,7 +66,7 @@ try {
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
                 <div class="lab-name">Laboratorium Business Analytics</div>
