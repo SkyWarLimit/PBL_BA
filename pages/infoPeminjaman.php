@@ -186,18 +186,13 @@ try {
                         <span class="title-line business-analytics">Business Analytics</span>
                     </h1>
                     <p class="hero-detailed-description">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                        labore et dolore magna aliqua.
-                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                        commodo consequat.
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-                        pariatur.
-                        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-                        anim id est laborum.
+                        Laboratorium Business Analytics menyediakan akses teknologi terbaru bagi para dosen, dan mahasiswa.
+                        Kami memahami bahwa mengolah data dalam jumlah besar membutuhkan komputer yang stabil dan perangkat lunak yang lengkap.
+                        Fasilitas kami dirancang untuk mendukung seluruh proses—mulai dari menyatukan data mentah, merapikannya, hingga menampilkan informasi tersebut dalam bentuk grafik interaktif yang mudah untuk dipahami.
                     </p>
                     <!-- Tombol Register For Laboratory Booking -->
                     <div class="register-btn-container">
-                        <button class="register-btn">
+                        <button class="register-btn" onclick="window.location.href='booking.php'">
                             <span class="btn-text">
                                 Register For Laboratory Booking
                                 <i class="fas fa-arrow-up arrow-icon"></i>
@@ -215,13 +210,19 @@ try {
         <h2 class="info-title">Laboratory Business Analytics</h2>
         <div class="info-content">
             <div class="info-text">
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <p>
+                Laboratorium ini dilengkapi dengan berbagai fasilitas modern yang dirancang untuk mendukung proses pembelajaran dan penelitian di bidang analisis bisnis.
+                Dengan lingkungan yang kondusif dan peralatan canggih, laboratorium ini bertujuan untuk memberikan pengalaman belajar yang optimal bagi para mahasiswa dan dosen.
+                di Laboratorium ini, mahasiswa dan dosen dapat mengakses perangkat lunak analisis data terkini, serta memanfaatkan infrastruktur teknologi informasi yang handal untuk mendukung berbagai proyek akademik dan penelitian.
+                </p>
             </div>
             
             <div class="info-block">
                 <h3 class="info-subtitle">Lab Facilities</h3>
                 <div class="info-text">
-                    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                    <p>
+                      Berikut merupakan beberapa fasilitas yang tersedia di Laboratorium Business Analytics untuk mendukung kegiatan belajar mengajar dan penelitian.  
+                    </p>
                 </div>
                 
                 <!-- Carousel Container -->
@@ -252,31 +253,45 @@ try {
                 <div class="rule-item">
                     <div class="rule-number">1</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.
+                        <strong>Larangan di Dalam Laboratorium:</strong> Dilarang keras melakukan perubahan pada perangkat keras (hardware), seperti menginstal aplikasi ilegal tanpa izin, serta dilarang membawa dan mengonsumsi makanan atau minuman di area lab demi menjaga kebersihan dan performa alat.
                     </div>
                 </div>
                 <div class="rule-item">
                     <div class="rule-number">2</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                        <strong>Tanggung Jawab Menjaga Alat:</strong> Pengguna bertanggung jawab penuh atas kondisi fisik dan fungsi perangkat yang dipinjam. Segala bentuk kerusakan atau kehilangan akibat kelalaian wajib segera dilaporkan kepada teknisi untuk diproses sesuai ketentuan ganti rugi yang berlaku.
                     </div>
                 </div>
                 <div class="rule-item">
                     <div class="rule-number">3</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                        <strong>Keselamatan di Dalam Lab:</strong> Pengguna wajib memahami panduan keselamatan kerja (K3K), termasuk lokasi alat pemadam api (APAR) dan jalur evakuasi darurat, guna menjamin keamanan diri dan kenyamanan bersama selama berada di lingkungan laboratorium.
                     </div>
                 </div>
                 <div class="rule-item">
                     <div class="rule-number">4</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                        <strong>Aturan Peminjaman untuk Mahasiswa:</strong> Mahasiswa diperbolehkan meminjam fasilitas laboratorium jika telah mendapatkan izin resmi dari dosen mata kuliah terkait. Selain itu, jumlah mahasiswa dalam satu kelompok minimal berjumlah 5 (lima) orang; pengajuan peminjaman dengan jumlah anggota di bawah ketentuan tersebut akan dianggap tidak sah.
                     </div>
                 </div>
                 <div class="rule-item">
                     <div class="rule-number">5</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.
+                        <strong>Cara Melakukan Peminjaman:</strong> Seluruh permohonan peminjaman ruangan wajib didaftarkan melalui website resmi Laboratorium Business Analytics berikut:                    
+                        <div class="booking-link-wrapper">
+                        <a href="booking.php" class="booking-link-box">
+                            Klik di Sini untuk Mengajukan Peminjaman
+                        </a>
+                        </div>
+                        Pastikan pengajuan dilakukan paling lambat 3 (tiga) hari kerja sebelum penggunaan. Peminjaman dianggap sah jika sudah mendapatkan konfirmasi persetujuan dari admin lab yang akan menghubungi kontak peminjam secara langsung.
+                        <br><br>
+                        Apabila peminjam batal menggunakan fasilitas lab dikarenakan ada suatu lain hal, maka peminjam diharapkan segera melakukan konfirmasi pada pengelola lab dan wajib mengisi formulir pembatalan pada tautan berikut:
+
+                        <div class="booking-link-wrapper">
+                            <a href="formCancel.php" class="booking-link-box cancel-box">
+                                Klik di Sini untuk Mengisi Form Pembatalan
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -10,42 +10,31 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
-// Variabel untuk digunakan dalam JS (Penting untuk Path API)
-$apiPath = $isLoggedIn ? '../admin/api/berita.php' : '../api/berita.php'; 
-
-// CATATAN PENTING: Jika API/berita.php berada di level yang sama dengan pages/berita.php, 
-// gunakan $apiPath = 'api/berita.php';
-// Jika API/berita.php ada di admin/api/, dan pages/berita.php ada di pages/, 
-// maka path yang benar dari pages/ adalah ../admin/api/berita.php.
-// Saya berasumsi struktur anda: /pages/berita.php dan /admin/api/berita.php
+// Variabel untuk digunakan dalam JS
+$apiPath = '../admin/api/berita.php';
 
 // --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
 $logoSrc = '../assets/images/logo.png';
-$namaLabText = 'Laboratorium Business Analytics'; // Default text
+$namaLabText = 'Laboratorium Business Analytics';
 
 try {
-    // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
     $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
     $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
     $settings = [];
     foreach ($resultRaw as $row) {
         $settings[$row['key']] = $row;
     }
 
-    // 1. Set Logo (Ambil dari kolom file_path)
     if (!empty($settings['logo']['file_path'])) {
         $logoSrc = '../admin/' . $settings['logo']['file_path'];
     }
-
-    // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
     if (!empty($settings['nama_lab']['value'])) {
         $namaLabText = $settings['nama_lab']['value'];
     }
     
 } catch (Exception $e) { 
-    /* Ignore error agar web tetap jalan pakai default */
+    /* Ignore error */
 }
 ?>
 
@@ -58,8 +47,7 @@ try {
     <title>Laboratorium Business Analytics</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/beritaStyle.css?v=<?php echo time(); ?>">
 </head>
 
@@ -136,7 +124,6 @@ try {
         
         <?php if ($isLoggedIn): ?>
             <div class="desktop-user-action">
-                
                 <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
                     <div class="text-end me-2">
                         <div class="user-name-label"><?php echo htmlspecialchars($userName); ?></div>
@@ -146,24 +133,19 @@ try {
                         <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128" alt="User Avatar">
                     </div>
                 </a>
-
                 <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
                     <i class="fas fa-sign-out-alt"></i>
                 </a>
-
             </div>
         <?php else: ?>
             <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
         <?php endif; ?>
-
     </nav>
 
     <section class="hero-section">
-        <div class="hero-rectangle">
-            </div>
+        <div class="hero-rectangle"></div>
         <div class="hero-container">
-            <div class="hero-inner-rectangle">
-                </div>
+            <div class="hero-inner-rectangle"></div>
             <div class="hero-text-content">
                 <div class="about-overlay">
                     <span class="about-text">News</span>
@@ -193,21 +175,9 @@ try {
         <div class="section-nav-rectangle">
             <div class="section-nav-container">
                 <ul class="section-nav-menu">
-                    <li class="section-nav-item">
-                        <a class="section-nav-link" href="#latest-news">
-                            <span class="nav-text">Newst Latest</span>
-                        </a>
-                    </li>
-                    <li class="section-nav-item">
-                        <a class="section-nav-link" href="#prestasi">
-                            <span class="nav-text">Prestasi</span>
-                        </a>
-                    </li>
-                    <li class="section-nav-item">
-                        <a class="section-nav-link" href="#announcement">
-                            <span class="nav-text">Announcement</span>
-                        </a>
-                    </li>
+                    <li class="section-nav-item"><a class="section-nav-link" href="#latest-news"><span class="nav-text">Newst Latest</span></a></li>
+                    <li class="section-nav-item"><a class="section-nav-link" href="#prestasi"><span class="nav-text">Prestasi</span></a></li>
+                    <li class="section-nav-item"><a class="section-nav-link" href="#announcement"><span class="nav-text">Announcement</span></a></li>
                 </ul>
             </div>
         </div>
@@ -219,12 +189,9 @@ try {
                 <p class="news-subtitle">Update Informasi Terkini</p>
                 <h2 class="news-title">Latest News Lab Business Analytics</h2>
             </div>
-
             <div class="news-grid" id="container-latest-news">
                 <div class="text-center w-100 py-5 loading-spinner-news">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
                 </div>
             </div>
         </div>
@@ -236,12 +203,9 @@ try {
                 <p class="news-subtitle">Pencapaian Membanggakan</p>
                 <h2 class="news-title">Prestasi Lab Business Analytics</h2>
             </div>
-
             <div class="news-grid" id="container-prestasi">
                 <div class="text-center w-100 py-5 loading-spinner-news">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
                 </div>
             </div>
         </div>
@@ -253,12 +217,9 @@ try {
                 <p class="news-subtitle">Pengumuman Penting</p>
                 <h2 class="news-title">Announcement Lab Business Analytics</h2>
             </div>
-
             <div class="news-grid" id="container-announcement">
                 <div class="text-center w-100 py-5 loading-spinner-news">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
                 </div>
             </div>
         </div>
@@ -273,8 +234,6 @@ try {
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchBerita();
-            
-            // Inisialisasi UI
             new NavbarScrollBehavior();
             new CompactNavbar();
         });
@@ -282,43 +241,35 @@ try {
         function fetchBerita() {
             fetch(API_URL) 
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     return response.json();
                 })
                 .then(result => {
-                    if (result.success) {
-                        renderBerita(result.data);
-                    } else {
-                        // Jika API menolak (kemungkinan UNAUTHORIZED)
-                        let message = result.message || 'API menolak akses (Kemungkinan butuh login untuk mengakses data ini).';
-                        if (!IS_LOGGED_IN) {
-                            message += ' Silakan login atau periksa izin API Anda.';
-                        }
+                    if (result.success) renderBerita(result.data);
+                    else {
+                        let message = result.message || 'API menolak akses.';
+                        if (!IS_LOGGED_IN) message += ' Silakan login.';
                         showErrorState(message);
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
-                    showErrorState('Gagal memuat berita. Periksa koneksi internet atau jalur API.');
+                    showErrorState('Gagal memuat berita.');
                 });
         }
 
         function showEmptyState() {
             const msg = '<p class="text-center text-muted py-5">Belum ada berita yang tersedia.</p>';
-            document.getElementById('container-latest-news').innerHTML = msg;
-            document.getElementById('container-prestasi').innerHTML = msg;
-            document.getElementById('container-announcement').innerHTML = msg;
+            ['container-latest-news', 'container-prestasi', 'container-announcement'].forEach(id => {
+                document.getElementById(id).innerHTML = msg;
+            });
         }
 
         function showErrorState(message) {
-            const msg = `<p class="text-center text-danger py-5">
-                <i class="fas fa-exclamation-triangle me-2"></i> ${message}
-            </p>`;
-            document.getElementById('container-latest-news').innerHTML = msg;
-            document.getElementById('container-prestasi').innerHTML = msg;
-            document.getElementById('container-announcement').innerHTML = msg;
+            const msg = `<p class="text-center text-danger py-5"><i class="fas fa-exclamation-triangle me-2"></i> ${message}</p>`;
+            ['container-latest-news', 'container-prestasi', 'container-announcement'].forEach(id => {
+                document.getElementById(id).innerHTML = msg;
+            });
         }
 
         function renderBerita(data) {
@@ -330,9 +281,7 @@ try {
             containerPrestasi.innerHTML = '';
             containerAnnouncement.innerHTML = '';
 
-            let hasLatest = false;
-            let hasPrestasi = false;
-            let hasAnnouncement = false;
+            let hasLatest = false, hasPrestasi = false, hasAnnouncement = false;
 
             if (data.length > 0) {
                 data.forEach(item => {
@@ -349,41 +298,36 @@ try {
                         containerAnnouncement.insertAdjacentHTML('beforeend', cardHTML);
                         hasAnnouncement = true;
                     } else {
-                        // Default masuk Latest jika kategori tidak spesifik
                         containerLatest.insertAdjacentHTML('beforeend', cardHTML);
                         hasLatest = true;
                     }
                 });
             }
 
-            // Tampilkan pesan kosong jika tidak ada data di kategori tertentu
             if (!hasLatest) containerLatest.innerHTML = '<p class="text-center text-muted">Belum ada berita terbaru.</p>';
             if (!hasPrestasi) containerPrestasi.innerHTML = '<p class="text-center text-muted">Belum ada data prestasi.</p>';
             if (!hasAnnouncement) containerAnnouncement.innerHTML = '<p class="text-center text-muted">Belum ada pengumuman.</p>';
         }
 
+        // --- FUNGSI UTAMA YANG DIMODIFIKASI ---
         function createNewsCard(item) {
             let formattedDate = '-';
             if (item.tanggal_upload) {
                 const dateObj = new Date(item.tanggal_upload);
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                // Menggunakan 'id-ID' untuk format tanggal Indonesia
                 formattedDate = dateObj.toLocaleDateString('id-ID', options);
             }
 
-            // Path Gambar: Disesuaikan dengan asumsi API berada di admin/
-            // Path dari DB: uploads/berita/file.jpg
-            // Path yang dibutuhkan dari pages/: ../admin/uploads/berita/file.jpg
             const imgSrc = item.file_path ? `../admin/${item.file_path}` : '../assets/img/untitled.jpeg';
-            
             const userName = item.nama_user || 'Admin Lab';
             const userRole = item.role_user || 'Contributor';
-
-            // Menggunakan ringkasan, jika konten tidak ada
             const excerpt = item.ringkasan || (item.konten ? item.konten.substring(0, 150) + (item.konten.length > 150 ? '...' : '') : 'Deskripsi tidak tersedia.');
 
+            // PERUBAHAN DI SINI:
+            // 1. Menambahkan onclick="window.location.href='beritaUtama.php?id=...'"
+            // 2. Menambahkan style="cursor: pointer;" agar user tahu ini bisa diklik
             return `
-                <div class="news-card">
+                <div class="news-card" onclick="window.location.href='beritaUtama.php?id=${item.id_artikel}'" style="cursor: pointer;">
                     <div class="news-image">
                         <img src="${imgSrc}" alt="${item.judul}" onerror="this.src='../assets/img/untitled.jpeg'">
                     </div>
@@ -411,13 +355,11 @@ try {
             `;
         }
         
-        // --- SCRIPT UI INTERAKSI (SAMA SEPERTI ASLI) ---
         function toggleMenu() {
             document.getElementById('navMenu').classList.toggle('active');
         }
 
         class NavbarScrollBehavior {
-            // ... (Kode NavbarScrollBehavior) ...
             constructor() {
                 this.mainNavbar = document.getElementById('mainNavbar');
                 this.sectionNavbar = document.getElementById('sectionNavbar');
@@ -426,9 +368,7 @@ try {
                 this.isMainNavHidden = false;
                 if(this.mainNavbar) this.init();
             }
-            init() {
-                window.addEventListener('scroll', () => { this.handleScroll(); });
-            }
+            init() { window.addEventListener('scroll', () => { this.handleScroll(); }); }
             handleScroll() {
                 const currentScrollY = window.scrollY;
                 const scrollDirection = currentScrollY > this.lastScrollY ? 'down' : 'up';
@@ -448,7 +388,6 @@ try {
         }
 
         class CompactNavbar {
-            // ... (Kode CompactNavbar) ...
             constructor() {
                 this.mainNavbar = document.getElementById('mainNavbar');
                 if(this.mainNavbar) this.init();
@@ -461,10 +400,8 @@ try {
             }
         }
         
-        // Perbaikan Scroll ke Section
         document.addEventListener('DOMContentLoaded', function () {
             const sectionLinks = document.querySelectorAll('.section-nav-link');
-
             sectionLinks.forEach(link => {
                 link.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -472,16 +409,11 @@ try {
                     this.classList.add('active');
                     const targetId = this.getAttribute('href').substring(1);
                     const targetSection = document.getElementById(targetId);
-
                     if (targetSection) {
                         const navbarHeight = document.querySelector('.sticky-navbar').offsetHeight;
                         const sectionNavHeight = document.querySelector('.section-navbar').offsetHeight;
                         const offsetTop = targetSection.offsetTop - navbarHeight - sectionNavHeight;
-
-                        window.scrollTo({
-                            top: Math.max(0, offsetTop),
-                            behavior: 'smooth'
-                        });
+                        window.scrollTo({ top: Math.max(0, offsetTop), behavior: 'smooth' });
                     }
                 });
             });
@@ -489,18 +421,14 @@ try {
             window.addEventListener('scroll', function () {
                 const sections = document.querySelectorAll('section[id]');
                 const scrollPos = window.scrollY + 250; 
-
                 sections.forEach(section => {
                     const sectionTop = section.offsetTop;
                     const sectionHeight = section.offsetHeight;
                     const sectionId = section.getAttribute('id');
-
                     if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
                         sectionLinks.forEach(link => {
                             link.classList.remove('active');
-                            if (link.getAttribute('href') === `#${sectionId}`) {
-                                link.classList.add('active');
-                            }
+                            if (link.getAttribute('href') === `#${sectionId}`) link.classList.add('active');
                         });
                     }
                 });

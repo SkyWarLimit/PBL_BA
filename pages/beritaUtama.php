@@ -23,31 +23,42 @@ if (file_exists($dbPath)) {
 $db = (new Database())->getConnection();
 
 // =================================================================
-// TAMBAHAN: LOGIKA AMBIL DATA BERITA (BY ID)
+// LOGIKA 1: AMBIL DATA BERITA UTAMA (YANG SEDANG DIBUKA)
 // =================================================================
-$berita = null; // Variabel penampung data
+$berita = null; 
+$currentId = 0; // Default ID untuk pencegahan error
 
-// Cek apakah ada ID di URL (contoh: beritaUtama.php?id=10)
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    // Pastikan nama tabel sesuai (view_artikel atau artikel)
+    $currentId = $_GET['id'];
     $stmt = $db->prepare("SELECT * FROM view_artikel WHERE id_artikel = ?");
-    $stmt->execute([$id]);
+    $stmt->execute([$currentId]);
     $berita = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Jika berita tidak ditemukan atau ID tidak ada, kembalikan ke halaman berita
+// Jika berita tidak ditemukan, kembalikan ke halaman berita
 if (!$berita) {
     echo "<script>alert('Berita tidak ditemukan atau telah dihapus.'); window.location='berita.php';</script>";
     exit;
 }
 
 // =================================================================
-// AKHIR TAMBAHAN LOGIKA
+// LOGIKA 2: AMBIL DATA SIDEBAR (PRESTASI) - KECUALI ID SAAT INI
 // =================================================================
+// Mengambil 3 berita kategori 'Prestasi', tapi BUKAN berita yang sedang dibuka
+$stmtPrestasi = $db->prepare("SELECT * FROM view_artikel WHERE kategori LIKE '%Prestasi%' AND id_artikel != ? ORDER BY tanggal_upload DESC LIMIT 3");
+$stmtPrestasi->execute([$currentId]);
+$sidebarPrestasi = $stmtPrestasi->fetchAll(PDO::FETCH_ASSOC);
+
+// =================================================================
+// LOGIKA 3: AMBIL DATA SIDEBAR (ANNOUNCEMENT) - KECUALI ID SAAT INI
+// =================================================================
+// Mengambil 3 berita kategori 'Pengumuman' atau 'Announcement', tapi BUKAN berita yang sedang dibuka
+$stmtAnnouncement = $db->prepare("SELECT * FROM view_artikel WHERE (kategori LIKE '%Pengumuman%' OR kategori LIKE '%Announcement%') AND id_artikel != ? ORDER BY tanggal_upload DESC LIMIT 3");
+$stmtAnnouncement->execute([$currentId]);
+$sidebarAnnouncement = $stmtAnnouncement->fetchAll(PDO::FETCH_ASSOC);
 
 
-// --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
+// --- 4. AMBIL DATA SETTING (Logo & Nama Lab) ---
 $logoSrc = '../assets/images/logo.png';
 $namaLabText = 'Laboratorium Business Analytics'; 
 
@@ -164,7 +175,6 @@ try {
         <?php else: ?>
             <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
         <?php endif; ?>
-
     </nav>
 
     <div class="content-container">
@@ -183,7 +193,7 @@ try {
                 <h1 class="news-title"><?= htmlspecialchars($berita['judul']); ?></h1>
                 
                 <div class="news-meta">
-                    <span><i class="fas fa-user"></i> Admin</span>
+                    <span><i class="fas fa-user"></i> <?= !empty($berita['nama_user']) ? htmlspecialchars($berita['nama_user']) : 'Admin'; ?></span>
                     <span><i class="fas fa-calendar-alt"></i> <?= date('d F Y', strtotime($berita['tanggal_upload'])); ?></span>
                     <span><i class="fa fa-tag"></i> <?= htmlspecialchars($berita['kategori']); ?></span>
                 </div>
@@ -193,116 +203,78 @@ try {
                 ?>
                 <img src="<?= $gambarUtama; ?>" alt="Gambar Berita" class="news-image">
                 
-                <div class="news-content">
-                    <?= $berita['konten']; ?>
+                <div class="news-content" style="text-align: justify; line-height: 1.6;">
+                    <?= nl2br(htmlspecialchars_decode($berita['konten'])); ?>
                 </div>
-
-                </div>
+            </div>
             
             <div class="col-lg-4">
+                
                 <div class="sidebar-section">
-                    <h3 class="sidebar-title">Prestasi</h3>
+                    <h3 class="sidebar-title">Prestasi Lainnya</h3>
                     
-                    <div class="news-item">
-                        <img src="./img/MissingPicturee.jpg" alt="Prestasi 1" class="news-thumbnail">
-                        <div class="news-info">
-                            <h4 class="news-sidebar-title">
-                                <a href="#">Prestasi Mahasiswa dalam Kompetisi Data Science Nasional</a>
-                            </h4>
-                            <p class="news-sidebar-desc">Mahasiswa Laboratorium Business Analytics berhasil meraih juara pertama dalam kompetisi data science tingkat nasional.</p>
-                            <div class="news-sidebar-meta">
-                                <span><i class="fas fa-user"></i> Admin</span>
-                                <span><i class="fas fa-calendar-alt"></i> 15 Mar 2023</span>
-                                <span><i class="fas fa-tag"></i> Prestasi</span>
+                    <?php if (count($sidebarPrestasi) > 0): ?>
+                        <?php foreach($sidebarPrestasi as $row): ?>
+                            <?php 
+                                $imgSide = !empty($row['file_path']) ? '../admin/' . $row['file_path'] : './img/MissingPicturee.jpg';
+                            ?>
+                            <div class="news-item">
+                                <img src="<?= $imgSide; ?>" alt="Thumbnail" class="news-thumbnail">
+                                <div class="news-info">
+                                    <h4 class="news-sidebar-title">
+                                        <a href="beritaUtama.php?id=<?= $row['id_artikel']; ?>">
+                                            <?= htmlspecialchars($row['judul']); ?>
+                                        </a>
+                                    </h4>
+                                    <p class="news-sidebar-desc">
+                                        <?= substr(strip_tags($row['konten']), 0, 80); ?>...
+                                    </p>
+                                    <div class="news-sidebar-meta">
+                                        <span><i class="fas fa-calendar-alt"></i> <?= date('d M Y', strtotime($row['tanggal_upload'])); ?></span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="news-item">
-                        <img src="./img/MissingPicturee.jpg" alt="Prestasi 2" class="news-thumbnail">
-                        <div class="news-info">
-                            <h4 class="news-sidebar-title">
-                                <a href="#">Penghargaan untuk Inovasi dalam Analisis Bisnis</a>
-                            </h4>
-                            <p class="news-sidebar-desc">Laboratorium Business Analytics menerima penghargaan atas inovasi dalam pengembangan solusi analisis bisnis.</p>
-                            <div class="news-sidebar-meta">
-                                <span><i class="fas fa-user"></i> Admin</span>
-                                <span><i class="fas fa-calendar-alt"></i> 10 Feb 2023</span>
-                                <span><i class="fas fa-tag"></i> Prestasi</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="news-item">
-                        <img src="./img/MissingPicturee.jpg" alt="Prestasi 3" class="news-thumbnail">
-                        <div class="news-info">
-                            <h4 class="news-sidebar-title">
-                                <a href="#">Laboratorium Business Analytics Raih Akreditasi A</a>
-                            </h4>
-                            <p class="news-sidebar-desc">Laboratorium Business Analytics berhasil meraih akreditasi A dari lembaga akreditasi nasional.</p>
-                            <div class="news-sidebar-meta">
-                                <span><i class="fas fa-user"></i> Admin</span>
-                                <span><i class="fas fa-calendar-alt"></i> 5 Jan 2023</span>
-                                <span><i class="fas fa-tag"></i> Prestasi</span>
-                            </div>
-                        </div>
-                    </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="text-muted small">Belum ada data prestasi lainnya.</p>
+                    <?php endif; ?>
                 </div>
                 
                 <div class="sidebar-section">
                     <h3 class="sidebar-title">Announcement</h3>
                     
-                    <div class="news-item">
-                        <img src="./img/MissingPicturee.jpg" alt="Announcement 1" class="news-thumbnail">
-                        <div class="news-info">
-                            <h4 class="news-sidebar-title">
-                                <a href="#">Jadwal Baru Penggunaan Laboratorium Semester Genap</a>
-                            </h4>
-                            <p class="news-sidebar-desc">Pengumuman jadwal baru penggunaan laboratorium untuk semester genap tahun akademik 2022/2023.</p>
-                            <div class="news-sidebar-meta">
-                                <span><i class="fas fa-user"></i> Admin</span>
-                                <span><i class="fas fa-calendar-alt"></i> 20 Mar 2023</span>
-                                <span><i class="fas fa-tag"></i> Pengumuman</span>
+                    <?php if (count($sidebarAnnouncement) > 0): ?>
+                        <?php foreach($sidebarAnnouncement as $row): ?>
+                            <?php 
+                                $imgSide = !empty($row['file_path']) ? '../admin/' . $row['file_path'] : './img/MissingPicturee.jpg';
+                            ?>
+                            <div class="news-item">
+                                <img src="<?= $imgSide; ?>" alt="Thumbnail" class="news-thumbnail">
+                                <div class="news-info">
+                                    <h4 class="news-sidebar-title">
+                                        <a href="beritaUtama.php?id=<?= $row['id_artikel']; ?>">
+                                            <?= htmlspecialchars($row['judul']); ?>
+                                        </a>
+                                    </h4>
+                                    <p class="news-sidebar-desc">
+                                        <?= substr(strip_tags($row['konten']), 0, 80); ?>...
+                                    </p>
+                                    <div class="news-sidebar-meta">
+                                        <span><i class="fas fa-calendar-alt"></i> <?= date('d M Y', strtotime($row['tanggal_upload'])); ?></span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="news-item">
-                        <img src="./img/MissingPicturee.jpg" alt="Announcement 2" class="news-thumbnail">
-                        <div class="news-info">
-                            <h4 class="news-sidebar-title">
-                                <a href="#">Workshop Business Analytics untuk Mahasiswa Baru</a>
-                            </h4>
-                            <p class="news-sidebar-desc">Laboratorium Business Analytics akan menyelenggarakan workshop untuk mahasiswa baru angkatan 2022.</p>
-                            <div class="news-sidebar-meta">
-                                <span><i class="fas fa-user"></i> Admin</span>
-                                <span><i class="fas fa-calendar-alt"></i> 12 Mar 2023</span>
-                                <span><i class="fas fa-tag"></i> Pengumuman</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="news-item">
-                        <img src="./img/MissingPicturee.jpg" alt="Announcement 3" class="news-thumbnail">
-                        <div class="news-info">
-                            <h4 class="news-sidebar-title">
-                                <a href="#">Pendaftaran Program Magang di Industri Mitra</a>
-                            </h4>
-                            <p class="news-sidebar-desc">Pembukaan pendaftaran program magang di perusahaan mitra Laboratorium Business Analytics.</p>
-                            <div class="news-sidebar-meta">
-                                <span><i class="fas fa-user"></i> Admin</span>
-                                <span><i class="fas fa-calendar-alt"></i> 8 Mar 2023</span>
-                                <span><i class="fas fa-tag"></i> Pengumuman</span>
-                            </div>
-                        </div>
-                    </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="text-muted small">Belum ada pengumuman lainnya.</p>
+                    <?php endif; ?>
                 </div>
                 
                 <div class="sidebar-section">
                     <h3 class="sidebar-title">Category</h3>
                     <ul class="category-list">
-                        <li><a href="#"><i class="fas fa-images"></i> Gallery</a></li>
-                        <li><a href="#"><i class="fas fa-cogs"></i> Content Management System</a></li>
+                        <li><a href="galeri.php"><i class="fas fa-images"></i> Gallery</a></li>
+                        <li><a href="newsInputService.php"><i class="fas fa-cogs"></i> Content Management System</a></li>
                     </ul>
                 </div>
             </div>
@@ -312,7 +284,6 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // --- 0. NAV MENU LOGIC (HAMBURGER) ---
         function toggleMenu() {
             const navMenu = document.getElementById('navMenu');
             const hamburgerIcon = document.querySelector('.hamburger i');
@@ -326,7 +297,6 @@ try {
                 hamburgerIcon.classList.add('fa-bars');
             }
         }
-        
     </script>
 </body>
 </html>

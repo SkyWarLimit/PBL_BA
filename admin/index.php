@@ -4203,8 +4203,14 @@ try {
         }
 
         function escapeHtml(s) {
-            return s ? s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
-        }
+    if (!s) return '';
+    return s
+        .replace(/\\/g, '\\\\')       // 1. Handle backslash dulu
+        .replace(/\n/g, "\\n")        // 2. Handle ENTER (Penyebab utama error)
+        .replace(/\r/g, "")           // 3. Hapus carriage return
+        .replace(/'/g, "\\'")         // 4. Handle kutip satu (untuk JS)
+        .replace(/"/g, "&quot;");     // 5. Handle kutip dua (untuk HTML)
+}
 
         function loadKontak() {
             document.getElementById('page-title-text').innerText = 'Pesan Masuk';

@@ -79,7 +79,7 @@ try {
             $kategori = $_POST['kategori_pemohon'];
             $nomorId = $_POST['nomor_identitas'];
             $instansi = $_POST['asal_instansi'];
-            $hp = $_POST['no_handphone'];
+            $hp = $_POST['no_hp'];
             $checkIn = $_POST['check_in'];
             $checkOut = $_POST['check_out'];
             $tanggalOnly = date('Y-m-d', strtotime($checkIn));
@@ -89,7 +89,7 @@ try {
                 // Insert Peminjaman
                 $sqlMain = "INSERT INTO peminjaman (
                                 id_user, tujuan, kategori_pemohon, nomor_identitas, 
-                                asal_instansi, no_handphone, status, tanggal_peminjaman, created_at
+                                asal_instansi, no_hp, status, tanggal_peminjaman, created_at
                             ) VALUES (?, ?, ?, ?, ?, ?, 'Pending', ?, NOW())";
                 
                 // Cek Driver untuk Last Insert ID (PostgreSQL vs MySQL)

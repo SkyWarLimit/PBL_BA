@@ -1,20 +1,12 @@
 <?php
 session_start();
 
-// --- LOGIKA SESSION ---
-$isLoggedIn = isset($_SESSION['user_id']);
-$userName = $isLoggedIn ? $_SESSION['nama'] : '';
-$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
-
-// --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
-// Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
-// Gunakan __DIR__ agar path relatifnya aman
+// --- 1. KONEKSI DATABASE & LOGIKA UTAMA ---
 $dbPath = __DIR__ . '/../admin/config/database.php';
 
 if (file_exists($dbPath)) {
     require_once $dbPath;
 } else {
-    // Fallback jika path beda
     $dbPathAlternative = $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php';
     if (file_exists($dbPathAlternative)) {
         require_once $dbPathAlternative;
@@ -32,31 +24,25 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
 // --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
 $logoSrc = '../assets/images/logo.png';
-$namaLabText = 'Laboratorium Business Analytics'; // Default text
+$namaLabText = 'Laboratorium Business Analytics'; 
 
 try {
-    // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
     $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
     $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
     $settings = [];
     foreach ($resultRaw as $row) {
         $settings[$row['key']] = $row;
     }
 
-    // 1. Set Logo (Ambil dari kolom file_path)
     if (!empty($settings['logo']['file_path'])) {
         $logoSrc = '../admin/' . $settings['logo']['file_path'];
     }
-
-    // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
     if (!empty($settings['nama_lab']['value'])) {
         $namaLabText = $settings['nama_lab']['value'];
     }
-    
 } catch (Exception $e) { 
-    /* Ignore error agar web tetap jalan pakai default */
+    /* Ignore error */
 }
 ?>
 
@@ -67,8 +53,12 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laboratorium Business Analytics - Table Booking</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/tableBookingStyle.css?v=<?php echo time(); ?>">
 
@@ -80,14 +70,13 @@ try {
             color: #333 !important;
             box-shadow: 2px 0 5px rgba(0,0,0,0.05);
         }
-        
-        /* CSS Tambahan untuk Tampilan Kotak Booking yang Lebih Rapi */
         .booking-rectangle {
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             padding: 5px 8px !important;
-            border-left: 4px solid !important; /* Aksen garis di kiri */
+            border-left: 4px solid !important;
+            cursor: pointer; /* Tambahkan cursor pointer */
         }
         .booking-time {
             font-size: 11px;
@@ -119,7 +108,7 @@ try {
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Logo">
             </div>
             <div class="lab-name-container">
                 <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
@@ -218,13 +207,15 @@ try {
                 </button>
                 <button class="today-btn" id="today-btn">Today</button>
             </div>
+            
             <div class="action-buttons">
                 <?php if ($isLoggedIn): ?>
                     <button class="btn-add-booking" onclick="window.location.href='../pages/booking.php'">Add Booking</button>
+                    <button class="btn-cancel-booking" onclick="window.location.href='../pages/formCancel.php'">Cancel Booking</button>
                 <?php else: ?>
-                    <button class="btn-add-booking" onclick="alert('Silakan login terlebih dahulu untuk melakukan booking.')">Login to Book</button>
+                    <button class="btn-add-booking" onclick="showLoginAlert('book')">Add Booking</button>
+                    <button class="btn-cancel-booking" onclick="showLoginAlert('cancel')">Cancel Booking</button>
                 <?php endif; ?>
-                <button class="btn-cancel-booking" onclick="window.location.href='../pages/formCancel.php'">Cancel Booking</button>
             </div>
         </div>
 
@@ -279,48 +270,7 @@ try {
         </div>
     </div>
 
-    <div class="modal-overlay" id="add-booking-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Tambah Booking Baru</div>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="booking-date">Tanggal:</label>
-                    <select id="booking-date" class="form-control"></select>
-                </div>
-                <div class="form-group">
-                    <label for="booking-time">Waktu:</label>
-                    <div class="time-inputs">
-                        <select id="start-hour" class="form-control"></select>
-                        <select id="start-minute" class="form-control">
-                            <option value="00">00</option><option value="15">15</option>
-                            <option value="30">30</option><option value="45">45</option>
-                        </select>
-                        <span style="line-height: 38px;">-</span>
-                        <select id="end-hour" class="form-control"></select>
-                        <select id="end-minute" class="form-control">
-                            <option value="00">00</option><option value="15">15</option>
-                            <option value="30">30</option><option value="45">45</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="booker-instansi">Instansi / Prodi:</label>
-                    <input type="text" id="booker-instansi" class="form-control" placeholder="Contoh: TI, Manajemen, BEM">
-                </div>
-                <div class="form-group">
-                    <label for="booking-purpose">Keperluan:</label>
-                    <input type="text" id="booking-purpose" class="form-control" placeholder="Masukkan keperluan">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-modal btn-add-booking-modal" id="submit-booking">Simpan Booking</button>
-                <button class="btn-modal btn-close-modal">Batal</button>
-            </div>
-        </div>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         // --- NAV MENU LOGIC ---
@@ -354,6 +304,29 @@ try {
             });
         });
 
+        // --- FUNGSI ALERT LOGIN (TAMBAHAN BARU) ---
+        function showLoginAlert(actionType) {
+            let message = 'Silakan login terlebih dahulu untuk melakukan booking.';
+            if(actionType === 'cancel') {
+                message = 'Silakan login terlebih dahulu untuk membatalkan booking.';
+            }
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Akses Terbatas',
+                text: message,
+                showCancelButton: true,
+                confirmButtonColor: '#435ebe', // Warna Biru
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Login Sekarang',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '../admin/login.php';
+                }
+            });
+        }
+
         // --- KONFIGURASI API ---
         const API_URL = '../admin/api/peminjaman.php'; 
 
@@ -373,21 +346,18 @@ try {
             document.getElementById('next-week').addEventListener('click', () => changeWeek(5));
             document.getElementById('today-btn').addEventListener('click', goToToday);
             setupModalEvents();
-            generateHourOptions();
             loadBookingsFromAPI();
         });
 
-        // --- FETCH DATA (FILTER ONLY APPROVED) ---
+        // --- FETCH DATA ---
         async function loadBookingsFromAPI() {
             try {
                 const response = await fetch(API_URL);
                 const result = await response.json();
 
                 if (result.success) {
-                    // FILTER DAN MAPPING DATA
                     bookingsData = result.data
                         .filter(item => {
-                            // LOGIKA FILTER: Hanya status Approved / Confirmed
                             const s = item.status.toLowerCase();
                             return s === 'approved' || s === 'confirmed';
                         })
@@ -400,14 +370,10 @@ try {
                                 date: checkInParts[0],
                                 startTime: checkInParts[1].substring(0, 5),
                                 endTime: checkOutParts[1].substring(0, 5),
-                                
-                                // Mapping untuk tampilan
-                                instansi: item.asal_instansi, // Untuk judul kotak (Prodi/Instansi)
-                                bookerName: item.nama_akun,   // Untuk nama kecil (Peminjam)
+                                instansi: item.asal_instansi,
+                                bookerName: item.nama_akun,
                                 purpose: item.tujuan,
                                 status: item.status,
-                                
-                                // Warna Khusus Approved (Hijau)
                                 color: 'rgba(76, 175, 80, 0.15)',
                                 borderColor: 'rgba(76, 175, 80, 0.6)'
                             };
@@ -416,65 +382,6 @@ try {
                 }
             } catch (error) {
                 console.error('Error fetching data:', error);
-            }
-        }
-
-        // --- SUBMIT DATA (POST) ---
-        async function submitBookingToAPI() {
-            const btnSubmit = document.getElementById('submit-booking');
-            
-            const dateVal = document.getElementById('booking-date').value;
-            const startH = document.getElementById('start-hour').value;
-            const startM = document.getElementById('start-minute').value;
-            const endH = document.getElementById('end-hour').value;
-            const endM = document.getElementById('end-minute').value;
-            
-            // Saya ubah ID input ini agar sesuai dengan Instansi yang diminta
-            const instansi = document.getElementById('booker-instansi').value; 
-            const purpose = document.getElementById('booking-purpose').value; 
-
-            if (!instansi || !purpose) {
-                alert("Instansi dan Keperluan harus diisi!");
-                return;
-            }
-
-            const checkIn = `${dateVal} ${startH}:${startM}:00`;
-            const checkOut = `${dateVal} ${endH}:${endM}:00`;
-
-            if (checkOut <= checkIn) {
-                alert("Waktu selesai harus setelah waktu mulai.");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('action', 'create');
-            formData.append('check_in', checkIn);
-            formData.append('check_out', checkOut);
-            formData.append('tujuan', purpose);
-            formData.append('asal_instansi', instansi); 
-            // Default Values
-            formData.append('kategori_pemohon', 'Umum'); 
-            formData.append('nomor_identitas', '-');     
-            formData.append('no_handphone', '-');        
-
-            btnSubmit.textContent = 'Menyimpan...';
-            btnSubmit.disabled = true;
-
-            try {
-                const response = await fetch(API_URL, { method: 'POST', body: formData });
-                const result = await response.json();
-                if (result.success) {
-                    alert('Booking berhasil diajukan! Menunggu konfirmasi Admin.');
-                    document.getElementById('add-booking-modal').style.display = 'none';
-                    loadBookingsFromAPI(); 
-                } else {
-                    alert('Gagal: ' + result.message);
-                }
-            } catch (error) {
-                alert('Terjadi kesalahan koneksi.');
-            } finally {
-                btnSubmit.textContent = 'Simpan Booking';
-                btnSubmit.disabled = false;
             }
         }
 
@@ -527,7 +434,7 @@ try {
                 for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
                     const topPos = (hour - START_HOUR) * PIXELS_PER_HOUR;
                     if(hour !== START_HOUR) { 
-                         const line = document.createElement('div'); line.className = 'time-line line-hour'; line.style.top = `${topPos}px`; container.appendChild(line);
+                          const line = document.createElement('div'); line.className = 'time-line line-hour'; line.style.top = `${topPos}px`; container.appendChild(line);
                     }
                     if (hour !== END_HOUR) {
                         const halfLine = document.createElement('div'); halfLine.className = 'time-line line-half'; halfLine.style.top = `${topPos + 30}px`; container.appendChild(halfLine);
@@ -537,7 +444,6 @@ try {
             }
             tableBody.appendChild(containerRow);
             renderAllBookings();
-            updateBookingDateOptions();
         }
 
         function renderAllBookings() {
@@ -545,7 +451,6 @@ try {
             bookingsData.forEach(booking => renderBooking(booking));
         }
 
-        // --- RENDER KOTAK BOOKING (MODIFIKASI TAMPILAN) ---
         function renderBooking(booking) {
             const date = new Date(booking.date);
             const mondayDate = getMonday(currentDate);
@@ -574,7 +479,6 @@ try {
             el.style.backgroundColor = booking.color;
             el.style.borderColor = booking.borderColor;
             
-            // TAMPILAN ISI KOTAK: JAM - INSTANSI - NAMA
             el.innerHTML = `
                 <div class="booking-time">${booking.startTime} - ${booking.endTime}</div>
                 <div class="booking-instansi">${booking.instansi}</div>
@@ -591,13 +495,13 @@ try {
         function showBookingDetail(booking) {
             document.getElementById('detail-date').textContent = booking.date; 
             document.getElementById('detail-time').textContent = `${booking.startTime} - ${booking.endTime}`;
-            document.getElementById('detail-instansi').textContent = booking.instansi; // Tampilkan Instansi
-            document.getElementById('detail-booker').textContent = booking.bookerName; // Tampilkan Nama
+            document.getElementById('detail-instansi').textContent = booking.instansi;
+            document.getElementById('detail-booker').textContent = booking.bookerName;
             document.getElementById('detail-purpose').textContent = booking.purpose;
             document.getElementById('detail-status').textContent = booking.status;
             
             const statusEl = document.getElementById('detail-status');
-            statusEl.style.color = '#2ecc71'; // Hijau karena pasti approved
+            statusEl.style.color = '#2ecc71';
             statusEl.style.fontWeight = 'bold';
             document.getElementById('booking-detail-modal').style.display = 'flex';
         }
@@ -610,28 +514,11 @@ try {
         }
         function getShortMonthName(idx) { return ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'][idx]; }
         function getShortDayName(idx) { return ['Min','Sen','Sel','Rab','Kam','Jum','Sab'][idx]; }
-        function formatDate(date) { const y = date.getFullYear(); const m = String(date.getMonth() + 1).padStart(2, '0'); const d = String(date.getDate()).padStart(2, '0'); return `${y}-${m}-${d}`; }
-
-        function updateBookingDateOptions() {
-            const select = document.getElementById('booking-date'); select.innerHTML = ''; const monday = getMonday(currentDate);
-            for(let i=0; i<5; i++) {
-                const d = new Date(monday); d.setDate(d.getDate() + i); const opt = document.createElement('option'); opt.value = formatDate(d); opt.textContent = `${getShortDayName(d.getDay())}, ${d.getDate()} ${getShortMonthName(d.getMonth())} ${d.getFullYear()}`; select.appendChild(opt);
-            }
-        }
-        function generateHourOptions() {
-            const startSel = document.getElementById('start-hour'); const endSel = document.getElementById('end-hour'); startSel.innerHTML = ''; endSel.innerHTML = '';
-            for(let i=START_HOUR; i<=END_HOUR; i++) {
-                const val = String(i).padStart(2,'0'); startSel.add(new Option(val, val)); endSel.add(new Option(val, val));
-            }
-            startSel.value = '08'; endSel.value = '09';
-        }
 
         function setupModalEvents() {
             document.querySelectorAll('.close-modal, .btn-close-modal').forEach(btn => {
-                btn.addEventListener('click', () => { document.getElementById('booking-detail-modal').style.display = 'none'; document.getElementById('add-booking-modal').style.display = 'none'; });
+                btn.addEventListener('click', () => { document.getElementById('booking-detail-modal').style.display = 'none'; });
             });
-            const btnAdd = document.getElementById('open-add-booking'); if(btnAdd) btnAdd.addEventListener('click', () => document.getElementById('add-booking-modal').style.display = 'flex');
-            const btnSubmit = document.getElementById('submit-booking'); if(btnSubmit) btnSubmit.addEventListener('click', submitBookingToAPI);
         }
         
         function changeWeek(days) { currentDate.setDate(currentDate.getDate() + days); generateTableData(); }

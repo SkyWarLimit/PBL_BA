@@ -625,7 +625,7 @@ function formatTanggalIndo($tanggal) {
                     </div>
                 <?php else: ?>
                     <div class="mobile-login-btn">
-                        <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                        <a class="nav-link login-link" href="./admin/login.php">Login</a>
                     </div>
                 <?php endif; ?>
             </li>
@@ -702,10 +702,16 @@ function formatTanggalIndo($tanggal) {
             <h2 class="about-title">About the Laboratory</h2>
             <div class="about-line"></div>
             <p class="about-description">
-                Laboratorium Business Analytics Politeknik Negeri Malang merupakan unit strategis yang dirancang sebagai ekosistem 
-                praktik untuk mendukung transformasi digital. Laboratorium ini berfungsi sebagai pusat pembelajaran berbasis proyek 
-                (PBL), penelitian terapan, dan pengabdian masyarakat yang berfokus pada pengambilan keputusan berbasis bukti guna 
-                menghasilkan lulusan vokasi yang unggul, adaptif, dan berdaya saing di industri.
+                Unit penunjang akademik di Jurusan Teknologi Informasi yang difokuskan pada pengembangan kompetensi di bidang 
+                analisis sistem, manajemen data, serta pemodelan bisnis. Laboratorium ini mendukung kegiatan praktikum, 
+                penelitian, dan pengembangan yang berkaitan dengan analisis kebutuhan sistem, perancangan proses bisnis, 
+                hingga penerapan teknologi informasi dalam mendukung keputusan organisasi.
+                <br>
+                Selain menjadi sarana pembelajaran mahasiswa, Laboratorium Analisa Bisnis juga berperan sebagai wadah penelitian 
+                dan inovasi bagi dosen maupun mahasiswa dalam mengkaji solusi berbasis data dan teknologi untuk meningkatkan 
+                efektivitas proses bisnis. Peran laboratorium ini diharapkan mampu memperkuat kualitas pembelajaran, 
+                memperdalam riset di bidang sistem informasi, serta mendukung terciptanya lulusan yang kompeten di bidang 
+                analisis dan perancangan bisnis.
             </p>
         </div>
     </section>
@@ -866,7 +872,7 @@ function formatTanggalIndo($tanggal) {
                     <div class="section-title-underline2"></div>
                 </div>
                 <div class="news-btn-container">
-                    <button class="news-btn">
+                    <button class="news-btn" onclick="window.location.href='./pages/berita.php'">
                         <span class="btn-text">
                             Read More
                             <i class="fas fa-arrow-up arrow-icon"></i>
@@ -876,113 +882,111 @@ function formatTanggalIndo($tanggal) {
             </div>
 
             <div class="row g-4">
-    
-    <div class="col-lg-6">
-        <div class="card news-card-lg rounded-3 overflow-hidden border-0 shadow-sm h-100">
-            <div class="news-lg-img-container position-relative h-100">
-                <?php if ($mainNews): ?>
-                    <?php 
-                        // Path gambar (tambahkan prefix admin/ jika perlu)
-                        $mainImg = !empty($mainNews['file_path']) ? './admin/' . $mainNews['file_path'] : './assets/img/default-news.jpg';
-                    ?>
-                    <img src="<?php echo htmlspecialchars($mainImg); ?>" 
-                         alt="<?php echo htmlspecialchars($mainNews['judul']); ?>" 
-                         class="news-lg-img"
-                         onerror="this.src='./assets/img/default-news.jpg'">
+                
+                <div class="col-lg-6">
+                    <div class="card news-card-lg rounded-3 overflow-hidden border-0 shadow-sm h-100">
+                        <div class="news-lg-img-container position-relative h-100">
+                            <?php if ($mainNews): ?>
+                                <?php 
+                                    $mainImg = !empty($mainNews['file_path']) ? './admin/' . $mainNews['file_path'] : './assets/img/default-news.jpg';
+                                ?>
+                                <img src="<?php echo htmlspecialchars($mainImg); ?>" 
+                                     alt="<?php echo htmlspecialchars($mainNews['judul']); ?>" 
+                                     class="news-lg-img"
+                                     onerror="this.src='./assets/img/default-news.jpg'">
 
-                    <div class="news-lg-content position-absolute bottom-0 start-0 w-100 p-4 p-lg-5">
-                        <h3 class="fw-bold text-white mb-3">
-                            <a href="detail_berita.php?id=<?php echo $mainNews['id_artikel']; ?>" class="text-white text-decoration-none stretched-link">
-                                <?php echo htmlspecialchars($mainNews['judul']); ?>
-                            </a>
-                        </h3>
+                                <div class="news-lg-content position-absolute bottom-0 start-0 w-100 p-4 p-lg-5">
+                                    <h3 class="fw-bold text-white mb-3">
+                                        <a href="./pages/beritaUtama.php?id=<?php echo $mainNews['id_artikel']; ?>" class="text-white text-decoration-none stretched-link">
+                                            <?php echo htmlspecialchars($mainNews['judul']); ?>
+                                        </a>
+                                    </h3>
 
-                        <div class="d-flex flex-wrap gap-3 text-white-50 small mb-3">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-person-circle me-2"></i> 
-                                <?php echo htmlspecialchars($mainNews['nama_pengupload'] ?? 'Admin'); ?>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-calendar4-event me-2"></i> 
-                                <?php echo formatTanggalIndo($mainNews['tanggal_upload']); ?>
-                            </div>
-                            <?php if(!empty($mainNews['kategori'])): ?>
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-tag-fill me-2"></i> <?php echo htmlspecialchars($mainNews['kategori']); ?>
-                            </div>
+                                    <div class="d-flex flex-wrap gap-3 text-white-50 small mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person-circle me-2"></i> 
+                                            <?php echo htmlspecialchars($mainNews['nama_pengupload'] ?? 'Admin'); ?>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-calendar4-event me-2"></i> 
+                                            <?php echo formatTanggalIndo($mainNews['tanggal_upload']); ?>
+                                        </div>
+                                        <?php if(!empty($mainNews['kategori'])): ?>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-tag-fill me-2"></i> <?php echo htmlspecialchars($mainNews['kategori']); ?>
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <p class="text-white-50 small mb-0 line-clamp-2">
+                                        <?php 
+                                            $deskripsi = !empty($mainNews['ringkasan']) ? $mainNews['ringkasan'] : $mainNews['konten'];
+                                            echo htmlspecialchars(substr(strip_tags($deskripsi), 0, 150)) . '...'; 
+                                        ?>
+                                    </p>
+                                </div>
+                            <?php else: ?>
+                                <div class="d-flex align-items-center justify-content-center h-100 bg-secondary text-white p-5">
+                                    <p>Belum ada berita terbaru.</p>
+                                </div>
                             <?php endif; ?>
+
+                            <div class="news-hover-overlay"></div>
                         </div>
-
-                        <p class="text-white-50 small mb-0 line-clamp-2">
-                            <?php 
-                                // Prioritaskan ringkasan, jika kosong ambil potongan konten
-                                $deskripsi = !empty($mainNews['ringkasan']) ? $mainNews['ringkasan'] : $mainNews['konten'];
-                                echo htmlspecialchars(substr(strip_tags($deskripsi), 0, 150)) . '...'; 
-                            ?>
-                        </p>
-                    </div>
-                <?php else: ?>
-                    <div class="d-flex align-items-center justify-content-center h-100 bg-secondary text-white p-5">
-                        <p>Belum ada berita terbaru.</p>
-                    </div>
-                <?php endif; ?>
-
-                <div class="news-hover-overlay"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-6 d-flex flex-column gap-4">
-        
-        <?php if (!empty($sideNews)): ?>
-            <?php foreach ($sideNews as $item): ?>
-                <?php 
-                    $sideImg = !empty($item['file_path']) ? './admin/' . $item['file_path'] : './assets/img/default-news.jpg';
-                ?>
-                <div class="news-item-sm d-flex align-items-start gap-3 position-relative">
-                    <div class="news-sm-img rounded-3 flex-shrink-0 position-relative overflow-hidden">
-                        <img src="<?php echo htmlspecialchars($sideImg); ?>" 
-                             alt="<?php echo htmlspecialchars($item['judul']); ?>" 
-                             class="news-profile-img"
-                             onerror="this.src='./assets/img/default-news.jpg'">
-                        <div class="news-sm-hover-overlay"></div>
-                    </div>
-
-                    <div class="news-sm-content">
-                        <h5 class="fw-bold text-dark mb-2 line-clamp-2">
-                            <a href="detail_berita.php?id=<?php echo $item['id_artikel']; ?>" class="text-decoration-none text-dark stretched-link">
-                                <?php echo htmlspecialchars($item['judul']); ?>
-                            </a>
-                        </h5>
-
-                        <div class="d-flex flex-wrap gap-3 text-muted small mb-2" style="font-size: 0.75rem;">
-                            <span class="d-flex align-items-center">
-                                <i class="bi bi-person-circle me-1"></i> 
-                                <?php echo htmlspecialchars($item['nama_pengupload'] ?? 'Admin'); ?>
-                            </span>
-                            <span class="d-flex align-items-center">
-                                <i class="bi bi-calendar4-event me-1"></i> 
-                                <?php echo formatTanggalIndo($item['tanggal_upload']); ?>
-                            </span>
-                        </div>
-
-                        <p class="text-muted small mb-0 line-clamp-2">
-                            <?php 
-                                $deskripsiSide = !empty($item['ringkasan']) ? $item['ringkasan'] : $item['konten'];
-                                echo htmlspecialchars(substr(strip_tags($deskripsiSide), 0, 100)) . '...'; 
-                            ?>
-                        </p>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div class="text-muted d-flex align-items-center justify-content-center h-100 border rounded bg-light p-4">
-                <small>Tidak ada berita tambahan.</small>
-            </div>
-        <?php endif; ?>
 
-    </div>
-</div>
+                <div class="col-lg-6 d-flex flex-column gap-4">
+                    
+                    <?php if (!empty($sideNews)): ?>
+                        <?php foreach ($sideNews as $item): ?>
+                            <?php 
+                                $sideImg = !empty($item['file_path']) ? './admin/' . $item['file_path'] : './assets/img/default-news.jpg';
+                            ?>
+                            <div class="news-item-sm d-flex align-items-start gap-3 position-relative">
+                                <div class="news-sm-img rounded-3 flex-shrink-0 position-relative overflow-hidden">
+                                    <img src="<?php echo htmlspecialchars($sideImg); ?>" 
+                                         alt="<?php echo htmlspecialchars($item['judul']); ?>" 
+                                         class="news-profile-img"
+                                         onerror="this.src='./assets/img/default-news.jpg'">
+                                    <div class="news-sm-hover-overlay"></div>
+                                </div>
+
+                                <div class="news-sm-content">
+                                    <h5 class="fw-bold text-dark mb-2 line-clamp-2">
+                                        <a href="./pages/beritaUtama.php?id=<?php echo $item['id_artikel']; ?>" class="text-decoration-none text-dark stretched-link">
+                                            <?php echo htmlspecialchars($item['judul']); ?>
+                                        </a>
+                                    </h5>
+
+                                    <div class="d-flex flex-wrap gap-3 text-muted small mb-2" style="font-size: 0.75rem;">
+                                        <span class="d-flex align-items-center">
+                                            <i class="bi bi-person-circle me-1"></i> 
+                                            <?php echo htmlspecialchars($item['nama_pengupload'] ?? 'Admin'); ?>
+                                        </span>
+                                        <span class="d-flex align-items-center">
+                                            <i class="bi bi-calendar4-event me-1"></i> 
+                                            <?php echo formatTanggalIndo($item['tanggal_upload']); ?>
+                                        </span>
+                                    </div>
+
+                                    <p class="text-muted small mb-0 line-clamp-2">
+                                        <?php 
+                                            $deskripsiSide = !empty($item['ringkasan']) ? $item['ringkasan'] : $item['konten'];
+                                            echo htmlspecialchars(substr(strip_tags($deskripsiSide), 0, 100)) . '...'; 
+                                        ?>
+                                    </p>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="text-muted d-flex align-items-center justify-content-center h-100 border rounded bg-light p-4">
+                            <small>Tidak ada berita tambahan.</small>
+                        </div>
+                    <?php endif; ?>
+
+                </div>
+            </div>
         </div>
     </section>
 

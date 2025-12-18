@@ -4,7 +4,7 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
-// 2. Buffer Output (PENTING: Mencegah error "Unexpected token <")
+// 2. Buffer Output
 ob_start();
 
 header('Content-Type: application/json');
@@ -12,7 +12,7 @@ session_start();
 
 // Fungsi helper kirim JSON
 function sendJson($success, $message, $data = []) {
-    ob_clean(); // Hapus output sampah sebelum kirim
+    ob_clean(); 
     echo json_encode([
         'success' => $success,
         'message' => $message,
@@ -22,23 +22,19 @@ function sendJson($success, $message, $data = []) {
 }
 
 try {
-    // 3. LOAD DATABASE (Path Absolut)
+    // 3. LOAD DATABASE
     $dbPath = __DIR__ . '/../config/database.php';
 
     if (!file_exists($dbPath)) {
         throw new Exception("File database.php tidak ditemukan di: " . $dbPath);
     }
 
-    // Include file database
     require_once $dbPath;
 
-    // 4. DETEKSI KONEKSI OTOMATIS (MODIFIKASI UTAMA DISINI)
-    // Kita cari variabel koneksi yang mungkin digunakan
+    // 4. DETEKSI KONEKSI OTOMATIS
     if (function_exists('getDBConnection')) {
         $conn = getDBConnection();
     } elseif (isset($conn)) {
-        // Variabel umum: $conn
-        // Hapus pengecekan 'instanceof PDO' agar support semua driver (PDO/MySQLi/PgSQL)
     } elseif (isset($pdo)) {
         $conn = $pdo;
     } elseif (isset($db)) {
@@ -46,30 +42,23 @@ try {
     } elseif (isset($mysqli)) {
         $conn = $mysqli;
     } else {
-        // Debugging: Jika masih gagal, beri tahu variabel apa yang tersedia
-        // Filter variabel sistem PHP agar tidak bingung
         $vars = array_keys(get_defined_vars());
         $userVars = array_diff($vars, ['GLOBALS', '_ENV', '_SERVER', '_GET', '_POST', '_FILES', '_COOKIE', '_SESSION', '_REQUEST', 'dbPath']);
         $varList = implode(', ', $userVars);
-        
-        throw new Exception("Gagal Koneksi! Tidak ditemukan variabel database ($conn, $pdo, $db). Variabel yang ada di file: " . ($varList ?: 'Tidak ada'));
+        throw new Exception("Gagal Koneksi! Tidak ditemukan variabel database.");
     }
 
-    // Pastikan $conn benar-benar ada isinya
     if (empty($conn)) {
         throw new Exception("Variabel koneksi database terdeteksi NULL/Kosong.");
     }
 
-    // 5. CEK AUTH
-    if (!isset($_SESSION['user_id'])) {
-        // Jika session belum ada, kirim error JSON (bukan redirect) agar frontend bisa handle
-        throw new Exception("Sesi habis atau belum login.");
-    }
-    $userId = $_SESSION['user_id'];
-
     $method = $_SERVER['REQUEST_METHOD'];
 
-    // --- GET DATA ---
+    // ==================================================================
+    // MODIFIKASI DISINI: PENGECEKAN AUTH HANYA UNTUK METHOD POST
+    // ==================================================================
+
+    // --- GET DATA (PUBLIC - TIDAK BUTUH LOGIN) ---
     if ($method === 'GET') {
         if (isset($_GET['id'])) {
             $stmt = $conn->prepare("SELECT * FROM research_focus WHERE id_research = ?");
@@ -85,8 +74,15 @@ try {
         }
     }
 
-    // --- POST DATA ---
+    // --- POST DATA (PROTECTED - HARUS LOGIN) ---
     if ($method === 'POST') {
+        
+        // 5. CEK AUTH (DIPINDAH KE DALAM SINI)
+        if (!isset($_SESSION['user_id'])) {
+            throw new Exception("Anda tidak memiliki akses. Silakan login terlebih dahulu.");
+        }
+        $userId = $_SESSION['user_id'];
+
         $action = $_POST['action'] ?? '';
 
         // HAPUS

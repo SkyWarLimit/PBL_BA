@@ -7,6 +7,15 @@ $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 // Role default jika tidak ada session
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
 
+// --- TAMBAHKAN FUNGSI INI ---
+function potongTeks($teks, $jumlahKata = 20) {
+    $words = explode(" ", strip_tags($teks)); // Pecah jadi array kata & hapus tag HTML
+    if (count($words) > $jumlahKata) {
+        return implode(" ", array_slice($words, 0, $jumlahKata)) . '...';
+    }
+    return $teks;
+}
+
 // --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
 // Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
 // Gunakan __DIR__ agar path relatifnya aman
@@ -284,14 +293,11 @@ try {
                         <span class="title-line business-analytics">Business Analytics</span>
                     </h1>
                     <p class="hero-detailed-description">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                        labore et dolore magna aliqua.
-                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                        commodo consequat.
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-                        pariatur.
-                        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-                        anim id est laborum.
+                        Laboratorium Business Analytics didirikan untuk menjembatani kesenjangan antara kurikulum akademik 
+                        dengan kebutuhan industri analitik modern. Laboratorium ini menyediakan lingkungan uji yang stabil, 
+                        repositori data terkurasi, dan prosedur operasional berstandar profesional. Fokus kami adalah memastikan 
+                        setiap tahapan analitik—mulai dari akuisisi data hingga visualisasi strategis—dijalankan dengan 
+                        integritas dan metodologi yang tepat.
                     </p>
                 </div>
             </div>
@@ -345,9 +351,9 @@ try {
             <div class="col-12">
                 <h2 class="section-title mb-3">Visi & Misi</h2>
                 <p class="section-description mb-5">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                    aliquip ex ea commodo consequat.
+                    Visi dan misi kami merupakan kompas strategis yang memandu seluruh aktivitas laboratorium. 
+                    Kami berkomitmen untuk menjadi garda terdepan dalam inovasi analitik yang memberikan nilai tambah nyata bagi 
+                    dunia pendidikan, industri, dan masyarakat luas.
                 </p>
                 <div class="vision-mission-card mb-4">
                     <h3 class="vision-mission-title">Visi</h3>
@@ -388,14 +394,11 @@ try {
             <div class="col-lg-5 mb-4 mb-lg-0">
                 <h2 class="roadmap-title mb-3">Road Map<br>Laboratory Business Analytics</h2>
                 <p class="section-description">
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Dicta blanditiis dolorem debitis natus amet
-                    nihil saepe sequi modi ipsum nemo. Ex doloribus consequuntur,
-                    nesciunt temporibus aliquam commodi sit facilis? Voluptatem veritatis ipsam natus voluptatum,
-                    laborum magni,
-                    deserunt molestias atque temporibus architecto quia optio illum officia provident voluptas explicabo
-                    ad aut sunt repudiandae nulla non laboriosam! Assumenda dolorem,
-                    quia omnis deserunt voluptates sint eveniet libero autem, inventore sapiente eaque commodi,
-                    reiciendis alias provident! Vero, cumque reprehenderit.
+                    Peta jalan Laboratorium Business Analytics dirancang secara sistematis untuk memastikan keberlanjutan dan 
+                    pertumbuhan yang terukur dalam jangka panjang. Rencana ini mencakup berbagai aspek mulai dari penguatan kualitas 
+                    lulusan melalui kurikulum yang relevan, pengembangan riset terapan yang mendalam, hingga perluasan jejaring kemitraan 
+                    strategis. Setiap fase dalam roadmap ini merupakan batu loncatan untuk mewujudkan visi laboratorium sebagai pusat 
+                    keunggulan analitik yang berdampak signifikan di tingkat regional maupun internasional.
                 </p>
             </div>
 
@@ -423,9 +426,8 @@ try {
         <div class="org-structure py-5" id="struktur-organisasi">
             <h2 class="section-title mb-3">Struktur Organisasi</h2>
             <p class="section-description mb-5">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-                dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                ex ea commodo consequat.
+                Pengelolaan laboratorium didukung oleh struktur organisasi yang solid dan profesional, memastikan setiap fungsi 
+                mulai dari operasional, riset, hingga kemitraan berjalan dengan optimal sesuai dengan tata kelola yang transparan.
             </p>
 
             <div class="tree-container">
@@ -480,9 +482,8 @@ try {
                     <div class="col-12">
                         <h2 class="section-title">Anggota Laboratory</h2>
                         <p class="section-description">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                            laboris nisi ut aliquip ex ea commodo consequat.
+                            Laboratorium ini didukung oleh para ahli dan akademisi yang memiliki dedikasi tinggi serta keahlian 
+                            mendalam di berbagai bidang analitik bisnis, pengolahan bahasa alami, hingga sistem cerdas.
                         </p>
                     </div>
                 </div>
@@ -630,11 +631,11 @@ try {
                             <h3 class="symbol-title mb-3">Makna Logo</h3>
                             <div class="symbol-content mb-4">
                                 <div class="symbol-description">
-                                    <?php echo nl2br(htmlspecialchars($maknaLogoText)); ?>
+                                    <?php echo nl2br(htmlspecialchars(potongTeks($maknaLogoText, 25))); ?>
                                 </div>
                             </div>
                             <div class="mt-auto">
-                                <a href="maknaLogo.html" class="btn-read-more">Read More</a>
+                                <a href="maknaLogo.php" class="btn-read-more">Read More</a>
                             </div>
                         </div>
                     </div>
@@ -647,11 +648,11 @@ try {
                             <h3 class="symbol-title mb-3">Makna Maskot</h3>
                             <div class="symbol-content mb-4">
                                 <div class="symbol-description">
-                                    <?php echo nl2br(htmlspecialchars($maknaMaskotText)); ?>
+                                    <?php echo nl2br(htmlspecialchars(potongTeks($maknaMaskotText, 25))); ?>
                                 </div>
                             </div>
                             <div class="mt-auto">
-                                <a href="maknaMaskot.html" class="btn-read-more">Read More</a>
+                                <a href="maknaMaskot.php" class="btn-read-more">Read More</a>
                             </div>
                         </div>
                     </div>

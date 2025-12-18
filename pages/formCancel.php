@@ -159,26 +159,104 @@ try {
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
+                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
+                <div class="lab-name">Laboratorium Business Analytics</div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
-            <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
-            <ul class="nav-menu" id="navMenu">
-                <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
-                <li class="nav-item"><a class="nav-link" href="booking.php">Booking</a></li>
-                <li class="nav-item desktop-user-action">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="text-end">
-                            <div class="user-name-label" style="font-weight:bold; font-size:0.9rem;"><?php echo htmlspecialchars($userName); ?></div>
-                            <div class="user-role-label" style="font-size:0.8rem; color:#ccc;"><?php echo htmlspecialchars($userRole); ?></div>
+        </div>
+
+        <div class="hamburger" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <ul class="nav-menu" id="navMenu">
+            <li class="nav-item"><a class="nav-link" href="../index.php">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="profile.php">Profil</a></li>
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <span>Publikasi</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="berita.php">Berita</a></li>
+                    <li><a class="dropdown-item" href="galeri.php">Gallery</a></li>
+                    <li><a class="dropdown-item" href="newsInputService.php">News Input Service</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <span>Peminjaman Lab</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="infoPeminjaman.php">Informasi Laboratorium</a></li>
+                    <li><a class="dropdown-item" href="tableBooking.php">Table Peminjaman</a></li>
+                    <li><a class="dropdown-item" href="booking.php">Pemesanan Lab</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item"><a class="nav-link" href="kontak.php">Kontak</a></li>
+
+            <li class="nav-item mobile-auth-section">
+                <?php if ($isLoggedIn): ?>
+                <div class="mobile-user-profile-modern">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1">
+                        <div class="mobile-avatar-modern">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=0D8ABC&color=fff&size=128"
+                                alt="User Avatar">
                         </div>
-                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=40" class="rounded-circle">
+                        <div class="mobile-info-modern">
+                            <span class="greeting-text">Halo,</span>
+                            <span class="username-text">
+                                <?php echo htmlspecialchars($userName); ?>
+                            </span>
+                        </div>
                     </div>
-                </li>
-            </ul>
+                    <a href="../admin/logout.php" class="logout-btn-modern" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+                <?php else: ?>
+                <div class="mobile-login-btn">
+                    <a class="nav-link login-link" href="../admin/login.php">Login</a>
+                </div>
+                <?php endif; ?>
+            </li>
+        </ul>
+
+        <?php if ($isLoggedIn): ?>
+        <div class="desktop-user-action">
+
+            <a class="user-profile-link" href="profile.php" title="Lihat Profil Saya">
+                <div class="text-end me-2">
+                    <div class="user-name-label">
+                        <?php echo htmlspecialchars($userName); ?>
+                    </div>
+                    <div class="user-role-label">
+                        <?php echo htmlspecialchars($userRole); ?>
+                    </div>
+                </div>
+                <div class="avatar-circle">
+                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random&size=128"
+                        alt="User Avatar">
+                </div>
+            </a>
+
+            <a class="desktop-logout-btn" href="../admin/logout.php" title="Keluar / Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+
+        </div>
+        <?php else: ?>
+        <button class="login-btn desktop-login-btn" onclick="window.location.href='../admin/login.php'">Login</button>
+        <?php endif; ?>
+
     </nav>
 
     <div class="container-fluid main-content">
@@ -286,8 +364,37 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        // --- 0. NAV MENU LOGIC (HAMBURGER) ---
         function toggleMenu() {
-            document.getElementById('navMenu').classList.toggle('active');
+            const navMenu = document.getElementById('navMenu');
+            const hamburgerIcon = document.querySelector('.hamburger i');
+            navMenu.classList.toggle('active');
+
+            if (navMenu.classList.contains('active')) {
+                hamburgerIcon.classList.remove('fa-bars');
+                hamburgerIcon.classList.add('fa-times');
+            } else {
+                hamburgerIcon.classList.remove('fa-times');
+                hamburgerIcon.classList.add('fa-bars');
+            }
+        }
+
+        // --- 1. Cek Login Status ---
+        const isLoggedIn = <?php echo json_encode($isLoggedIn); ?>;
+
+        function toggleMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const icon = document.querySelector('.hamburger i');
+
+            navMenu.classList.toggle('active');
+
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
