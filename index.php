@@ -78,28 +78,85 @@ try {
     // Kita cari baris dimana kolom "key" adalah 'logo' atau 'maskot'
     // PENTING: Gunakan tanda kutip dua (") pada kata "key" karena ini PostgreSQL
     $querySetting = 'SELECT "key", file_path FROM settings WHERE "key" IN (\'logo\', \'maskot\')';
-    
+
     $stmtSetting = $db->prepare($querySetting);
     $stmtSetting->execute();
-    
+
     // Hasil jadi array asosiatif: ['logo' => 'uploads/logo/...', 'maskot' => 'uploads/maskot/...']
-    $settingsData = $stmtSetting->fetchAll(PDO::FETCH_KEY_PAIR); 
+    $settingsData = $stmtSetting->fetchAll(PDO::FETCH_KEY_PAIR);
 
     // 2. SETUP VARIABEL LOGO
     // Jika ada data di DB, gabungkan dengan path './admin/'. Jika tidak, pakai default.
-    $logoSrc = !empty($settingsData['logo']) 
-        ? './admin/' . $settingsData['logo'] 
+    $logoSrc = !empty($settingsData['logo'])
+        ? './admin/' . $settingsData['logo']
         : './assets/images/logo.png';
 
     // 3. SETUP VARIABEL MASKOT
-    $maskotSrc = !empty($settingsData['maskot']) 
-        ? './admin/' . $settingsData['maskot'] 
+    $maskotSrc = !empty($settingsData['maskot'])
+        ? './admin/' . $settingsData['maskot']
         : './assets/img/MaskotLab.png';
-
 } catch (PDOException $e) {
     // Fallback jika terjadi error koneksi
     $logoSrc = './assets/images/logo.png';
     $maskotSrc = './assets/img/MaskotLab.png';
+}
+
+// --- AMBIL DATA RESEARCH FOCUS ---
+$researchList = [];
+$initialBg = '../assets/img/default-research.jpg'; // Gambar default jika database kosong
+
+try {
+    // Ambil data urut berdasarkan kolom 'urutan'
+    $stmt = $db->query("SELECT * FROM research_focus ORDER BY urutan ASC");
+    $researchList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Jika ada data, set gambar background awal menggunakan data pertama
+    if (!empty($researchList) && !empty($researchList[0]['file_path'])) {
+        // Sesuaikan path './admin/' jika file ini ada di root, atau '../admin/' jika di folder
+        $initialBg = './admin/' . $researchList[0]['file_path'];
+    }
+} catch (Exception $e) {
+    // Error handling silent
+}
+
+// --- AMBIL DATA BERITA DARI VIEW ---
+$newsList = [];
+$mainNews = null;
+$sideNews = [];
+
+try {
+    // Menggunakan 'view_artikel' sesuai permintaan
+    // Urutkan berdasarkan tanggal_upload terbaru
+    $sql = "SELECT * FROM view_artikel ORDER BY tanggal_upload DESC LIMIT 4";
+            
+    $stmt = $db->query($sql);
+    $newsList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Pisahkan Data
+    if (!empty($newsList)) {
+        // Ambil berita pertama (index 0) untuk KARTU BESAR
+        $mainNews = array_shift($newsList); 
+        
+        // Sisanya (maksimal 3) otomatis untuk LIST SAMPING
+        $sideNews = $newsList; 
+    }
+
+} catch (Exception $e) {
+    // Error handling silent
+}
+
+// Helper Function: Format Tanggal Indonesia
+function formatTanggalIndo($tanggal) {
+    if (empty($tanggal)) return '-';
+    $bulanIndo = [
+        1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    $time = strtotime($tanggal);
+    $hari = date('d', $time);
+    $bulan = $bulanIndo[(int)date('m', $time)];
+    $tahun = date('Y', $time);
+    return "$hari $bulan, $tahun";
 }
 ?>
 
@@ -633,37 +690,43 @@ try {
 
     <section class="profile-carousel-section">
         <div class="custom-container-relative">
+
             <div class="gray-backdrop-box">
-                <img id="backdrop-image" src="../assets/img/468271953_2965587063594573_732085040912103659_n.jpg" alt="Research Project Image" class="backdrop-img-content">
+                <img id="backdrop-image"
+                    src="<?php echo htmlspecialchars($initialBg); ?>"
+                    alt="Research Background"
+                    class="backdrop-img-content"
+                    onerror="this.src='./assets/img/default-research.jpg'">
             </div>
+
             <div class="carousel-wrapper">
                 <div class="carousel-track" id="track">
-                    <div class="custom-card" data-bg-img="../assets/img/468271953_2965587063594573_732085040912103659_n.jpg">
-                        <div class="card-content">
-                            <h3>Project 1</h3>
-                            <p>Deskripsi singkat 1</p>
-                        </div>
-                    </div>
-                    <div class="custom-card" data-bg-img="../assets/img/472123358_1124447422368489_4166635474059537722_n.jpg">
-                        <div class="card-content">
-                            <h3>Project 2</h3>
-                            <p>Deskripsi singkat 2</p>
-                        </div>
-                    </div>
-                    <div class="custom-card" data-bg-img="../assets/img/480910804_18103876279490907_972057783880120162_n.jpg">
-                        <div class="card-content">
-                            <h3>Project 3</h3>
-                            <p>Deskripsi singkat 3</p>
-                        </div>
-                    </div>
-                    <div class="custom-card" data-bg-img="../assets/img/472009416_9031096613644839_2631417119897194052_n.jpg">
-                        <div class="card-content">
-                            <h3>Project 4</h3>
-                            <p>Deskripsi singkat 4</p>
-                        </div>
-                    </div>
+
+                    <?php if (empty($researchList)): ?>
+                        <div class="text-white text-center w-100 mt-5">Belum ada data research focus.</div>
+                    <?php else: ?>
+
+                        <?php foreach ($researchList as $item): ?>
+                            <?php
+                            // Tentukan path gambar
+                            $bgImg = !empty($item['file_path'])
+                                ? './admin/' . $item['file_path']
+                                : './assets/img/default-research.jpg';
+                            ?>
+
+                            <div class="custom-card" data-bg-img="<?php echo htmlspecialchars($bgImg); ?>">
+                                <div class="card-content">
+                                    <h3><?php echo htmlspecialchars($item['judul']); ?></h3>
+                                    <p><?php echo htmlspecialchars($item['deskripsi']); ?></p>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+
+                    <?php endif; ?>
+
                 </div>
             </div>
+
             <div class="carousel-nav">
                 <button class="nav-btn prev-btn" id="prevBtn">
                     <i class="fa fa-arrow-left"></i>
@@ -672,6 +735,7 @@ try {
                     <i class="fa fa-arrow-right"></i>
                 </button>
             </div>
+
         </div>
     </section>
 
@@ -784,112 +848,113 @@ try {
             </div>
 
             <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="card news-card-lg rounded-3 overflow-hidden border-0 shadow-sm h-100">
-                        <div class="news-lg-img-container position-relative h-100">
-                            <img src="./assets/img/untitled.jpeg" alt="News Image" class="news-lg-img">
+    
+    <div class="col-lg-6">
+        <div class="card news-card-lg rounded-3 overflow-hidden border-0 shadow-sm h-100">
+            <div class="news-lg-img-container position-relative h-100">
+                <?php if ($mainNews): ?>
+                    <?php 
+                        // Path gambar (tambahkan prefix admin/ jika perlu)
+                        $mainImg = !empty($mainNews['file_path']) ? './admin/' . $mainNews['file_path'] : './assets/img/default-news.jpg';
+                    ?>
+                    <img src="<?php echo htmlspecialchars($mainImg); ?>" 
+                         alt="<?php echo htmlspecialchars($mainNews['judul']); ?>" 
+                         class="news-lg-img"
+                         onerror="this.src='./assets/img/default-news.jpg'">
 
-                            <div class="news-lg-content position-absolute bottom-0 start-0 w-100 p-4 p-lg-5">
-                                <h3 class="fw-bold text-white mb-3">Lorem Ipsum is simply dummy text of the printing and
-                                    typesetting industry.</h3>
+                    <div class="news-lg-content position-absolute bottom-0 start-0 w-100 p-4 p-lg-5">
+                        <h3 class="fw-bold text-white mb-3">
+                            <a href="detail_berita.php?id=<?php echo $mainNews['id_artikel']; ?>" class="text-white text-decoration-none stretched-link">
+                                <?php echo htmlspecialchars($mainNews['judul']); ?>
+                            </a>
+                        </h3>
 
-                                <div class="d-flex flex-wrap gap-3 text-white-50 small mb-3">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-person-circle me-2"></i> Nm. User
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-calendar4-event me-2"></i> 31 November, 2025
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-people-fill me-2"></i> Mahasiswa Polinema
-                                    </div>
-                                </div>
-
-                                <p class="text-white-50 small mb-0 line-clamp-2">
-                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
-                                    Ipsum has been the industry's standard dummy text ever since the 1500s...
-                                </p>
+                        <div class="d-flex flex-wrap gap-3 text-white-50 small mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-circle me-2"></i> 
+                                <?php echo htmlspecialchars($mainNews['nama_pengupload'] ?? 'Admin'); ?>
                             </div>
-
-                            <div class="news-hover-overlay"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6 d-flex flex-column gap-4">
-                    <div class="news-item-sm d-flex align-items-start gap-3 position-relative">
-                        <div class="news-sm-img rounded-3 flex-shrink-0 position-relative overflow-hidden">
-                            <img src="./assets/img/untitled.jpeg" alt="Profile" class="news-profile-img">
-                            <div class="news-sm-hover-overlay"></div>
-                        </div>
-
-                        <div class="news-sm-content">
-                            <h5 class="fw-bold text-dark mb-2 line-clamp-2">Lorem Ipsum is simply dummy text of the
-                                printing and typesetting industry.</h5>
-
-                            <div class="d-flex flex-wrap gap-3 text-muted small mb-2" style="font-size: 0.75rem;">
-                                <span class="d-flex align-items-center"><i class="bi bi-person-circle me-1"></i> Nm.
-                                    User</span>
-                                <span class="d-flex align-items-center"><i class="bi bi-calendar4-event me-1"></i> 31
-                                    Nov, 2025</span>
-                                <span class="d-flex align-items-center"><i class="bi bi-people-fill me-1"></i> Mhs.
-                                    Polinema</span>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar4-event me-2"></i> 
+                                <?php echo formatTanggalIndo($mainNews['tanggal_upload']); ?>
                             </div>
-
-                            <p class="text-muted small mb-0 line-clamp-2">
-                                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
-                                has been the industry's standard dummy text...
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="news-item-sm d-flex align-items-start gap-3 position-relative">
-                        <div class="news-sm-img rounded-3 flex-shrink-0 position-relative overflow-hidden">
-                            <img src="./assets/img/untitled.jpeg" alt="Profile" class="news-profile-img">
-                            <div class="news-sm-hover-overlay"></div>
-                        </div>
-                        <div class="news-sm-content">
-                            <h5 class="fw-bold text-dark mb-2 line-clamp-2">Lorem Ipsum is simply dummy text of the
-                                printing and typesetting industry.</h5>
-                            <div class="d-flex flex-wrap gap-3 text-muted small mb-2" style="font-size: 0.75rem;">
-                                <span class="d-flex align-items-center"><i class="bi bi-person-circle me-1"></i> Nm.
-                                    User</span>
-                                <span class="d-flex align-items-center"><i class="bi bi-calendar4-event me-1"></i> 31
-                                    Nov, 2025</span>
-                                <span class="d-flex align-items-center"><i class="bi bi-people-fill me-1"></i> Mhs.
-                                    Polinema</span>
+                            <?php if(!empty($mainNews['kategori'])): ?>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-tag-fill me-2"></i> <?php echo htmlspecialchars($mainNews['kategori']); ?>
                             </div>
-                            <p class="text-muted small mb-0 line-clamp-2">
-                                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
-                                has been the industry's standard dummy text...
-                            </p>
+                            <?php endif; ?>
                         </div>
-                    </div>
 
-                    <div class="news-item-sm d-flex align-items-start gap-3 position-relative">
-                        <div class="news-sm-img rounded-3 flex-shrink-0 position-relative overflow-hidden">
-                            <img src="./assets/img/untitled.jpeg" alt="Profile" class="news-profile-img">
-                            <div class="news-sm-hover-overlay"></div>
-                        </div>
-                        <div class="news-sm-content">
-                            <h5 class="fw-bold text-dark mb-2 line-clamp-2">Lorem Ipsum is simply dummy text of the
-                                printing and typesetting industry.</h5>
-                            <div class="d-flex flex-wrap gap-3 text-muted small mb-2" style="font-size: 0.75rem;">
-                                <span class="d-flex align-items-center"><i class="bi bi-person-circle me-1"></i> Nm.
-                                    User</span>
-                                <span class="d-flex align-items-center"><i class="bi bi-calendar4-event me-1"></i> 31
-                                    Nov, 2025</span>
-                                <span class="d-flex align-items-center"><i class="bi bi-people-fill me-1"></i> Mhs.
-                                    Polinema</span>
-                            </div>
-                            <p class="text-muted small mb-0 line-clamp-2">
-                                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
-                                has been the industry's standard dummy text...
-                            </p>
-                        </div>
+                        <p class="text-white-50 small mb-0 line-clamp-2">
+                            <?php 
+                                // Prioritaskan ringkasan, jika kosong ambil potongan konten
+                                $deskripsi = !empty($mainNews['ringkasan']) ? $mainNews['ringkasan'] : $mainNews['konten'];
+                                echo htmlspecialchars(substr(strip_tags($deskripsi), 0, 150)) . '...'; 
+                            ?>
+                        </p>
                     </div>
-                </div>
+                <?php else: ?>
+                    <div class="d-flex align-items-center justify-content-center h-100 bg-secondary text-white p-5">
+                        <p>Belum ada berita terbaru.</p>
+                    </div>
+                <?php endif; ?>
+
+                <div class="news-hover-overlay"></div>
             </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 d-flex flex-column gap-4">
+        
+        <?php if (!empty($sideNews)): ?>
+            <?php foreach ($sideNews as $item): ?>
+                <?php 
+                    $sideImg = !empty($item['file_path']) ? './admin/' . $item['file_path'] : './assets/img/default-news.jpg';
+                ?>
+                <div class="news-item-sm d-flex align-items-start gap-3 position-relative">
+                    <div class="news-sm-img rounded-3 flex-shrink-0 position-relative overflow-hidden">
+                        <img src="<?php echo htmlspecialchars($sideImg); ?>" 
+                             alt="<?php echo htmlspecialchars($item['judul']); ?>" 
+                             class="news-profile-img"
+                             onerror="this.src='./assets/img/default-news.jpg'">
+                        <div class="news-sm-hover-overlay"></div>
+                    </div>
+
+                    <div class="news-sm-content">
+                        <h5 class="fw-bold text-dark mb-2 line-clamp-2">
+                            <a href="detail_berita.php?id=<?php echo $item['id_artikel']; ?>" class="text-decoration-none text-dark stretched-link">
+                                <?php echo htmlspecialchars($item['judul']); ?>
+                            </a>
+                        </h5>
+
+                        <div class="d-flex flex-wrap gap-3 text-muted small mb-2" style="font-size: 0.75rem;">
+                            <span class="d-flex align-items-center">
+                                <i class="bi bi-person-circle me-1"></i> 
+                                <?php echo htmlspecialchars($item['nama_pengupload'] ?? 'Admin'); ?>
+                            </span>
+                            <span class="d-flex align-items-center">
+                                <i class="bi bi-calendar4-event me-1"></i> 
+                                <?php echo formatTanggalIndo($item['tanggal_upload']); ?>
+                            </span>
+                        </div>
+
+                        <p class="text-muted small mb-0 line-clamp-2">
+                            <?php 
+                                $deskripsiSide = !empty($item['ringkasan']) ? $item['ringkasan'] : $item['konten'];
+                                echo htmlspecialchars(substr(strip_tags($deskripsiSide), 0, 100)) . '...'; 
+                            ?>
+                        </p>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="text-muted d-flex align-items-center justify-content-center h-100 border rounded bg-light p-4">
+                <small>Tidak ada berita tambahan.</small>
+            </div>
+        <?php endif; ?>
+
+    </div>
+</div>
         </div>
     </section>
 
@@ -900,7 +965,7 @@ try {
                     <h2 class="fw-bold text-dark mb-2">Today's Lab Gallery</h2>
                     <div class="section-title-underline2"></div>
                 </div>
-                
+
                 <div class="gallery-btn-container">
                     <button class="gallery-btn" onclick="window.location.href='./pages/galeri.php'">
                         <span class="btn-text">
@@ -1236,18 +1301,18 @@ try {
         /* ========================================= */
         // --- TAMBAHAN: SCRIPT BOOKING TABLE ---
         /* ========================================= */
-        document.addEventListener('DOMContentLoaded', function () {
-    
-    // --- KONFIGURASI GLOBAL ---
-    // Sesuaikan path ini dengan lokasi file API PHP Anda
-    const API_URL = './admin/api/peminjaman.php'; 
-    
-    // Konfigurasi Grid Waktu
-    const START_HOUR = 7;       // Jam 07:00
-    const END_HOUR = 22;        // Jam 22:00
-    const PIXELS_PER_HOUR = 60; // Tinggi 1 jam = 60px (Penting untuk presisi)
-    const TOTAL_HOURS = END_HOUR - START_HOUR;
-    const TOTAL_HEIGHT = TOTAL_HOURS * PIXELS_PER_HOUR; // Total tinggi grid (840px)
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // --- KONFIGURASI GLOBAL ---
+            // Sesuaikan path ini dengan lokasi file API PHP Anda
+            const API_URL = './admin/api/peminjaman.php';
+
+            // Konfigurasi Grid Waktu
+            const START_HOUR = 7; // Jam 07:00
+            const END_HOUR = 22; // Jam 22:00
+            const PIXELS_PER_HOUR = 60; // Tinggi 1 jam = 60px (Penting untuk presisi)
+            const TOTAL_HOURS = END_HOUR - START_HOUR;
+            const TOTAL_HEIGHT = TOTAL_HOURS * PIXELS_PER_HOUR; // Total tinggi grid (840px)
 
             // State Variables
             let bookingsData = [];

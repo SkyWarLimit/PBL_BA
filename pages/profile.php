@@ -153,7 +153,7 @@ try {
 
 <body>
 
-    <nav class="sticky-navbar">
+    <nav class="sticky-navbar" id ="mainNavbar">
         <div class="logo-container">
             <div class="logo">
                 <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
@@ -600,87 +600,80 @@ try {
     <div class="py-5"></div>
 
     <!-- Makna Logo & Maskot Section -->
-    <div class="row mb-5" id="makna-logo-maskot">
-        <div class="col-12">
-            <h2 class="section-title mb-3">Makna Logo & Maskot</h2>
-            <p class="section-description mb-5">
-                Berikut adalah filosofi di balik identitas visual Laboratorium Business Analytics.
-                Logo dan maskot kami merepresentasikan nilai-nilai inti dan visi kami dalam dunia analitik data.
-            </p>
-        </div>
-
-        <div class="row align-items-start">
-
-            <div class="col-lg-6 mb-5 mb-lg-0">
-                <div class="logo-section">
-
-                    <div class="symbol-preview-large mb-4 text-center">
-                        <img src="<?php echo htmlspecialchars($logoSrc); ?>"
-                            alt="Logo Laboratorium"
-                            class="img-fluid"
-                            style="max-height: 250px; object-fit: contain;">
-                    </div>
-
-                    <h3 class="symbol-title mb-4">Makna Logo</h3>
-
-                    <div class="symbol-content mb-4">
-                        <div class="symbol-description">
-                            <?php echo nl2br(htmlspecialchars($maknaLogoText)); ?>
-                        </div>
-                    </div>
-
-                    <div class="text-start">
-                        <a href="maknaLogo.html" class="btn-read-more">Read More</a>
-                    </div>
+    <div class="container py-2"> <section class="researcher-section py-4" id="makna-logo-maskot">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2 class="section-title mb-3">Makna Logo & Maskot</h2>
+                    <p class="section-description">
+                        Berikut adalah filosofi di balik identitas visual Laboratorium Business Analytics.
+                        Logo dan maskot kami merepresentasikan nilai-nilai inti dan visi kami dalam dunia analitik data.
+                    </p>
                 </div>
             </div>
 
-            <div class="col-lg-6">
-                <div class="mascot-section">
-                    <h3 class="symbol-title mb-4">Makna Maskot</h3>
-
-                    <div class="symbol-content mb-4">
-                        <div class="symbol-description">
-                            <?php echo nl2br(htmlspecialchars($maknaMaskotText)); ?>
+            <div class="row align-items-stretch">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <div class="logo-section h-100">
+                        <div class="symbol-preview-large mb-4 text-center">
+                            <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Logo" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                        </div>
+                        <h3 class="symbol-title mb-3">Makna Logo</h3>
+                        <div class="symbol-content mb-4">
+                            <div class="symbol-description">
+                                <?php echo nl2br(htmlspecialchars($maknaLogoText)); ?>
+                            </div>
+                        </div>
+                        <div class="mt-auto">
+                            <a href="maknaLogo.html" class="btn-read-more">Read More</a>
                         </div>
                     </div>
+                </div>
 
-                    <div class="text-start mb-4">
-                        <a href="maknaMaskot.html" class="btn-read-more">Read More</a>
-                    </div>
-
-                    <div class="symbol-preview-large text-center">
-                        <img src="<?php echo htmlspecialchars($maskotSrc); ?>"
-                            alt="Maskot Laboratorium"
-                            class="img-fluid"
-                            style="max-height: 250px; object-fit: contain;">
+                <div class="col-lg-6">
+                    <div class="mascot-section h-100">
+                        <div class="symbol-preview-large mb-4 text-center">
+                            <img src="<?php echo htmlspecialchars($maskotSrc); ?>" alt="Maskot" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                        </div>
+                        <h3 class="symbol-title mb-3">Makna Maskot</h3>
+                        <div class="symbol-content mb-4">
+                            <div class="symbol-description">
+                                <?php echo nl2br(htmlspecialchars($maknaMaskotText)); ?>
+                            </div>
+                        </div>
+                        <div class="mt-auto">
+                            <a href="maknaMaskot.html" class="btn-read-more">Read More</a>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
-    </div>
+    </section>
+</div>
 
     <div class="py-5"></div>
 
     <!-- research focus -->
-    <div class="row mb-5" id="research-focus">
-        <div class="col-12">
-            <h2 class="section-title mb-3">Research Focus</h2>
-            <p class="section-description mb-5">
-                Berikut adalah fokus penelitian utama di Laboratorium Business Analytics,
-                mencakup pengembangan platform data hingga penerapan machine learning.
-            </p>
+    <div class="container py-2"> <section class="researcher-section py-4" id="research-focus">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2 class="section-title mb-3">Research Focus</h2>
+                    <p class="section-description">
+                        Berikut adalah fokus penelitian utama di Laboratorium Business Analytics, 
+                        mencakup pengembangan platform data hingga penerapan machine learning.
+                    </p>
+                </div>
+            </div>
 
             <section class="profile-carousel-section">
                 <div class="custom-container-relative">
-
                     <div class="gray-backdrop-box">
-                        <img id="backdrop-image"
-                            src="assets/img/default-research.jpg"
-                            alt="Research Background"
-                            class="backdrop-img-content"
-                            onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+                        <img id="backdrop-image" 
+                             src="assets/img/default-research.jpg" 
+                             alt="Research Background" 
+                             class="backdrop-img-content"
+                             onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
                     </div>
 
                     <div class="carousel-wrapper">
@@ -699,10 +692,11 @@ try {
                             <i class="fa fa-arrow-right"></i>
                         </button>
                     </div>
-
                 </div>
             </section>
         </div>
+    </section>
+    </div>
     </div>
     </div>
 
