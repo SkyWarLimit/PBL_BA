@@ -169,7 +169,10 @@ try {
         <div class="contact-hero-bg"></div>
         <div class="contact-hero-content">
             <h1>Contact Us</h1>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+            <p>
+            Kami sangat terbuka bagi siapa pun yang ingin bekerja sama, berdiskusi, atau berkunjung untuk mengenal lebih dekat Laboratorium Business Analytics.
+            Tim kami siap membantu menjawab pertanyaan Anda mengenai laporan tentang fasilitas lab, kritik dan saran tentang fasilitas lab ,hingga cara memanfaatkan fasilitas lab kami untuk mendukung kemajuan dan kemudahan untuk menggunakan fasilitas di lab kami.
+            </p>
         </div>
     </section>
 

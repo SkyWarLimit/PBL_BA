@@ -6,6 +6,54 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? $_SESSION['nama'] : '';
 // Role default jika tidak ada session
 $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+
+// --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
+// Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
+// Gunakan __DIR__ agar path relatifnya aman
+$dbPath = __DIR__ . '/../admin/config/database.php';
+
+if (file_exists($dbPath)) {
+    require_once $dbPath;
+} else {
+    // Fallback jika path beda
+    $dbPathAlternative = $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php';
+    if (file_exists($dbPathAlternative)) {
+        require_once $dbPathAlternative;
+    } else {
+        die("Error: Config database tidak ditemukan. Cek path file.");
+    }
+}
+
+$db = (new Database())->getConnection();
+
+// --- 2. AMBIL DATA SETTING (Logo & Nama Lab) ---
+$logoSrc = '../assets/images/logo.png';
+$namaLabText = 'Laboratorium Business Analytics'; // Default text
+
+try {
+    // PERBAIKAN: Ambil kolom 'value' (untuk teks) DAN 'file_path' (untuk gambar)
+    $stmt = $db->query("SELECT key, value, file_path FROM settings WHERE key IN ('logo', 'nama_lab')");
+    $resultRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Kita susun ulang array-nya biar gampang dipanggil berdasarkan key
+    $settings = [];
+    foreach ($resultRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    // 1. Set Logo (Ambil dari kolom file_path)
+    if (!empty($settings['logo']['file_path'])) {
+        $logoSrc = '../admin/' . $settings['logo']['file_path'];
+    }
+
+    // 2. Set Nama Lab (Ambil dari kolom value - SESUAI DATABASE KAMU)
+    if (!empty($settings['nama_lab']['value'])) {
+        $namaLabText = $settings['nama_lab']['value'];
+    }
+    
+} catch (Exception $e) { 
+    /* Ignore error agar web tetap jalan pakai default */
+}
 ?>
 
 <!DOCTYPE html>
@@ -29,10 +77,10 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
     <nav class="sticky-navbar">
         <div class="logo-container">
             <div class="logo">
-                <img src="../assets/img/logo.png" alt="Laboratorium Business Analytics Logo">
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             </div>
             <div class="lab-name-container">
-                <div class="lab-name">Laboratorium Business Analytics</div>
+                <div class="lab-name"><?php echo htmlspecialchars($namaLabText); ?></div>
                 <div class="lab-tagline">Transforming Data into Decisions</div>
             </div>
         </div>
@@ -138,18 +186,13 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                         <span class="title-line business-analytics">Business Analytics</span>
                     </h1>
                     <p class="hero-detailed-description">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                        labore et dolore magna aliqua.
-                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                        commodo consequat.
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-                        pariatur.
-                        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-                        anim id est laborum.
+                        Laboratorium Business Analytics menyediakan akses teknologi terbaru bagi para dosen, dan mahasiswa.
+                        Kami memahami bahwa mengolah data dalam jumlah besar membutuhkan komputer yang stabil dan perangkat lunak yang lengkap.
+                        Fasilitas kami dirancang untuk mendukung seluruh proses—mulai dari menyatukan data mentah, merapikannya, hingga menampilkan informasi tersebut dalam bentuk grafik interaktif yang mudah untuk dipahami.
                     </p>
                     <!-- Tombol Register For Laboratory Booking -->
                     <div class="register-btn-container">
-                        <button class="register-btn">
+                        <button class="register-btn" onclick="window.location.href='booking.php'">
                             <span class="btn-text">
                                 Register For Laboratory Booking
                                 <i class="fas fa-arrow-up arrow-icon"></i>
@@ -167,13 +210,19 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
         <h2 class="info-title">Laboratory Business Analytics</h2>
         <div class="info-content">
             <div class="info-text">
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <p>
+                Laboratorium ini dilengkapi dengan berbagai fasilitas modern yang dirancang untuk mendukung proses pembelajaran dan penelitian di bidang analisis bisnis.
+                Dengan lingkungan yang kondusif dan peralatan canggih, laboratorium ini bertujuan untuk memberikan pengalaman belajar yang optimal bagi para mahasiswa dan dosen.
+                di Laboratorium ini, mahasiswa dan dosen dapat mengakses perangkat lunak analisis data terkini, serta memanfaatkan infrastruktur teknologi informasi yang handal untuk mendukung berbagai proyek akademik dan penelitian.
+                </p>
             </div>
             
             <div class="info-block">
                 <h3 class="info-subtitle">Lab Facilities</h3>
                 <div class="info-text">
-                    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                    <p>
+                      Berikut merupakan beberapa fasilitas yang tersedia di Laboratorium Business Analytics untuk mendukung kegiatan belajar mengajar dan penelitian.  
+                    </p>
                 </div>
                 
                 <!-- Carousel Container -->
@@ -204,31 +253,45 @@ $userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
                 <div class="rule-item">
                     <div class="rule-number">1</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.
+                        <strong>Larangan di Dalam Laboratorium:</strong> Dilarang keras melakukan perubahan pada perangkat keras (hardware), seperti menginstal aplikasi ilegal tanpa izin, serta dilarang membawa dan mengonsumsi makanan atau minuman di area lab demi menjaga kebersihan dan performa alat.
                     </div>
                 </div>
                 <div class="rule-item">
                     <div class="rule-number">2</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                        <strong>Tanggung Jawab Menjaga Alat:</strong> Pengguna bertanggung jawab penuh atas kondisi fisik dan fungsi perangkat yang dipinjam. Segala bentuk kerusakan atau kehilangan akibat kelalaian wajib segera dilaporkan kepada teknisi untuk diproses sesuai ketentuan ganti rugi yang berlaku.
                     </div>
                 </div>
                 <div class="rule-item">
                     <div class="rule-number">3</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                        <strong>Keselamatan di Dalam Lab:</strong> Pengguna wajib memahami panduan keselamatan kerja (K3K), termasuk lokasi alat pemadam api (APAR) dan jalur evakuasi darurat, guna menjamin keamanan diri dan kenyamanan bersama selama berada di lingkungan laboratorium.
                     </div>
                 </div>
                 <div class="rule-item">
                     <div class="rule-number">4</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                        <strong>Aturan Peminjaman untuk Mahasiswa:</strong> Mahasiswa diperbolehkan meminjam fasilitas laboratorium jika telah mendapatkan izin resmi dari dosen mata kuliah terkait. Selain itu, jumlah mahasiswa dalam satu kelompok minimal berjumlah 5 (lima) orang; pengajuan peminjaman dengan jumlah anggota di bawah ketentuan tersebut akan dianggap tidak sah.
                     </div>
                 </div>
                 <div class="rule-item">
                     <div class="rule-number">5</div>
                     <div class="rule-text">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.
+                        <strong>Cara Melakukan Peminjaman:</strong> Seluruh permohonan peminjaman ruangan wajib didaftarkan melalui website resmi Laboratorium Business Analytics berikut:                    
+                        <div class="booking-link-wrapper">
+                        <a href="booking.php" class="booking-link-box">
+                            Klik di Sini untuk Mengajukan Peminjaman
+                        </a>
+                        </div>
+                        Pastikan pengajuan dilakukan paling lambat 3 (tiga) hari kerja sebelum penggunaan. Peminjaman dianggap sah jika sudah mendapatkan konfirmasi persetujuan dari admin lab yang akan menghubungi kontak peminjam secara langsung.
+                        <br><br>
+                        Apabila peminjam batal menggunakan fasilitas lab dikarenakan ada suatu lain hal, maka peminjam diharapkan segera melakukan konfirmasi pada pengelola lab dan wajib mengisi formulir pembatalan pada tautan berikut:
+
+                        <div class="booking-link-wrapper">
+                            <a href="formCancel.php" class="booking-link-box cancel-box">
+                                Klik di Sini untuk Mengisi Form Pembatalan
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -255,7 +318,7 @@ function toggleMenu() {
 
 document.addEventListener('DOMContentLoaded', function() {
     // --- KONFIGURASI API ---
-    const API_URL = '/PBL_BA/admin/api/fasilitas.php'; 
+    const API_URL = '../admin/api/fasilitas.php'; 
 
     const carousel = document.getElementById('facilitiesCarousel');
     const carouselContainer = document.querySelector('.facilities-carousel-container');
