@@ -39,17 +39,17 @@ try {
     
     $method = $_SERVER['REQUEST_METHOD'];
 
-    // === GET: READ DATA (DIPERBOLEHKAN UNTUK PUBLIK/NON-LOGIN) ===
+    // ==================================================================
+    // === GET: READ DATA (ADMIN MELIHAT SEMUA DATA) ===
+    // ==================================================================
     if ($method === 'GET') {
-        // Ambil data (Filter hanya status yang sudah diizinkan untuk ditampilkan ke publik)
+        // Query dimodifikasi: Filter WHERE dihapus agar Admin bisa melihat semua status
         $sql = "SELECT p.*, dp.waktu_mulai AS check_in, dp.waktu_selesai AS check_out, 
-                         u.nama AS nama_akun, u.email AS email_akun
-                  FROM peminjaman p
-                  JOIN detail_peminjaman dp ON p.id_peminjaman = dp.id_peminjaman
-                  JOIN users u ON p.id_user = u.id_user
-                  -- HANYA TAMPILKAN BOOKING YANG SUDAH DISETUJUI DI TABLE PUBLIK
-                  WHERE p.status IN ('Approved', 'Confirmed') 
-                  ORDER BY p.created_at DESC";
+                       u.nama AS nama_akun, u.email AS email_akun
+                FROM peminjaman p
+                JOIN detail_peminjaman dp ON p.id_peminjaman = dp.id_peminjaman
+                JOIN users u ON p.id_user = u.id_user
+                ORDER BY p.created_at DESC";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute();
@@ -58,18 +58,18 @@ try {
         sendJson(true, "Data loaded", $data);
     }
 
-    // === POST: CREATE / UPDATE / DELETE (MEMERLUKAN LOGIN) ===
+    // ==================================================================
+    // === POST: CREATE / UPDATE / DELETE / REQUEST_CANCEL ===
+    // ==================================================================
     if ($method === 'POST') {
         // Pengecekan Auth DITERAPKAN DI SINI untuk operasi POST
         if (!$userId) { 
-            // Tambahkan pengecualian yang lebih jelas jika mencoba POST tanpa login
-            throw new Exception("Unauthorized: Silakan login terlebih dahulu untuk melakukan Pemesanan Lab.");
+            throw new Exception("Unauthorized: Silakan login terlebih dahulu.");
         }
         
         $action = $_POST['action'] ?? 'create';
 
         // --- CREATE BOOKING (USER) ---
-        // Trigger peminjaman_insert_log akan otomatis aktif
         if ($action === 'create') {
             if (empty($_POST['tujuan']) || empty($_POST['check_in'])) {
                 throw new Exception("Data tidak lengkap.");
@@ -86,13 +86,13 @@ try {
 
             $conn->beginTransaction();
             try {
-                // Insert Peminjaman (Trigger insert log jalan di sini)
+                // Insert Peminjaman
                 $sqlMain = "INSERT INTO peminjaman (
                                 id_user, tujuan, kategori_pemohon, nomor_identitas, 
                                 asal_instansi, no_handphone, status, tanggal_peminjaman, created_at
                             ) VALUES (?, ?, ?, ?, ?, ?, 'Pending', ?, NOW())";
                 
-                // PostgreSQL: Gunakan RETURNING id_peminjaman untuk dapat ID
+                // Cek Driver untuk Last Insert ID (PostgreSQL vs MySQL)
                 if ($conn->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql') {
                     $sqlMain .= " RETURNING id_peminjaman";
                     $stmtMain = $conn->prepare($sqlMain);
@@ -121,11 +121,9 @@ try {
         }
 
         // --- UPDATE STATUS (ADMIN) ---
-        // Trigger peminjaman_update_log akan otomatis aktif
         if ($action === 'update_status') {
-             // Opsional: Cek role admin di sini jika Anda memilikinya
-             // if ($_SESSION['role'] !== 'admin') throw new Exception("Akses ditolak.");
-
+             // Opsional: Validasi role admin bisa ditambahkan di sini
+            
             $id = $_POST['id'];
             $status = $_POST['status'];
             $alasan = $_POST['alasan_batal'] ?? null;
@@ -141,27 +139,65 @@ try {
         }
 
         // --- DELETE (ADMIN) ---
-        // Trigger peminjaman_delete_log akan otomatis aktif
         if ($action === 'delete') {
-             // Opsional: Cek role admin di sini jika Anda memilikinya
-             // if ($_SESSION['role'] !== 'admin') throw new Exception("Akses ditolak.");
-             
+             // Opsional: Validasi role admin bisa ditambahkan di sini
+
             $id = $_POST['id'];
             
-            // Hapus detail dulu (manual jika foreign key tdk cascade)
+            // Hapus detail dulu
             $conn->prepare("DELETE FROM detail_peminjaman WHERE id_peminjaman = ?")->execute([$id]);
             
-            // Hapus induk (Trigger delete log jalan di sini)
+            // Hapus induk
             if ($conn->prepare("DELETE FROM peminjaman WHERE id_peminjaman = ?")->execute([$id])) {
                 sendJson(true, "Data dihapus");
             } else {
                 throw new Exception("Gagal menghapus data");
             }
         }
+
+        // --- REQUEST CANCEL (USER) ---
+        // (BAGIAN INI YANG DITAMBAHKAN UNTUK MEMPERBAIKI ERROR)
+        if ($action === 'request_cancel') {
+            $id = $_POST['id_peminjaman'] ?? null;
+            $alasan = $_POST['alasan_pembatalan'] ?? '';
+
+            if (!$id) throw new Exception("ID Peminjaman tidak ditemukan.");
+            if (empty($alasan)) throw new Exception("Alasan pembatalan wajib diisi.");
+
+            // Validasi: Pastikan peminjaman ini milik user yang sedang login
+            // dan statusnya masih memungkinkan untuk dibatalkan
+            $checkSql = "SELECT status FROM peminjaman WHERE id_peminjaman = ? AND id_user = ?";
+            $stmtCheck = $conn->prepare($checkSql);
+            $stmtCheck->execute([$id, $userId]);
+            $exists = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if (!$exists) {
+                throw new Exception("Data booking tidak ditemukan atau bukan milik Anda.");
+            }
+
+            if ($exists['status'] === 'Rejected' || $exists['status'] === 'Cancelled' || $exists['status'] === 'Completed') {
+                throw new Exception("Booking dengan status ini tidak dapat diajukan pembatalan.");
+            }
+
+            // Lakukan Update: Set request_pembatalan = true (atau 1)
+            $updateSql = "UPDATE peminjaman 
+                          SET request_pembatalan = ?, 
+                              alasan_pembatalan = ?, 
+                              updated_at = NOW() 
+                          WHERE id_peminjaman = ?";
+            
+            $stmtUpdate = $conn->prepare($updateSql);
+            
+            // Parameter pertama: true (integer 1 agar kompatibel boolean MySQL/Postgres via PDO)
+            if ($stmtUpdate->execute([1, $alasan, $id])) {
+                sendJson(true, "Permintaan pembatalan berhasil dikirim. Menunggu persetujuan Admin.");
+            } else {
+                throw new Exception("Gagal mengajukan pembatalan.");
+            }
+        }
     }
 
 } catch (Exception $e) {
-    // Jika GET gagal karena database, atau POST gagal karena auth/logic
     sendJson(false, $e->getMessage());
 }
 ?>

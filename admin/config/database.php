@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 class Database {
     // Setting Database PostgreSQL Anda
     private $host = "localhost";
-    private $db_name = "lab_ba";
+    private $db_name = "ba_lab";
     private $username = "postgres";
     private $password = "Anasaurizky0705";
     private $port = "5432";

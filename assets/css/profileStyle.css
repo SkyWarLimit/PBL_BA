@@ -1376,7 +1376,12 @@ body {
 @media (max-width: 991px) {
     /* 1. RESET DASAR */
     .tree { min-width: 100%; padding: 0 15px; }
-    .tree-container { overflow-x: hidden; }
+    .tree-container { 
+        overflow-x: auto !important;
+        margin: 0 !important;
+        width: 100% !important;
+        padding: 20px 0;
+    }
 
     /* Sembunyikan elemen lama */
     .tree > ul > li > ul::before,
@@ -1834,6 +1839,84 @@ body {
     flex: 1;
 }
 
+/* ========================================================== */
+/* PENGATURAN PRESISI: PENYELARASAN 100% VERTIKAL             */
+/* ========================================================== */
+
+/* Hapus semua override padding pada section agar mengikuti container Bootstrap secara murni */
+#anggota-laboratory, 
+#makna-logo-maskot {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Pastikan container di dalam kedua section ini memiliki padding yang identik */
+#anggota-laboratory .container,
+#makna-logo-maskot .container {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    max-width: 1320px; /* Standar Bootstrap XXL, sesuaikan jika perlu */
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* Menghilangkan margin bawaan pada judul dan deskripsi yang bisa menggeser posisi teks */
+#anggota-laboratory .section-title,
+#makna-logo-maskot .section-title {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    text-align: left !important;
+}
+
+#anggota-laboratory .section-description,
+#makna-logo-maskot .section-description {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    text-align: left !important;
+}
+
+/* Responsive Tablet & Mobile */
+@media (max-width: 991px) {
+    #anggota-laboratory .container,
+    #makna-logo-maskot .container {
+        padding-left: 20px !important; /* Jarak aman tepi layar mobile */
+        padding-right: 20px !important;
+    }
+}
+
+/* ========================================================== */
+/* REVISI KHUSUS: PENYELARASAN MAKNA LOGO KE ANGGOTA LAB      */
+/* ========================================================== */
+
+/* Pastikan section Makna Logo tidak memiliki margin tambahan yang merusak alignment */
+#makna-logo-maskot {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Kunci alignment judul & deskripsi agar identik dengan Anggota Lab */
+#makna-logo-maskot .section-title,
+#makna-logo-maskot .section-description {
+    text-align: left !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    display: block;
+}
+
+/* Responsif Mobile & Tablet */
+@media (max-width: 991px) {
+    /* Pastikan container luar pada Makna Logo memiliki padding yang sama dengan Anggota Lab */
+    #makna-logo-maskot .container {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+
+    /* Penyelarasan teks judul besar tetap di kiri sesuai Anggota Lab */
+    #makna-logo-maskot .section-title {
+        text-align: left !important;
+    }
+}
+
 /* ========================================= */
 /* STYLING UNTUK TOMBOL READ MORE DENGAN LINK */
 /* ========================================= */
@@ -2030,13 +2113,16 @@ a.btn-read-more:hover {
 /* ========================================================================= */
 
 html, body {
+    width: 100%;
     max-width: 100% !important;
     /* overflow-x: hidden !important; */
     position: relative;
+    margin: 0;
+    
 }
 
 body {
-    overflow-x: hidden;
+    overflow-x: clip; /* Cegah overflow horizontal */
     overflow-y: auto; /* Pastikan scroll vertikal tetap jalan normal */
 }
 
@@ -2346,6 +2432,8 @@ body {
     }
 }
 
+
+
 /* ========================================================== */
 /* FIX TOTAL: RESEARCH FOCUS MOBILE (Strict Override)         */
 /* ========================================================== */
@@ -2417,14 +2505,14 @@ body {
         transform: none !important;
         width: 100% !important;
         
-        overflow: hidden !important;
+        overflow: visible !important;
         z-index: 10 !important; /* Harus lebih tinggi dari backdrop */
         
         /* OVERLAP LOGIC (Sama persis Index) */
         margin-top: -200px !important; 
         
         /* Centering Card Logic */
-        padding-left: 16vw !important; 
+        padding-left: 10vw !important; 
         padding-right: 0 !important;
         box-sizing: border-box !important;
         display: block !important;
@@ -2508,6 +2596,45 @@ body {
     .gray-backdrop-box { height: 400px !important; }
     .custom-card { height: 320px !important; }
     .carousel-wrapper { margin-top: -200px !important; margin-right: 45px !important; }
+}
+
+/* ========================================================== */
+/* FINAL SYNC: RESEARCH FOCUS ALIGNMENT                       */
+/* ========================================================== */
+
+/* Pastikan section Research Focus tidak memiliki padding liar */
+#research-focus {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Kunci alignment judul & deskripsi agar identik dengan Anggota Lab */
+#research-focus .section-title,
+#research-focus .section-description {
+    text-align: left !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    display: block;
+}
+
+/* Penyelarasan Khusus Responsif */
+@media (max-width: 991px) {
+    #research-focus .container {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+
+    #research-focus .section-title {
+        text-align: left !important;
+        font-size: 1.8rem !important;
+    }
+}
+
+/* Tambahan: Pastikan Carousel tetap berfungsi baik dalam struktur baru */
+.profile-carousel-section {
+    width: 100%;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
 }
 
 /* ========================================================== */

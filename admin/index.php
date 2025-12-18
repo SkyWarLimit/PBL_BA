@@ -4,27 +4,66 @@ require_once __DIR__ . '/config/database.php';
 // Fungsi cek auth sederhana
 if (!function_exists('checkAuth')) {
     session_start();
-    function checkAuth() {
+    function checkAuth()
+    {
         if (!isset($_SESSION['user_id'])) {
             header("Location: login.php");
             exit;
         }
     }
 }
-checkAuth(); 
+checkAuth();
+
+// --- 1. KONEKSI DATABASE & LOGIKA UTAMA (DI ATAS HTML) ---
+// Sesuaikan path ini jika file ini ada di dalam folder 'public' atau 'pages'
+// Gunakan __DIR__ agar path relatifnya aman
+$dbPath = __DIR__ . '/../admin/config/database.php';
+
+if (file_exists($dbPath)) {
+    require_once $dbPath;
+} else {
+    // Fallback jika path beda
+    $dbPathAlternative = $_SERVER['DOCUMENT_ROOT'] . '/admin/config/database.php';
+    if (file_exists($dbPathAlternative)) {
+        require_once $dbPathAlternative;
+    } else {
+        die("Error: Config database tidak ditemukan. Cek path file.");
+    }
+}
+
+$db = (new Database())->getConnection();
+
+// Logika User Session
+$isLoggedIn = isset($_SESSION['user_id']);
+$userName = $isLoggedIn ? $_SESSION['nama'] : '';
+$userRole = isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User';
+
+// --- 2. AMBIL DATA SETTING (Logo & Maskot) ---
+$logoSrc = '../assets/images/logo.png';
+$maskotSrc = '../assets/img/MaskotLab.png';
+
+try {
+    $stmt = $db->query("SELECT key, file_path FROM settings WHERE key IN ('logo', 'maskot')");
+    $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    if (!empty($settings['logo'])) $logoSrc = '../admin/' . $settings['logo'];
+    if (!empty($settings['maskot'])) $maskotSrc = '../admin/' . $settings['maskot'];
+} catch (Exception $e) { /* Ignore */
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Laboratorium Business Analytics</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -39,8 +78,8 @@ checkAuth();
             --bg-body: #f8f9fa;
             --sidebar-width: 260px;
             --card-radius: 16px;
-            --shadow-sm: 0 2px 15px rgba(0,0,0,0.03);
-            --shadow-md: 0 5px 20px rgba(0,0,0,0.05);
+            --shadow-sm: 0 2px 15px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 5px 20px rgba(0, 0, 0, 0.05);
         }
 
         body {
@@ -61,34 +100,75 @@ checkAuth();
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         /* Kategori Badges */
-        .badge-news-latest { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        .badge-prestasi { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .badge-announcement { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
-        .badge-kegiatan { background-color: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
-        .badge-fasilitas { background-color: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
-        .badge-lainnya { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-        .badge-default { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .badge-news-latest {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .badge-prestasi {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .badge-announcement {
+            background-color: #ffedd5;
+            color: #c2410c;
+            border: 1px solid #fed7aa;
+        }
+
+        .badge-kegiatan {
+            background-color: #f3e8ff;
+            color: #7e22ce;
+            border: 1px solid #e9d5ff;
+        }
+
+        .badge-fasilitas {
+            background-color: #e0e7ff;
+            color: #4338ca;
+            border: 1px solid #c7d2fe;
+        }
+
+        .badge-lainnya {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .badge-default {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
 
         /* === SIDEBAR MODERN === */
         .sidebar {
             position: fixed;
-            top: 0; left: 0;
+            top: 0;
+            left: 0;
             width: var(--sidebar-width);
             height: 100vh;
             background: #ffffff;
             z-index: 1000;
             transition: all 0.3s ease;
-            box-shadow: 5px 0 20px rgba(0,0,0,0.02);
+            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.02);
             padding: 20px;
             overflow-y: auto;
         }
-        
-        .sidebar::-webkit-scrollbar { width: 5px; }
-        .sidebar::-webkit-scrollbar-thumb { background-color: #eee; border-radius: 10px; }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: #eee;
+            border-radius: 10px;
+        }
 
         .sidebar-brand {
             display: flex;
@@ -100,7 +180,7 @@ checkAuth();
             font-size: 1.3rem;
             text-decoration: none;
         }
-        
+
         .sidebar-brand img {
             width: 35px;
             height: auto;
@@ -153,21 +233,30 @@ checkAuth();
             box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
         }
 
-        .nav-link.active i { color: white; }
-        
+        .nav-link.active i {
+            color: white;
+        }
+
         .btn-logout {
             margin-top: 30px;
             background-color: #fff5f5;
             color: #e63946;
             border: 1px solid #ffe5e5;
         }
+
         .btn-logout:hover {
             background-color: #e63946;
             color: white;
             border-color: #e63946;
         }
-        .btn-logout i { color: #e63946; }
-        .btn-logout:hover i { color: white; }
+
+        .btn-logout i {
+            color: #e63946;
+        }
+
+        .btn-logout:hover i {
+            color: white;
+        }
 
         /* === MAIN CONTENT === */
         .main-content {
@@ -208,8 +297,16 @@ checkAuth();
             margin-right: 12px;
         }
 
-        .user-info h6 { margin: 0; font-size: 0.9rem; font-weight: 700; }
-        .user-info span { font-size: 0.75rem; color: var(--text-muted); }
+        .user-info h6 {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .user-info span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
 
         /* === CARDS & TABLES === */
         .card {
@@ -221,10 +318,17 @@ checkAuth();
             margin-bottom: 25px;
             animation: fadeIn 0.3s ease-in-out;
         }
-        
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .card-header {
@@ -235,8 +339,9 @@ checkAuth();
             justify-content: space-between;
             align-items: center;
         }
-        
-        .card-header span, .card-header h5 {
+
+        .card-header span,
+        .card-header h5 {
             font-size: 1.1rem;
             font-weight: 700;
             color: var(--text-main);
@@ -244,14 +349,28 @@ checkAuth();
             align-items: center;
             margin: 0;
         }
-        
-        .card-header i { margin-right: 10px; color: var(--primary); }
 
-        .card-body { padding: 25px; }
-        .card-body.p-0 { padding: 0; }
+        .card-header i {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .card-body.p-0 {
+            padding: 0;
+        }
 
         /* Tabel Modern - General */
-        .table { margin-bottom: 0; border-collapse: separate; border-spacing: 0; width: 100%; }
+        .table {
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+
         .table thead th {
             background-color: #f9fafb;
             color: var(--text-muted);
@@ -262,6 +381,7 @@ checkAuth();
             border-bottom: 1px solid #eee;
             letter-spacing: 0.5px;
         }
+
         .table tbody td {
             padding: 18px 25px;
             vertical-align: middle;
@@ -269,28 +389,29 @@ checkAuth();
             color: #555;
             font-weight: 500;
         }
-        
+
         /* === TABLE STYLES SPECIFIC FOR BERITA & GALERI (MODERN) === */
         .table-modern tbody tr {
             transition: all 0.2s ease;
         }
+
         .table-modern tbody tr:hover {
             background-color: #f8faff;
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
             z-index: 10;
             position: relative;
         }
-        
+
         /* Thumbnail */
         .content-thumbnail {
             width: 80px;
             height: 55px;
             object-fit: cover;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        
+
         .content-title {
             font-weight: 700;
             color: #1e293b;
@@ -299,23 +420,24 @@ checkAuth();
             font-size: 0.95rem;
             text-decoration: none;
         }
+
         .content-desc {
             font-size: 0.8rem;
             color: #94a3b8;
             display: block;
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             max-width: 300px;
         }
-        
+
         /* Helpers */
         .img-preview {
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             object-fit: cover;
         }
-        
+
         /* Tombol Kustom */
         .btn-primary-custom {
             background-color: var(--primary);
@@ -328,14 +450,16 @@ checkAuth();
             transition: all 0.3s;
             box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
         }
+
         .btn-primary-custom:hover {
             background-color: var(--secondary);
             color: white;
             transform: translateY(-2px);
         }
-        
+
         /* Input Form Modern */
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             padding: 12px 15px;
             border-radius: 10px;
             border: 1px solid #e2e8f0;
@@ -343,20 +467,43 @@ checkAuth();
             font-size: 0.95rem;
             transition: all 0.2s;
         }
-        .form-control:focus, .form-select:focus {
+
+        .form-control:focus,
+        .form-select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
             background-color: white;
         }
-        
+
         /* Search Input Modern */
-        .search-input-wrapper { position: relative; }
-        .search-input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-        .search-input { padding-left: 40px !important; border-radius: 50px !important; border: 1px solid #e2e8f0; background: #f8fafc; }
-        .search-input:focus { background: white; }
-        
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .search-input {
+            padding-left: 40px !important;
+            border-radius: 50px !important;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .search-input:focus {
+            background: white;
+        }
+
         /* Form Container Style */
-        .form-container-view { max-width: 900px; margin: 0 auto; }
+        .form-container-view {
+            max-width: 900px;
+            margin: 0 auto;
+        }
 
         /* === MODERN UPLOAD BOX STYLE === */
         .upload-box {
@@ -374,80 +521,313 @@ checkAuth();
             align-items: center;
             justify-content: center;
         }
-        .upload-box:hover { border-color: var(--primary); background-color: #f8faff; }
-        .upload-icon-circle { width: 60px; height: 60px; background-color: #e0e7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
-        .upload-icon-circle i { font-size: 1.5rem; color: var(--primary); }
-        .upload-text-title { font-weight: 700; color: var(--text-main); margin-bottom: 5px; }
-        .upload-text-muted { font-size: 0.8rem; color: var(--text-muted); }
-        .file-input-hidden { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+        .upload-box:hover {
+            border-color: var(--primary);
+            background-color: #f8faff;
+        }
+
+        .upload-icon-circle {
+            width: 60px;
+            height: 60px;
+            background-color: #e0e7ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .upload-icon-circle i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .upload-text-title {
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+
+        .upload-text-muted {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .file-input-hidden {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
 
         /* Tampilan Preview */
-        .preview-box { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #eee; background: #fff; padding: 10px; }
-        .preview-box img { width: 100%; height: auto; max-height: 400px; object-fit: contain; display: block; border-radius: 8px; }
-        .btn-remove-preview { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.95); color: #e63946; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: all 0.2s; z-index: 10; }
-        .btn-remove-preview:hover { transform: scale(1.1); color: red; }
-        
+        .preview-box {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #eee;
+            background: #fff;
+            padding: 10px;
+        }
+
+        .preview-box img {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: contain;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .btn-remove-preview {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #e63946;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .btn-remove-preview:hover {
+            transform: scale(1.1);
+            color: red;
+        }
+
         /* === ASSET SHOWCASE STYLES (LOGO & MASKOT) === */
-        .asset-card { transition: transform 0.3s ease; border: 0; overflow: hidden; border-radius: 20px; }
-        .asset-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .asset-card {
+            transition: transform 0.3s ease;
+            border: 0;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        .asset-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
         .asset-img-wrapper {
             background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-            background-color: white; 
+            background-color: white;
             height: 280px;
-            display: flex; align-items: center; justify-content: center;
-            border-bottom: 1px solid #f0f0f0; position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
         }
-        .asset-img-wrapper img { max-width: 70%; max-height: 80%; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.15)); transition: all 0.5s ease; }
-        .asset-card:hover .asset-img-wrapper img { transform: scale(1.05); }
-        .asset-badge { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.9); backdrop-filter: blur(5px); padding: 5px 15px; border-radius: 30px; font-weight: 700; color: var(--primary); font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .asset-img-wrapper img {
+            max-width: 70%;
+            max-height: 80%;
+            object-fit: contain;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.15));
+            transition: all 0.5s ease;
+        }
+
+        .asset-card:hover .asset-img-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .asset-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.8rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
 
         /* Submission Detail Styles */
-        .submission-detail-header { background: white; padding: 30px; border-radius: var(--card-radius); box-shadow: var(--shadow-md); margin-bottom: 25px; }
-        .submission-meta-badge { background: #f1f5f9; color: var(--text-muted); padding: 8px 16px; border-radius: 50px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; margin-right: 10px; font-weight: 600; }
-        .submission-content-card { background: white; border-radius: var(--card-radius); box-shadow: var(--shadow-md); overflow: hidden; }
-        .submission-image-wrapper { background-color: #f8f9fa; width: 100%; padding: 20px; text-align: center; border-bottom: 1px solid #eee; }
-        .submission-hero-img { max-width: 100%; height: auto; max-height: 600px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .submission-body { padding: 40px; }
-        .submission-body p { line-height: 1.8; font-size: 1rem; color: #4b5563; }
-        .action-bar { position: sticky; bottom: 20px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 15px 30px; border-radius: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.5); display: flex; justify-content: space-between; align-items: center; margin-top: 30px; z-index: 900; }
+        .submission-detail-header {
+            background: white;
+            padding: 30px;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 25px;
+        }
+
+        .submission-meta-badge {
+            background: #f1f5f9;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 10px;
+            font-weight: 600;
+        }
+
+        .submission-content-card {
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .submission-image-wrapper {
+            background-color: #f8f9fa;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .submission-hero-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 600px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .submission-body {
+            padding: 40px;
+        }
+
+        .submission-body p {
+            line-height: 1.8;
+            font-size: 1rem;
+            color: #4b5563;
+        }
+
+        .action-bar {
+            position: sticky;
+            bottom: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            z-index: 900;
+        }
 
         /* Responsive */
         @media (max-width: 992px) {
-            .sidebar { left: -260px; }
-            .sidebar.active { left: 0; }
-            .main-content { margin-left: 0; padding: 20px; }
+            .sidebar {
+                left: -260px;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
         }
-        
+
         /* SweetAlert Customization to match theme */
         .swal2-popup {
             font-family: 'Nunito', sans-serif;
             border-radius: 16px;
         }
+
         .swal2-confirm {
             background-color: var(--primary) !important;
             box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3) !important;
         }
+
         .swal2-confirm:focus {
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.5) !important;
         }
-        
+
         /* Style for Contact Message View */
-        .contact-view-table td { padding: 10px; vertical-align: top; }
-        .contact-view-label { font-weight: 700; color: var(--text-main); width: 100px; }
-        .contact-view-value { color: #555; }
+        .contact-view-table td {
+            padding: 10px;
+            vertical-align: top;
+        }
+
+        .contact-view-label {
+            font-weight: 700;
+            color: var(--text-main);
+            width: 100px;
+        }
+
+        .contact-view-value {
+            color: #555;
+        }
 
         /* Timeline Style (For Dashboard) */
-        .timeline .border-start { border-color: #e9ecef !important; }
-        .timeline .rounded-circle { box-shadow: 0 0 0 4px #fff; }
+        .timeline .border-start {
+            border-color: #e9ecef !important;
+        }
+
+        .timeline .rounded-circle {
+            box-shadow: 0 0 0 4px #fff;
+        }
 
         /* Dashboard Minimal Stats */
-        .dash-stat-item { display: flex; align-items: center; padding: 15px 20px; background: white; border-radius: 12px; box-shadow: var(--shadow-sm); transition: transform 0.2s; }
-        .dash-stat-item:hover { transform: translateY(-3px); }
-        .dash-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1.1rem; }
-        .dash-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .dash-value { font-size: 1.2rem; font-weight: 800; color: var(--text-main); line-height: 1; }
+        .dash-stat-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s;
+        }
+
+        .dash-stat-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .dash-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.1rem;
+        }
+
+        .dash-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dash-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+        }
 
         /* Dropdown Custom for Chart Filter */
         .chart-filter-select {
@@ -459,9 +839,10 @@ checkAuth();
             font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             outline: none;
         }
+
         .chart-filter-select:focus {
             border-color: var(--primary);
         }
@@ -476,11 +857,25 @@ checkAuth();
             font-weight: 600;
             transition: all 0.2s;
         }
-        .chart-range-btn:hover { background: #f8f9fa; color: var(--primary); }
-        .btn-group-chart .btn:first-child { border-radius: 50px 0 0 50px; }
-        .btn-group-chart .btn:last-child { border-radius: 0 50px 50px 0; }
-        .btn-group-chart .btn.active { background-color: #f1f5f9; color: var(--primary); }
-        
+
+        .chart-range-btn:hover {
+            background: #f8f9fa;
+            color: var(--primary);
+        }
+
+        .btn-group-chart .btn:first-child {
+            border-radius: 50px 0 0 50px;
+        }
+
+        .btn-group-chart .btn:last-child {
+            border-radius: 0 50px 50px 0;
+        }
+
+        .btn-group-chart .btn.active {
+            background-color: #f1f5f9;
+            color: var(--primary);
+        }
+
         /* Icon Preview Box for Fasilitas */
         .icon-preview {
             width: 50px;
@@ -494,20 +889,22 @@ checkAuth();
             font-size: 1.5rem;
             color: var(--primary);
         }
-
     </style>
     <script>
-        window.onpageshow = function(event) { if (event.persisted) window.location.reload(); };
+        window.onpageshow = function(event) {
+            if (event.persisted) window.location.reload();
+        };
     </script>
 </head>
+
 <body>
-    
+
     <div class="sidebar">
         <a href="#" class="sidebar-brand">
-            <img src="../assets/images/logo.png" alt="Logo"> 
+                <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Laboratorium Business Analytics Logo">
             <span>Lab Admin</span>
         </a>
-        
+
         <div class="sidebar-menu">
             <ul class="nav flex-column">
                 <li class="sidebar-header">Utama</li>
@@ -534,7 +931,7 @@ checkAuth();
                 <li><a class="nav-link" href="#" data-page="kontak"><i class="fas fa-envelope"></i><span>Pesan Masuk</span></a></li>
                 <li><a class="nav-link" href="#" data-page="users"><i class="fas fa-users-cog"></i><span>Manajemen User</span></a></li>
                 <li><a class="nav-link" href="#" data-page="log"><i class="fas fa-history"></i><span>Log Aktivitas</span></a></li>
-                
+
                 <li>
                     <a class="nav-link btn-logout" href="logout.php">
                         <i class="fas fa-sign-out-alt"></i><span>Keluar</span>
@@ -550,7 +947,7 @@ checkAuth();
                 <h1 class="page-title" id="page-title-text">Dashboard</h1>
                 <p class="text-muted m-0">Selamat datang kembali, <?php echo htmlspecialchars($_SESSION['nama'] ?? 'Administrator'); ?></p>
             </div>
-            
+
             <div class="user-profile">
                 <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['nama'] ?? 'A'); ?>&background=4361ee&color=fff" class="user-avatar">
                 <div class="user-info d-none d-md-block me-2">
@@ -567,7 +964,7 @@ checkAuth();
     <div id="modal-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         // === 1. NAVIGATION HANDLER ===
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -576,7 +973,7 @@ checkAuth();
                 e.preventDefault();
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
-                
+
                 const titleText = this.querySelector('span').innerText;
                 document.getElementById('page-title-text').innerText = titleText;
                 loadPage(this.dataset.page);
@@ -590,25 +987,56 @@ checkAuth();
             if (window.dashboardChart instanceof Chart) {
                 window.dashboardChart.destroy();
             }
-            content.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Memuat data...</p></div>'; 
+            content.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Memuat data...</p></div>';
 
-            switch(page) {
-                case 'beranda': loadBeranda(); break;
-                case 'identitas': loadIdentitas(); break;
-                case 'visi_misi': loadVisiMisi(); break;
-                case 'roadmap': loadRoadmap(); break;
-                case 'research_focus': loadResearchFocus(); break;
-                case 'makna_logo': loadMaknaLogo(); break;
-                case 'anggota': loadAnggota(); break;
-                case 'berita': loadBerita(); break;
-                case 'galeri': loadGaleri(); break;
-                case 'news_service': loadNewsService(); break;
-                case 'fasilitas': loadFasilitas(); break;
-                case 'booking': loadBooking(); break;
-                case 'users': loadUsers(); break;
-                case 'kontak': loadKontak(); break;
-                case 'log': loadLog(); break;
-                default: content.innerHTML = '<div class="alert alert-warning">Halaman tidak ditemukan.</div>';
+            switch (page) {
+                case 'beranda':
+                    loadBeranda();
+                    break;
+                case 'identitas':
+                    loadIdentitas();
+                    break;
+                case 'visi_misi':
+                    loadVisiMisi();
+                    break;
+                case 'roadmap':
+                    loadRoadmap();
+                    break;
+                case 'research_focus':
+                    loadResearchFocus();
+                    break;
+                case 'makna_logo':
+                    loadMaknaLogo();
+                    break;
+                case 'anggota':
+                    loadAnggota();
+                    break;
+                case 'berita':
+                    loadBerita();
+                    break;
+                case 'galeri':
+                    loadGaleri();
+                    break;
+                case 'news_service':
+                    loadNewsService();
+                    break;
+                case 'fasilitas':
+                    loadFasilitas();
+                    break;
+                case 'booking':
+                    loadBooking();
+                    break;
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'kontak':
+                    loadKontak();
+                    break;
+                case 'log':
+                    loadLog();
+                    break;
+                default:
+                    content.innerHTML = '<div class="alert alert-warning">Halaman tidak ditemukan.</div>';
             }
         }
 
@@ -625,15 +1053,27 @@ checkAuth();
 
         function loadBeranda() {
             document.getElementById('page-title-text').innerText = 'Dashboard Overview';
-            
+
             // Fetch Semua Data Secara Paralel
             Promise.all([
-                fetch('api/peminjaman.php').then(r => r.json()).catch(() => ({data: []})),        
-                fetch('api/news_service.php').then(r => r.json()).catch(() => ({data: []})),  
-                fetch('api/berita.php').then(r => r.json()).catch(() => ({data: []})),        
-                fetch('api/kontak.php').then(r => r.json()).catch(() => ({data: []})),        
-                fetch('api/galeri.php').then(r => r.json()).catch(() => ({data: []})),        
-                fetch('api/log.php?action=list').then(r => r.json()).catch(() => ({data: []})) 
+                fetch('api/peminjaman.php').then(r => r.json()).catch(() => ({
+                    data: []
+                })),
+                fetch('api/news_service.php').then(r => r.json()).catch(() => ({
+                    data: []
+                })),
+                fetch('api/berita.php').then(r => r.json()).catch(() => ({
+                    data: []
+                })),
+                fetch('api/kontak.php').then(r => r.json()).catch(() => ({
+                    data: []
+                })),
+                fetch('api/galeri.php').then(r => r.json()).catch(() => ({
+                    data: []
+                })),
+                fetch('api/log.php?action=list').then(r => r.json()).catch(() => ({
+                    data: []
+                }))
             ]).then(([bookingRes, newsRes, beritaRes, kontakRes, galeriRes, logRes]) => {
 
                 // Simpan data mentah
@@ -770,13 +1210,13 @@ checkAuth();
                     const opt = document.createElement('option');
                     opt.value = y;
                     opt.text = y;
-                    if(y === currentYear) opt.selected = true;
+                    if (y === currentYear) opt.selected = true;
                     yearSelect.appendChild(opt);
                 }
 
                 // Setup Canvas
                 window.chartCtx = document.getElementById('dailyStatsChart').getContext('2d');
-                
+
                 // Initialize Default State
                 window.chartPageOffset = 0;
                 window.isMonthlyView = false;
@@ -827,28 +1267,28 @@ checkAuth();
             } else {
                 // --- MODE HARIAN (Navigasi) ---
                 // Hitung rentang hari berdasarkan offset
-                
-                let endDay = window.chartPageOffset * 7; 
+
+                let endDay = window.chartPageOffset * 7;
                 let startDay = endDay - 6;
 
                 // Penyesuaian agar "Next" bergerak ke masa depan (positif) dan "Return" ke masa lalu (negatif)
                 if (window.chartPageOffset > 0) {
-                      startDay = (window.chartPageOffset - 1) * 7 + 1;
-                      endDay = startDay + 6;
+                    startDay = (window.chartPageOffset - 1) * 7 + 1;
+                    endDay = startDay + 6;
                 } else if (window.chartPageOffset < 0) {
-                      endDay = window.chartPageOffset * 7;
-                      startDay = endDay - 6;
+                    endDay = window.chartPageOffset * 7;
+                    startDay = endDay - 6;
                 } else {
-                      // Offset 0 (Default: -6 s/d 0)
-                      endDay = 0;
-                      startDay = -6;
+                    // Offset 0 (Default: -6 s/d 0)
+                    endDay = 0;
+                    startDay = -6;
                 }
 
                 processedData = processDataRange(dataSet, startDay, endDay);
-                
+
                 // Tentukan Text Deskripsi
-                if(window.chartPageOffset === 0) descText = "Menampilkan data 7 hari terakhir (Hari Ini).";
-                else if(window.chartPageOffset > 0) descText = `Menampilkan proyeksi 7 hari ke depan (Halaman ${window.chartPageOffset}).`;
+                if (window.chartPageOffset === 0) descText = "Menampilkan data 7 hari terakhir (Hari Ini).";
+                else if (window.chartPageOffset > 0) descText = `Menampilkan proyeksi 7 hari ke depan (Halaman ${window.chartPageOffset}).`;
                 else descText = `Menampilkan riwayat data masa lalu (Halaman ${Math.abs(window.chartPageOffset)}).`;
             }
 
@@ -861,26 +1301,29 @@ checkAuth();
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const labels = [];
             const counts = [];
-            
+
             // Loop dari startOffset ke endOffset
             for (let i = startOffset; i <= endOffset; i++) {
                 const d = new Date();
-                d.setDate(d.getDate() + i); 
-                
+                d.setDate(d.getDate() + i);
+
                 const dateString = d.toISOString().split('T')[0];
                 const dayName = days[d.getDay()];
                 const dayDate = d.getDate() + '/' + (d.getMonth() + 1);
-                
+
                 labels.push(`${dayName} (${dayDate})`);
 
                 const count = dataSet.filter(item => {
                     let itemDate = item.tanggal_pengajuan || item.tanggal_upload || item.created_at || item.tanggal_booking || item.waktu || '';
                     return itemDate.startsWith(dateString);
                 }).length;
-                
+
                 counts.push(count);
             }
-            return { labels, counts };
+            return {
+                labels,
+                counts
+            };
         }
 
         // Helper: Proses Bulanan (Sesuai Tahun Pilihan)
@@ -890,14 +1333,17 @@ checkAuth();
 
             dataSet.forEach(item => {
                 let itemDateStr = item.tanggal_pengajuan || item.tanggal_upload || item.created_at || item.tanggal_booking || item.waktu || '';
-                if(itemDateStr) {
+                if (itemDateStr) {
                     const itemDate = new Date(itemDateStr);
-                    if(itemDate.getFullYear() === targetYear) {
+                    if (itemDate.getFullYear() === targetYear) {
                         counts[itemDate.getMonth()]++;
                     }
                 }
             });
-            return { labels: months, counts: counts };
+            return {
+                labels: months,
+                counts: counts
+            };
         }
 
         // Render Chart.js
@@ -905,8 +1351,8 @@ checkAuth();
             if (window.dashboardChart instanceof Chart) window.dashboardChart.destroy();
 
             let gradient = window.chartCtx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(67, 97, 238, 0.5)');   
-            gradient.addColorStop(1, 'rgba(67, 97, 238, 0.05)'); 
+            gradient.addColorStop(0, 'rgba(67, 97, 238, 0.5)');
+            gradient.addColorStop(1, 'rgba(67, 97, 238, 0.05)');
 
             window.dashboardChart = new Chart(window.chartCtx, {
                 type: 'line',
@@ -924,25 +1370,56 @@ checkAuth();
                         pointRadius: 4,
                         pointHoverRadius: 6,
                         fill: true,
-                        tension: 0.4 
+                        tension: 0.4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
+                        legend: {
+                            display: false
+                        },
                         tooltip: {
                             mode: 'index',
                             intersect: false,
-                            callbacks: { label: function(c) { return c.parsed.y + ' Item'; } }
+                            callbacks: {
+                                label: function(c) {
+                                    return c.parsed.y + ' Item';
+                                }
+                            }
                         }
                     },
                     scales: {
-                        x: { grid: { display: false }, ticks: { font: { family: "'Nunito', sans-serif" } } },
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9', borderDash: [5, 5] }, ticks: { stepSize: 1, font: { family: "'Nunito', sans-serif" } } }
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Nunito', sans-serif"
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f5f9',
+                                borderDash: [5, 5]
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    family: "'Nunito', sans-serif"
+                                }
+                            }
+                        }
                     },
-                    interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
                 }
             });
         }
@@ -955,7 +1432,7 @@ checkAuth();
 
         function loadRoadmap() {
             document.getElementById('page-title-text').innerText = 'Manajemen Roadmap';
-            
+
             // Fetch data dari API roadmap
             fetch('api/roadmap.php')
                 .then(r => {
@@ -966,7 +1443,7 @@ checkAuth();
                     try {
                         const result = JSON.parse(text);
                         allRoadmapData = result.success ? result.data : [];
-                        
+
                         const html = `
                         <div class="fade-in">
                             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -1001,7 +1478,7 @@ checkAuth();
                                 </div>
                             </div>
                         </div>`;
-                        
+
                         document.getElementById('content-area').innerHTML = html;
                     } catch (e) {
                         console.error('Invalid JSON:', text);
@@ -1043,7 +1520,7 @@ checkAuth();
         }
 
         function openRoadmapForm(id = null) {
-            if(id) {
+            if (id) {
                 fetch(`api/roadmap.php?id=${id}`).then(r => r.json()).then(res => renderRoadmapFormHTML(res.data));
             } else {
                 renderRoadmapFormHTML(null);
@@ -1053,19 +1530,19 @@ checkAuth();
         function renderRoadmapFormHTML(data) {
             const isEdit = data !== null;
             document.getElementById('page-title-text').innerText = isEdit ? 'Edit Roadmap' : 'Tambah Roadmap Baru';
-            
+
             // --- LOGIKA SPLIT TAHUN ---
             // Mengambil string tahun dari DB (misal: "2023 - 2025") dan memecahnya menjadi start dan end
             let valStart = '';
             let valEnd = '';
-            
-            if(isEdit && data.tahun) {
+
+            if (isEdit && data.tahun) {
                 // Cek jika ada pemisah " - " atau " s/d "
                 // Kita ambil angka saja untuk memudahkan
                 let numbers = data.tahun.match(/\d+/g);
-                if(numbers) {
-                    if(numbers.length >= 1) valStart = numbers[0];
-                    if(numbers.length >= 2) valEnd = numbers[1];
+                if (numbers) {
+                    if (numbers.length >= 1) valStart = numbers[0];
+                    if (numbers.length >= 2) valEnd = numbers[1];
                 } else {
                     valStart = data.tahun; // Fallback jika tidak ada angka
                 }
@@ -1123,15 +1600,15 @@ checkAuth();
             </div>`;
 
             document.getElementById('content-area').innerHTML = html;
-            
+
             // --- CUSTOM SUBMIT HANDLER ---
-            document.getElementById('formRoadmap').onsubmit = (e) => { 
-                e.preventDefault(); 
-                
+            document.getElementById('formRoadmap').onsubmit = (e) => {
+                e.preventDefault();
+
                 const form = e.target;
                 const inputUrutan = parseInt(form.urutan.value);
                 const currentId = form.id_roadmap.value;
-                
+
                 // 1. VALIDASI URUTAN (Frontend Check)
                 // Cek apakah ada data lain di array allRoadmapData yang punya urutan sama
                 const isDuplicate = allRoadmapData.some(item => {
@@ -1153,7 +1630,7 @@ checkAuth();
                 // Mengambil value dari 2 input terpisah
                 const tStart = document.getElementById('val_tahun_start').value;
                 const tEnd = document.getElementById('val_tahun_end').value;
-                
+
                 // Format gabungan: "start - end" (Contoh: "3 - 5")
                 // Backend kemungkinan menyimpan ini sebagai string di kolom 'tahun'
                 const combinedTahun = `${tStart} - ${tEnd}`;
@@ -1163,7 +1640,7 @@ checkAuth();
                 formData.set('tahun', combinedTahun); // Override field 'tahun' (atau tambah baru jika belum ada di form)
 
                 // Kirim ke server
-                submitFormPage('api/roadmap.php', formData, loadRoadmap); 
+                submitFormPage('api/roadmap.php', formData, loadRoadmap);
             };
         }
 
@@ -1181,17 +1658,20 @@ checkAuth();
                     const formData = new FormData();
                     formData.append('action', 'delete');
                     formData.append('id', id);
-                    
-                    fetch('api/roadmap.php', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(res => {
-                        if (res.success) {
-                            Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-                            loadRoadmap();
-                        } else {
-                            Swal.fire('Gagal!', res.message, 'error');
-                        }
-                    });
+
+                    fetch('api/roadmap.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(res => {
+                            if (res.success) {
+                                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                                loadRoadmap();
+                            } else {
+                                Swal.fire('Gagal!', res.message, 'error');
+                            }
+                        });
                 }
             });
         }
@@ -1204,7 +1684,7 @@ checkAuth();
 
         function loadResearchFocus() {
             document.getElementById('page-title-text').innerText = 'Fokus Riset';
-            
+
             // Menggunakan .text() dulu baru parse JSON untuk mencegah error "Unexpected token <"
             fetch('api/research_focus.php')
                 .then(response => response.text())
@@ -1215,7 +1695,7 @@ checkAuth();
                         renderResearchView();
                     } catch (e) {
                         console.error("Error Parsing JSON:", text);
-                        document.getElementById('content-area').innerHTML = 
+                        document.getElementById('content-area').innerHTML =
                             `<div class="alert alert-danger">
                                 <strong>Gagal memuat data (Server Error).</strong><br>
                                 Kemungkinan ada error PHP. Cek console browser untuk detailnya.
@@ -1262,7 +1742,7 @@ checkAuth();
                     </div>
                 </div>
             </div>`;
-            
+
             document.getElementById('content-area').innerHTML = html;
         }
 
@@ -1296,19 +1776,20 @@ checkAuth();
                         </div>
                     </td>
                 </tr>
-            `}).join('');
+            `
+            }).join('');
         }
 
         function openResearchForm(id = null) {
-            if(id) {
+            if (id) {
                 // Fetch single data
                 fetch(`api/research_focus.php?id=${id}`)
-                .then(r => r.json())
-                .then(res => {
-                    if(res.success) renderResearchFormHTML(res.data);
-                    else Swal.fire('Error', 'Data tidak ditemukan', 'error');
-                })
-                .catch(err => Swal.fire('Error', 'Gagal memuat data', 'error'));
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) renderResearchFormHTML(res.data);
+                        else Swal.fire('Error', 'Data tidak ditemukan', 'error');
+                    })
+                    .catch(err => Swal.fire('Error', 'Gagal memuat data', 'error'));
             } else {
                 renderResearchFormHTML(null);
             }
@@ -1317,9 +1798,9 @@ checkAuth();
         function renderResearchFormHTML(data) {
             const isEdit = data !== null;
             const hasImage = isEdit && data.file_path && data.file_path !== '';
-            
+
             document.getElementById('page-title-text').innerText = isEdit ? 'Edit Fokus Riset' : 'Tambah Fokus Riset';
-            
+
             const html = `
             <div class="form-container-view fade-in">
                 <form id="formResearch">
@@ -1390,11 +1871,11 @@ checkAuth();
             </div>`;
 
             document.getElementById('content-area').innerHTML = html;
-            
+
             // Handle Submit Form
-            document.getElementById('formResearch').onsubmit = (e) => { 
-                e.preventDefault(); 
-                submitFormPage('api/research_focus.php', new FormData(e.target), loadResearchFocus); 
+            document.getElementById('formResearch').onsubmit = (e) => {
+                e.preventDefault();
+                submitFormPage('api/research_focus.php', new FormData(e.target), loadResearchFocus);
             };
         }
 
@@ -1413,24 +1894,27 @@ checkAuth();
                     const formData = new FormData();
                     formData.append('action', 'delete');
                     formData.append('id', id);
-                    
+
                     // Menggunakan fetch manual agar bisa handle error text/json
-                    fetch('api/research_focus.php', { method: 'POST', body: formData })
-                    .then(r => r.text())
-                    .then(text => {
-                        try {
-                            const res = JSON.parse(text);
-                            if (res.success) {
-                                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-                                loadResearchFocus();
-                            } else {
-                                Swal.fire('Gagal!', res.message, 'error');
+                    fetch('api/research_focus.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(r => r.text())
+                        .then(text => {
+                            try {
+                                const res = JSON.parse(text);
+                                if (res.success) {
+                                    Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                                    loadResearchFocus();
+                                } else {
+                                    Swal.fire('Gagal!', res.message, 'error');
+                                }
+                            } catch (e) {
+                                console.error(text);
+                                Swal.fire('Error', 'Terjadi kesalahan server saat menghapus.', 'error');
                             }
-                        } catch (e) {
-                            console.error(text);
-                            Swal.fire('Error', 'Terjadi kesalahan server saat menghapus.', 'error');
-                        }
-                    });
+                        });
                 }
             });
         }
@@ -1438,15 +1922,19 @@ checkAuth();
         // ==========================================
         // === 3. MANAJEMEN BERITA (SESUAI API) ===
         // ==========================================
-        
-        let allBeritaData = []; 
+
+        let allBeritaData = [];
 
         function getBeritaBadge(category) {
             switch ((category || '').toLowerCase()) {
-                case 'news latest': return 'badge-news-latest';
-                case 'prestasi': return 'badge-prestasi';
-                case 'announcement': return 'badge-announcement';
-                default: return 'badge-default';
+                case 'news latest':
+                    return 'badge-news-latest';
+                case 'prestasi':
+                    return 'badge-prestasi';
+                case 'announcement':
+                    return 'badge-announcement';
+                default:
+                    return 'badge-default';
             }
         }
 
@@ -1498,8 +1986,11 @@ checkAuth();
 
         function renderBeritaTable(data) {
             const tbody = document.getElementById('beritaTableBody');
-            if (!data.length) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-newspaper fa-3x mb-3 text-light-emphasis"></i><p>Belum ada data berita.</p></div></td></tr>`; return; }
-            
+            if (!data.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-newspaper fa-3x mb-3 text-light-emphasis"></i><p>Belum ada data berita.</p></div></td></tr>`;
+                return;
+            }
+
             tbody.innerHTML = data.map(i => {
                 let displayImage = fixImagePath(i.file_path);
                 const uploaderName = i.nama_pengupload || i.uploaded_by || 'Admin';
@@ -1509,7 +2000,7 @@ checkAuth();
                 if (i.updated_at) {
                     let parts = i.updated_at.split(' ');
                     if (parts.length > 1) {
-                        timeDisplay = parts[1].substring(0, 5); 
+                        timeDisplay = parts[1].substring(0, 5);
                     }
                 }
 
@@ -1557,33 +2048,36 @@ checkAuth();
                     const formData = new FormData();
                     formData.append('action', 'delete');
                     formData.append('id', id);
-                    fetch('api/berita.php', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(res => {
-                        if (res.success) {
-                            allBeritaData = allBeritaData.filter(b => b.id_artikel != id);
-                            renderBeritaTable(allBeritaData);
-                            Swal.fire('Terhapus!', 'Berita berhasil dihapus.', 'success');
-                        } else {
-                            Swal.fire('Gagal!', res.message, 'error');
-                        }
-                    });
+                    fetch('api/berita.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(res => {
+                            if (res.success) {
+                                allBeritaData = allBeritaData.filter(b => b.id_artikel != id);
+                                renderBeritaTable(allBeritaData);
+                                Swal.fire('Terhapus!', 'Berita berhasil dihapus.', 'success');
+                            } else {
+                                Swal.fire('Gagal!', res.message, 'error');
+                            }
+                        });
                 }
             });
         }
 
-        function filterBerita() { 
-            const cat = document.getElementById('filterKategori').value; 
+        function filterBerita() {
+            const cat = document.getElementById('filterKategori').value;
             const search = document.getElementById('searchBerita').value.toLowerCase();
             const filtered = allBeritaData.filter(i => {
                 const uploader = i.nama_pengupload || i.uploaded_by || '';
                 return (cat === 'all' || i.kategori === cat) && (i.judul.toLowerCase().includes(search) || uploader.toLowerCase().includes(search));
             });
-            renderBeritaTable(filtered); 
+            renderBeritaTable(filtered);
         }
 
         function openBeritaForm(id = null) {
-            if(id) fetch(`api/berita.php?id=${id}`).then(r=>r.json()).then(res => renderBeritaFormHTML(res.data));
+            if (id) fetch(`api/berita.php?id=${id}`).then(r => r.json()).then(res => renderBeritaFormHTML(res.data));
             else renderBeritaFormHTML(null);
         }
 
@@ -1658,7 +2152,10 @@ checkAuth();
                     </form>
                 </div>`;
             document.getElementById('content-area').innerHTML = html;
-            document.getElementById('formBerita').onsubmit = (e) => { e.preventDefault(); submitFormPage('api/berita.php', new FormData(e.target), loadBerita); };
+            document.getElementById('formBerita').onsubmit = (e) => {
+                e.preventDefault();
+                submitFormPage('api/berita.php', new FormData(e.target), loadBerita);
+            };
         }
 
 
@@ -1670,11 +2167,16 @@ checkAuth();
 
         function getGaleriBadge(category) {
             switch ((category || '').toLowerCase()) {
-                case 'kategori 1': return 'badge-news-latest';
-                case 'kategori 2': return 'badge-prestasi';
-                case 'kategori 3': return 'badge-announcement';
-                case 'kategori 4': return 'badge-kegiatan';
-                default: return 'badge-default';
+                case 'kategori 1':
+                    return 'badge-news-latest';
+                case 'kategori 2':
+                    return 'badge-prestasi';
+                case 'kategori 3':
+                    return 'badge-announcement';
+                case 'kategori 4':
+                    return 'badge-kegiatan';
+                default:
+                    return 'badge-default';
             }
         }
 
@@ -1728,8 +2230,11 @@ checkAuth();
 
         function renderGaleriTable(data) {
             const tbody = document.getElementById('galeriTableBody');
-            if (!data.length) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-images fa-3x mb-3 text-light-emphasis"></i><p>Belum ada data galeri.</p></div></td></tr>`; return; }
-            
+            if (!data.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-images fa-3x mb-3 text-light-emphasis"></i><p>Belum ada data galeri.</p></div></td></tr>`;
+                return;
+            }
+
             tbody.innerHTML = data.map(i => {
                 let displayImage = fixImagePath(i.file_path);
                 let dateDisplay = i.tanggal_upload ? i.tanggal_upload.split(' ')[0] : '-';
@@ -1737,7 +2242,7 @@ checkAuth();
                 if (i.updated_at) {
                     let parts = i.updated_at.split(' ');
                     if (parts.length > 1) {
-                        timeDisplay = parts[1].substring(0, 5); 
+                        timeDisplay = parts[1].substring(0, 5);
                     }
                 }
                 const uploaderName = i.nama_pengupload || '-';
@@ -1790,17 +2295,20 @@ checkAuth();
                     const formData = new FormData();
                     formData.append('action', 'delete');
                     formData.append('id', id);
-                    fetch('api/galeri.php', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(res => {
-                        if (res.success) {
-                            allGaleriData = allGaleriData.filter(g => g.id_galeri != id);
-                            renderGaleriTable(allGaleriData);
-                            Swal.fire('Terhapus!', 'Foto berhasil dihapus.', 'success');
-                        } else {
-                            Swal.fire('Gagal!', res.message, 'error');
-                        }
-                    });
+                    fetch('api/galeri.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(res => {
+                            if (res.success) {
+                                allGaleriData = allGaleriData.filter(g => g.id_galeri != id);
+                                renderGaleriTable(allGaleriData);
+                                Swal.fire('Terhapus!', 'Foto berhasil dihapus.', 'success');
+                            } else {
+                                Swal.fire('Gagal!', res.message, 'error');
+                            }
+                        });
                 }
             });
         }
@@ -1815,12 +2323,12 @@ checkAuth();
             renderGaleriTable(filtered);
         }
 
-        function openGaleriForm(id=null){
-            if(id) fetch(`api/galeri.php?id=${id}`).then(r=>r.json()).then(res=>renderGaleriFormHTML(res.data));
+        function openGaleriForm(id = null) {
+            if (id) fetch(`api/galeri.php?id=${id}`).then(r => r.json()).then(res => renderGaleriFormHTML(res.data));
             else renderGaleriFormHTML(null);
         }
 
-        function renderGaleriFormHTML(data=null){
+        function renderGaleriFormHTML(data = null) {
             const isEdit = data !== null;
             const hasImage = isEdit && data.file_path && data.file_path !== '';
             document.getElementById('page-title-text').innerText = isEdit ? 'Edit Galeri' : 'Tambah Foto Galeri';
@@ -1885,7 +2393,10 @@ checkAuth();
                 </form>
             </div>`;
             document.getElementById('content-area').innerHTML = html;
-            document.getElementById('formGaleri').onsubmit=(e)=>{e.preventDefault(); submitFormPage('api/galeri.php', new FormData(e.target), loadGaleri);}
+            document.getElementById('formGaleri').onsubmit = (e) => {
+                e.preventDefault();
+                submitFormPage('api/galeri.php', new FormData(e.target), loadGaleri);
+            }
         }
 
         // ==========================================
@@ -1895,8 +2406,8 @@ checkAuth();
         function loadNewsService() {
             document.getElementById('page-title-text').innerText = 'News Service';
             fetch('api/news_service.php').then(r => r.json()).then(result => {
-                    const data = result.data || [];
-                    const html = `
+                const data = result.data || [];
+                const html = `
                     <div class="fade-in">
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-body d-flex justify-content-between align-items-center">
@@ -1920,9 +2431,11 @@ checkAuth();
                             </div>
                         </div>
                     </div>`;
-                    document.getElementById('content-area').innerHTML = html;
-                    if(data.length > 0) renderNewsServiceTable(data);
-                }).catch(err => { document.getElementById('content-area').innerHTML = `<div class="alert alert-danger">Gagal memuat data: ${err}</div>`; });
+                document.getElementById('content-area').innerHTML = html;
+                if (data.length > 0) renderNewsServiceTable(data);
+            }).catch(err => {
+                document.getElementById('content-area').innerHTML = `<div class="alert alert-danger">Gagal memuat data: ${err}</div>`;
+            });
         }
 
         function renderNewsServiceTable(data) {
@@ -1962,34 +2475,42 @@ checkAuth();
                 confirmButtonText: 'Ya, Proses!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const formData = new FormData(); formData.append('action', action); formData.append('id', id);
-                    fetch('api/news_service.php', { method: 'POST', body: formData }).then(r => r.json()).then(res => {
-                        if (res.success) { 
-                            Swal.fire('Berhasil', res.message, 'success'); 
-                            loadNewsService(); 
-                        } else { 
-                            Swal.fire('Gagal', res.message, 'error'); 
+                    const formData = new FormData();
+                    formData.append('action', action);
+                    formData.append('id', id);
+                    fetch('api/news_service.php', {
+                        method: 'POST',
+                        body: formData
+                    }).then(r => r.json()).then(res => {
+                        if (res.success) {
+                            Swal.fire('Berhasil', res.message, 'success');
+                            loadNewsService();
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
                         }
-                    }).catch(err => { console.error(err); Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error'); });
+                    }).catch(err => {
+                        console.error(err);
+                        Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
+                    });
                 }
             });
         }
-        
+
         // ==========================================
         // === 6. MANAJEMEN FASILITAS LAB (BARU) ===
         // ==========================================
-        
+
         let allFasilitasData = [];
 
         function loadFasilitas() {
             document.getElementById('page-title-text').innerText = 'Fasilitas Laboratorium';
-            
+
             // Mengambil semua data dari api/fasilitas.php
             fetch('api/fasilitas.php')
                 .then(r => r.json())
                 .then(result => {
                     allFasilitasData = result.success ? result.data : [];
-                    
+
                     const html = `
                     <div class="fade-in">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -2021,7 +2542,7 @@ checkAuth();
                             </div>
                         </div>
                     </div>`;
-                    
+
                     document.getElementById('content-area').innerHTML = html;
                     renderFasilitasTable(allFasilitasData);
                 })
@@ -2032,7 +2553,7 @@ checkAuth();
 
         function renderFasilitasTable(data) {
             const tbody = document.getElementById('fasilitasTableBody');
-            
+
             if (!data.length) {
                 tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted"><div class="py-4"><i class="fas fa-box-open fa-3x mb-3 text-light-emphasis"></i><p>Belum ada data fasilitas.</p></div></td></tr>`;
                 return;
@@ -2080,7 +2601,7 @@ checkAuth();
         }
 
         function openFasilitasForm(id = null) {
-            if(id) {
+            if (id) {
                 // Fetch single data: sesuai logic API "if (isset($_GET['id']))"
                 fetch(`api/fasilitas.php?id=${id}`).then(r => r.json()).then(res => renderFasilitasFormHTML(res.data));
             } else {
@@ -2152,7 +2673,7 @@ checkAuth();
         // Helper untuk preview icon real-time
         function updateIconPreview(val) {
             const preview = document.getElementById('iconPreview');
-            if(val.trim() === '') {
+            if (val.trim() === '') {
                 preview.className = 'bi bi-question-circle';
             } else {
                 preview.className = val;
@@ -2175,20 +2696,23 @@ checkAuth();
                     formData.append('action', 'delete');
                     // Sesuai API: $id = $_POST['id']
                     formData.append('id', id);
-                    
-                    fetch('api/fasilitas.php', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(res => {
-                        if (res.success) {
-                            Swal.fire('Terhapus!', 'Fasilitas berhasil dihapus.', 'success');
-                            loadFasilitas();
-                        } else {
-                            Swal.fire('Gagal!', res.message, 'error');
-                        }
-                    })
-                    .catch(err => {
-                         Swal.fire('Error!', 'Terjadi kesalahan sistem.', 'error');
-                    });
+
+                    fetch('api/fasilitas.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(res => {
+                            if (res.success) {
+                                Swal.fire('Terhapus!', 'Fasilitas berhasil dihapus.', 'success');
+                                loadFasilitas();
+                            } else {
+                                Swal.fire('Gagal!', res.message, 'error');
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire('Error!', 'Terjadi kesalahan sistem.', 'error');
+                        });
                 }
             });
         }
@@ -2201,31 +2725,45 @@ checkAuth();
 
         function getBookingBadge(status) {
             switch ((status || '').toLowerCase()) {
-                case 'approved': return 'bg-success bg-opacity-10 text-success border border-success border-opacity-25';
-                case 'pending': return 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25';
-                case 'rejected': return 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25';
-                case 'cancellation_requested': return 'bg-info bg-opacity-10 text-info border border-info border-opacity-25';
-                case 'cancelled': return 'bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25';
-                case 'completed': return 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25';
-                default: return 'bg-light text-muted border';
+                case 'approved':
+                    return 'bg-success bg-opacity-10 text-success border border-success border-opacity-25';
+                case 'pending':
+                    return 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25';
+                case 'rejected':
+                    return 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25';
+                case 'cancellation_requested':
+                    return 'bg-info bg-opacity-10 text-info border border-info border-opacity-25';
+                case 'cancelled':
+                    return 'bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25';
+                case 'completed':
+                    return 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25';
+                default:
+                    return 'bg-light text-muted border';
             }
         }
 
         function getStatusIcon(status) {
             switch ((status || '').toLowerCase()) {
-                case 'approved': return '<i class="fas fa-check-circle me-1"></i>';
-                case 'pending': return '<i class="fas fa-clock me-1"></i>';
-                case 'rejected': return '<i class="fas fa-times-circle me-1"></i>';
-                case 'cancellation_requested': return '<i class="fas fa-exclamation-circle me-1"></i>';
-                case 'cancelled': return '<i class="fas fa-ban me-1"></i>';
-                case 'completed': return '<i class="fas fa-flag-checkered me-1"></i>';
-                default: return '';
+                case 'approved':
+                    return '<i class="fas fa-check-circle me-1"></i>';
+                case 'pending':
+                    return '<i class="fas fa-clock me-1"></i>';
+                case 'rejected':
+                    return '<i class="fas fa-times-circle me-1"></i>';
+                case 'cancellation_requested':
+                    return '<i class="fas fa-exclamation-circle me-1"></i>';
+                case 'cancelled':
+                    return '<i class="fas fa-ban me-1"></i>';
+                case 'completed':
+                    return '<i class="fas fa-flag-checkered me-1"></i>';
+                default:
+                    return '';
             }
         }
 
         function loadBooking() {
             document.getElementById('page-title-text').innerText = 'Data Booking Lab';
-            
+
             fetch('api/peminjaman.php')
                 .then(r => r.json())
                 .then(result => {
@@ -2284,233 +2822,293 @@ checkAuth();
                     </div>
                 </div>
             </div>`;
-            
+
             document.getElementById('content-area').innerHTML = html;
         }
 
         function renderBookingRows(data) {
             return data.map(item => {
-                // Format tanggal check-in/out agar lebih enak dibaca
-                // Format DB: YYYY-MM-DD HH:MM:SS
-                const start = new Date(item.check_in).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                const end = new Date(item.check_out).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                // --- LOGIKA BARU: DETEKSI STATUS REQ BATAL ---
+                // Kita buat variabel displayStatus untuk tampilan saja
+                // Jika request_pembatalan = true, kita paksa status jadi 'Cancellation_Requested'
+                // kecuali jika admin sudah membatalkan/menolak (status final).
+
+                let displayStatus = item.status;
+
+                // Cek berbagai variasi boolean (1, true, 't', '1') karena beda database beda output
+                const isReqCancel = item.request_pembatalan === true || item.request_pembatalan === 1 || item.request_pembatalan === 't' || item.request_pembatalan === '1';
+
+                if (isReqCancel) {
+                    if (item.status !== 'Cancelled' && item.status !== 'Rejected') {
+                        displayStatus = 'Cancellation_Requested';
+                    }
+                }
+
+                // Format Tanggal yang rapi
+                const start = new Date(item.check_in).toLocaleString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const end = new Date(item.check_out).toLocaleString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
                 const timeString = `${start} - ${end}`;
 
-                // Safe string for onclick
+                // Safe string untuk dikirim ke fungsi onclick
                 const itemSafe = JSON.stringify(item).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
 
                 return `
-                <tr style="cursor: pointer;" onclick='viewBookingDetail(${itemSafe})'>
-                    <td class="ps-4">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold me-3 border" style="width: 40px; height: 40px;">
-                                ${item.nama_akun ? item.nama_akun.charAt(0).toUpperCase() : '?'}
-                            </div>
-                            <div>
-                                <div class="fw-bold text-dark">${item.nama_akun}</div>
-                                <div class="small text-muted">${item.email_akun}</div>
-                                <div class="small text-muted" style="font-size: 0.75rem;">${item.no_handphone || '-'}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="fw-bold text-primary mb-1">${item.tujuan}</div>
-                        <div class="text-muted small"><i class="far fa-clock me-1 text-warning"></i> ${timeString}</div>
-                        <div class="text-muted small mt-1"><i class="fas fa-building me-1 text-secondary"></i> ${item.asal_instansi || '-'}</div>
-                    </td>
-                    <td class="text-center">
-                        <span class="badge bg-light text-dark border rounded-pill px-3">${item.kategori_pemohon}</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="badge ${getBookingBadge(item.status)} rounded-pill px-3 py-2" style="font-size: 0.75rem;">
-                            ${getStatusIcon(item.status)} ${item.status.replace('_', ' ')}
-                        </span>
-                        ${item.status === 'Cancellation_Requested' ? '<div class="mt-1"><small class="text-danger fw-bold animate__animated animate__flash">Meminta Pembatalan!</small></div>' : ''}
-                    </td>
-                    <td class="text-end pe-4">
-                        <button class="btn btn-sm btn-light text-primary border shadow-sm rounded-pill px-3 fw-bold" onclick='event.stopPropagation(); viewBookingDetail(${itemSafe})'>
-                            Detail <i class="fas fa-arrow-right ms-1"></i>
-                        </button>
-                    </td>
-                </tr>
-            `}).join('');
+        <tr style="cursor: pointer;" onclick='viewBookingDetail(${itemSafe})'>
+            <td class="ps-4">
+                <div class="d-flex align-items-center">
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold me-3 border" style="width: 40px; height: 40px;">
+                        ${item.nama_akun ? item.nama_akun.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark">${item.nama_akun}</div>
+                        <div class="small text-muted">${item.email_akun}</div>
+                        <div class="small text-muted" style="font-size: 0.75rem;">${item.no_hp || '-'}</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="fw-bold text-primary mb-1">${item.tujuan}</div>
+                <div class="text-muted small"><i class="far fa-clock me-1 text-warning"></i> ${timeString}</div>
+                <div class="text-muted small mt-1"><i class="fas fa-building me-1 text-secondary"></i> ${item.asal_instansi || '-'}</div>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-light text-dark border rounded-pill px-3">${item.kategori_pemohon}</span>
+            </td>
+            <td class="text-center">
+                <span class="badge ${getBookingBadge(displayStatus)} rounded-pill px-3 py-2" style="font-size: 0.75rem;">
+                    ${getStatusIcon(displayStatus)} ${displayStatus.replace('Cancellation_Requested', 'Req. Batal').replace('_', ' ')}
+                </span>
+                ${displayStatus === 'Cancellation_Requested' ? '<div class="mt-1"><small class="text-danger fw-bold animate__animated animate__flash">Meminta Pembatalan!</small></div>' : ''}
+            </td>
+            <td class="text-end pe-4">
+                <button class="btn btn-sm btn-light text-primary border shadow-sm rounded-pill px-3 fw-bold" onclick='event.stopPropagation(); viewBookingDetail(${itemSafe})'>
+                    Detail <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+            </td>
+        </tr>
+    `
+            }).join('');
         }
 
         function filterBooking() {
             const search = document.getElementById('searchBooking').value.toLowerCase();
             const statusFilter = document.getElementById('filterStatusBooking').value;
-            
+
             const filtered = allBookingData.filter(item => {
-                const matchSearch = (item.nama_akun || '').toLowerCase().includes(search) || 
-                                    (item.tujuan || '').toLowerCase().includes(search) ||
-                                    (item.asal_instansi || '').toLowerCase().includes(search);
+                const matchSearch = (item.nama_akun || '').toLowerCase().includes(search) ||
+                    (item.tujuan || '').toLowerCase().includes(search) ||
+                    (item.asal_instansi || '').toLowerCase().includes(search);
                 const matchStatus = statusFilter === 'all' || item.status === statusFilter;
                 return matchSearch && matchStatus;
             });
-            
-            document.getElementById('bookingTableBody').innerHTML = filtered.length === 0 ? 
-                `<tr><td colspan="5" class="text-center py-5 text-muted">Data tidak ditemukan.</td></tr>` : 
+
+            document.getElementById('bookingTableBody').innerHTML = filtered.length === 0 ?
+                `<tr><td colspan="5" class="text-center py-5 text-muted">Data tidak ditemukan.</td></tr>` :
                 renderBookingRows(filtered);
         }
 
         function viewBookingDetail(item) {
-            // Scroll to top
+            // Scroll ke atas agar user sadar halaman berubah
             window.scrollTo(0, 0);
             document.getElementById('page-title-text').innerText = 'Detail Booking';
 
-            // Format tanggal lengkap
-            const tglPengajuan = new Date(item.tanggal_pengajuan).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            const checkInFull = new Date(item.check_in).toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const checkOutFull = new Date(item.check_out).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            // Format Tanggal Lengkap
+            // Fallback ke tanggal hari ini jika created_at kosong
+            const tglPengajuan = new Date(item.created_at || new Date()).toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const checkInFull = new Date(item.check_in).toLocaleString('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const checkOutFull = new Date(item.check_out).toLocaleString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
 
-            // Tombol Aksi berdasarkan Status
+            // --- LOGIKA BARU: DETEKSI STATUS ---
+            let displayStatus = item.status;
+            const isReqCancel = item.request_pembatalan === true || item.request_pembatalan === 1 || item.request_pembatalan === 't' || item.request_pembatalan === '1';
+
+            if (isReqCancel) {
+                if (item.status !== 'Cancelled' && item.status !== 'Rejected') {
+                    displayStatus = 'Cancellation_Requested';
+                }
+            }
+
+            // --- GENERATE TOMBOL AKSI SESUAI STATUS ---
             let actionButtons = '';
-            
-            if (item.status === 'Pending') {
+
+            if (displayStatus === 'Pending') {
                 actionButtons = `
-                    <button class="btn btn-outline-danger rounded-pill fw-bold px-4 me-2" onclick="updateBookingStatus(${item.id_peminjaman}, 'Rejected')"><i class="fas fa-times me-2"></i>Tolak</button>
-                    <button class="btn btn-primary-custom rounded-pill fw-bold px-4" onclick="updateBookingStatus(${item.id_peminjaman}, 'Approved')"><i class="fas fa-check me-2"></i>Setujui</button>
-                `;
-            } else if (item.status === 'Approved') {
+            <button class="btn btn-outline-danger rounded-pill fw-bold px-4 me-2" onclick="updateBookingStatus(${item.id_peminjaman}, 'Rejected')"><i class="fas fa-times me-2"></i>Tolak</button>
+            <button class="btn btn-primary-custom rounded-pill fw-bold px-4" onclick="updateBookingStatus(${item.id_peminjaman}, 'Approved')"><i class="fas fa-check me-2"></i>Setujui</button>
+        `;
+            } else if (displayStatus === 'Approved') {
                 actionButtons = `
-                    <button class="btn btn-outline-secondary rounded-pill fw-bold px-4 me-2" onclick="updateBookingStatus(${item.id_peminjaman}, 'Cancelled')"><i class="fas fa-ban me-2"></i>Batalkan</button>
-                    <button class="btn btn-success rounded-pill fw-bold px-4" onclick="updateBookingStatus(${item.id_peminjaman}, 'Completed')"><i class="fas fa-flag-checkered me-2"></i>Selesai</button>
-                `;
-            } else if (item.status === 'Cancellation_Requested') {
+            <button class="btn btn-outline-secondary rounded-pill fw-bold px-4 me-2" onclick="updateBookingStatus(${item.id_peminjaman}, 'Cancelled')"><i class="fas fa-ban me-2"></i>Batalkan</button>
+            <button class="btn btn-success rounded-pill fw-bold px-4" onclick="updateBookingStatus(${item.id_peminjaman}, 'Completed')"><i class="fas fa-flag-checkered me-2"></i>Selesai</button>
+        `;
+            } else if (displayStatus === 'Cancellation_Requested') {
+                // TAMPILAN KHUSUS REQUEST BATAL
                 actionButtons = `
-                    <div class="alert alert-warning border-warning d-flex align-items-center w-100 mb-3">
-                        <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
-                        <div>
-                            <strong>Permintaan Pembatalan!</strong><br>
-                            Alasan User: "${item.alasan_batal || '-'}"
-                        </div>
-                    </div>
-                    <div class="d-flex gap-2 justify-content-end w-100">
-                        <button class="btn btn-secondary rounded-pill fw-bold px-4" onclick="updateBookingStatus(${item.id_peminjaman}, 'Approved')"><i class="fas fa-undo me-2"></i>Tolak (Tetap Lanjut)</button>
-                        <button class="btn btn-danger rounded-pill fw-bold px-4" onclick="updateBookingStatus(${item.id_peminjaman}, 'Cancelled')"><i class="fas fa-check me-2"></i>Konfirmasi Batal</button>
-                    </div>
-                `;
+            <div class="alert alert-warning border-warning d-flex align-items-center w-100 mb-3">
+                <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
+                <div>
+                    <strong>Permintaan Pembatalan!</strong><br>
+                    Alasan User: "<em>${item.alasan_pembatalan || '-'}</em>"
+                </div>
+            </div>
+            <div class="d-flex gap-2 justify-content-end w-100">
+                <button class="btn btn-secondary rounded-pill fw-bold px-4" onclick="updateBookingStatus(${item.id_peminjaman}, 'Approved')"><i class="fas fa-undo me-2"></i>Tolak (Tetap Lanjut)</button>
+                <button class="btn btn-danger rounded-pill fw-bold px-4" onclick="updateBookingStatus(${item.id_peminjaman}, 'Cancelled')"><i class="fas fa-check me-2"></i>Konfirmasi Batal</button>
+            </div>
+        `;
             } else {
-                // Status final (Completed, Rejected, Cancelled)
+                // Status Final (Selesai/Ditolak/Dibatalkan) -> Hanya tombol hapus
                 actionButtons = `<button class="btn btn-light border text-danger rounded-pill fw-bold px-4" onclick="deleteBooking(${item.id_peminjaman})"><i class="fas fa-trash-alt me-2"></i>Hapus Permanen</button>`;
             }
 
             const html = `
-            <div class="fade-in">
-                <button class="btn btn-link text-decoration-none text-muted mb-3 ps-0" onclick="loadBooking()">
-                    <i class="fas fa-arrow-left me-2"></i>Kembali ke Daftar
-                </button>
+    <div class="fade-in">
+        <button class="btn btn-link text-decoration-none text-muted mb-3 ps-0" onclick="loadBooking()">
+            <i class="fas fa-arrow-left me-2"></i>Kembali ke Daftar
+        </button>
 
-                <div class="row g-4">
-                    <div class="col-lg-8">
-                        <div class="card border-0 shadow-sm rounded-4 h-100">
-                            <div class="card-body p-5">
-                                <div class="d-flex justify-content-between align-items-start mb-4">
-                                    <div>
-                                        <span class="badge ${getBookingBadge(item.status)} rounded-pill px-3 py-2 mb-2">
-                                            ${getStatusIcon(item.status)} ${item.status.replace('_', ' ')}
-                                        </span>
-                                        <h3 class="fw-bold text-dark mt-2">${item.tujuan}</h3>
-                                        <p class="text-muted small mb-0"><i class="far fa-calendar-alt me-2"></i> Diajukan pada: ${tglPengajuan}</p>
-                                    </div>
-                                    <div class="bg-light p-3 rounded-3 text-center border" style="min-width: 120px;">
-                                        <div class="small text-muted fw-bold text-uppercase ls-1">ID Booking</div>
-                                        <div class="fs-4 fw-bold text-primary">#${item.id_peminjaman}</div>
-                                    </div>
-                                </div>
-
-                                <hr class="opacity-10 my-4">
-
-                                <h6 class="fw-bold text-uppercase text-muted small ls-1 mb-3">Jadwal Pemakaian</h6>
-                                <div class="d-flex align-items-center mb-4 bg-primary bg-opacity-10 p-4 rounded-3 border border-primary border-opacity-10">
-                                    <div class="me-4 text-center">
-                                        <i class="fas fa-clock fa-2x text-primary"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fs-5 fw-bold text-dark">${checkInFull}</div>
-                                        <div class="text-muted small">Sampai dengan ${checkOutFull}</div>
-                                    </div>
-                                </div>
-
-                                <h6 class="fw-bold text-uppercase text-muted small ls-1 mb-3">Detail Pemohon</h6>
-                                <div class="row g-3">
-                                    <div class="col-sm-6">
-                                        <div class="p-3 border rounded-3 bg-light h-100">
-                                            <small class="text-muted d-block mb-1">Nama Lengkap</small>
-                                            <div class="fw-bold text-dark">${item.nama_akun}</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="p-3 border rounded-3 bg-light h-100">
-                                            <small class="text-muted d-block mb-1">Nomor Identitas (NIM/NIP)</small>
-                                            <div class="fw-bold text-dark">${item.nomor_identitas || '-'}</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="p-3 border rounded-3 bg-light h-100">
-                                            <small class="text-muted d-block mb-1">Kategori</small>
-                                            <div class="fw-bold text-dark">${item.kategori_pemohon}</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="p-3 border rounded-3 bg-light h-100">
-                                            <small class="text-muted d-block mb-1">Instansi / Prodi</small>
-                                            <div class="fw-bold text-dark">${item.asal_instansi}</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                ${(item.alasan_batal) ? `
-                                    <hr class="opacity-10 my-4">
-                                    <div class="alert alert-danger border-danger bg-danger bg-opacity-10">
-                                        <h6 class="fw-bold text-danger mb-1"><i class="fas fa-info-circle me-2"></i>Catatan Pembatalan/Penolakan:</h6>
-                                        <p class="mb-0 text-dark small">${item.alasan_batal}</p>
-                                    </div>
-                                ` : ''}
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body p-5">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div>
+                                <span class="badge ${getBookingBadge(displayStatus)} rounded-pill px-3 py-2 mb-2">
+                                    ${getStatusIcon(displayStatus)} ${displayStatus.replace('Cancellation_Requested', 'Req. Batal').replace('_', ' ')}
+                                </span>
+                                <h3 class="fw-bold text-dark mt-2">${item.tujuan}</h3>
+                                <p class="text-muted small mb-0"><i class="far fa-calendar-alt me-2"></i> Diajukan pada: ${tglPengajuan}</p>
+                            </div>
+                            <div class="bg-light p-3 rounded-3 text-center border" style="min-width: 120px;">
+                                <div class="small text-muted fw-bold text-uppercase ls-1">ID Booking</div>
+                                <div class="fs-4 fw-bold text-primary">#${item.id_peminjaman}</div>
                             </div>
                         </div>
+
+                        <hr class="opacity-10 my-4">
+
+                        <h6 class="fw-bold text-uppercase text-muted small ls-1 mb-3">Jadwal Pemakaian</h6>
+                        <div class="d-flex align-items-center mb-4 bg-primary bg-opacity-10 p-4 rounded-3 border border-primary border-opacity-10">
+                            <div class="me-4 text-center">
+                                <i class="fas fa-clock fa-2x text-primary"></i>
+                            </div>
+                            <div>
+                                <div class="fs-5 fw-bold text-dark">${checkInFull}</div>
+                                <div class="text-muted small">Sampai dengan ${checkOutFull}</div>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold text-uppercase text-muted small ls-1 mb-3">Detail Pemohon</h6>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="p-3 border rounded-3 bg-light h-100">
+                                    <small class="text-muted d-block mb-1">Nama Lengkap</small>
+                                    <div class="fw-bold text-dark">${item.nama_akun}</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-3 border rounded-3 bg-light h-100">
+                                    <small class="text-muted d-block mb-1">Nomor Identitas (NIM/NIP)</small>
+                                    <div class="fw-bold text-dark">${item.nomor_identitas || '-'}</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-3 border rounded-3 bg-light h-100">
+                                    <small class="text-muted d-block mb-1">Kategori</small>
+                                    <div class="fw-bold text-dark">${item.kategori_pemohon}</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-3 border rounded-3 bg-light h-100">
+                                    <small class="text-muted d-block mb-1">Instansi / Prodi</small>
+                                    <div class="fw-bold text-dark">${item.asal_instansi}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${(item.catatan_admin || item.alasan_pembatalan) ? `
+                            <hr class="opacity-10 my-4">
+                            
+                            ${item.catatan_admin ? `
+                            <div class="alert alert-danger border-danger bg-danger bg-opacity-10 mb-2">
+                                <h6 class="fw-bold text-danger mb-1"><i class="fas fa-info-circle me-2"></i>Catatan Admin:</h6>
+                                <p class="mb-0 text-dark small">${item.catatan_admin}</p>
+                            </div>` : ''}
+                            
+                            ${(item.alasan_pembatalan && displayStatus === 'Cancellation_Requested') ? `
+                            <div class="alert alert-warning border-warning bg-warning bg-opacity-10">
+                                <h6 class="fw-bold text-warning mb-1"><i class="fas fa-user-edit me-2"></i>Alasan User Membatalkan:</h6>
+                                <p class="mb-0 text-dark small">${item.alasan_pembatalan}</p>
+                            </div>` : ''}
+                        ` : ''}
+
                     </div>
+                </div>
+            </div>
 
-                    <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm rounded-4 mb-4">
-                            <div class="card-body p-4">
-                                <h6 class="fw-bold text-primary mb-3">Kontak Cepat</h6>
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                        <i class="fab fa-whatsapp fs-5"></i>
-                                    </div>
-                                    <div>
-                                        <div class="small text-muted">WhatsApp / HP</div>
-                                        <a href="https://wa.me/${formatPhone(item.no_handphone)}" target="_blank" class="fw-bold text-dark text-decoration-none stretched-link">
-                                            ${item.no_handphone || '-'}
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                        <i class="far fa-envelope fs-5"></i>
-                                    </div>
-                                    <div>
-                                        <div class="small text-muted">Email</div>
-                                        <a href="mailto:${item.email_akun}" class="fw-bold text-dark text-decoration-none">
-                                            ${item.email_akun}
-                                        </a>
-                                    </div>
-                                </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-primary mb-3">Kontak Cepat</h6>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fab fa-whatsapp fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted">WhatsApp / HP</div>
+                                <a href="https://wa.me/${formatPhone(item.no_hp)}" target="_blank" class="fw-bold text-dark text-decoration-none stretched-link">
+                                    ${item.no_hp || '-'}
+                                </a>
                             </div>
                         </div>
-
-                        <div class="card border-0 shadow-sm rounded-4 bg-primary bg-opacity-10">
-                            <div class="card-body p-4">
-                                <h6 class="fw-bold text-primary mb-3">Tindakan Admin</h6>
-                                <div class="d-flex flex-column gap-2">
-                                    ${actionButtons}
-                                </div>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="far fa-envelope fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted">Email</div>
+                                <a href="mailto:${item.email_akun}" class="fw-bold text-dark text-decoration-none">
+                                    ${item.email_akun}
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>`;
+
+                <div class="card border-0 shadow-sm rounded-4 bg-primary bg-opacity-10">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-primary mb-3">Tindakan Admin</h6>
+                        <div class="d-flex flex-column gap-2">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
 
             document.getElementById('content-area').innerHTML = html;
         }
@@ -2531,7 +3129,9 @@ checkAuth();
                     input: 'textarea',
                     inputLabel: 'Masukkan alasan:',
                     inputPlaceholder: 'Contoh: Jadwal bentrok, Ruangan renovasi...',
-                    inputAttributes: { 'aria-label': 'Masukkan alasan' },
+                    inputAttributes: {
+                        'aria-label': 'Masukkan alasan'
+                    },
                     showCancelButton: true,
                     confirmButtonText: 'Ya, Lanjutkan',
                     confirmButtonColor: '#e63946',
@@ -2569,7 +3169,10 @@ checkAuth();
             formData.append('status', status);
             if (reason) formData.append('alasan_batal', reason);
 
-            fetch('api/peminjaman.php', { method: 'POST', body: formData })
+            fetch('api/peminjaman.php', {
+                    method: 'POST',
+                    body: formData
+                })
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -2597,7 +3200,10 @@ checkAuth();
                     formData.append('action', 'delete');
                     formData.append('id', id);
 
-                    fetch('api/peminjaman.php', { method: 'POST', body: formData })
+                    fetch('api/peminjaman.php', {
+                            method: 'POST',
+                            body: formData
+                        })
                         .then(r => r.json())
                         .then(res => {
                             if (res.success) {
@@ -2614,7 +3220,7 @@ checkAuth();
         // ==========================================
         // === 8. HELPER & UTILITIES ===
         // ==========================================
-        
+
         function fixImagePath(path) {
             if (!path) return '';
             if (path.startsWith('http') || path.startsWith('../')) return path;
@@ -2628,21 +3234,25 @@ checkAuth();
         // ==========================================
 
         let allAnggotaData = [];
-        let allUsersData = []; 
+        let allUsersData = [];
 
         function loadAnggota() {
             document.getElementById('page-title-text').innerText = 'Manajemen Anggota Lab';
-            
+
             fetch('api/anggota.php')
                 .then(r => r.json())
                 .then(result => {
-                    if(!result.success) {
+                    if (!result.success) {
                         document.getElementById('content-area').innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
                         return;
                     }
-                    
+
                     allAnggotaData = result.data || [];
-                    
+                    // --- TAMBAHAN KODE: SORTING (LAMA KE BARU) ---
+                    // Mengurutkan berdasarkan id_dosen dari kecil ke besar
+                    allAnggotaData.sort((a, b) => a.id_dosen - b.id_dosen);
+                    // ---------------------------------------------
+
                     const html = `
                     <div class="fade-in">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -2674,7 +3284,7 @@ checkAuth();
                             </div>
                         </div>
                     </div>`;
-                    
+
                     document.getElementById('content-area').innerHTML = html;
                     renderAnggotaTable(allAnggotaData);
                 })
@@ -2683,7 +3293,7 @@ checkAuth();
 
         function renderAnggotaTable(data) {
             const tbody = document.getElementById('anggotaTableBody');
-            
+
             if (!data.length) {
                 tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted">Belum ada data anggota.</td></tr>`;
                 return;
@@ -2691,17 +3301,17 @@ checkAuth();
 
             tbody.innerHTML = data.map(item => {
                 // Tampilan Foto (Fix Path)
-                const photoSrc = (item.foto && item.foto !== '') 
-                    ? item.foto + '?t=' + new Date().getTime() 
-                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.nama)}&background=random&color=fff`;
+                const photoSrc = (item.foto && item.foto !== '') ?
+                    item.foto + '?t=' + new Date().getTime() :
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(item.nama)}&background=random&color=fff`;
 
                 // Link Icons
                 let linksHtml = '';
                 const links = item.links_map || {};
-                if(links['Sinta']) linksHtml += `<a href="${links['Sinta']}" target="_blank" class="btn btn-sm btn-light text-primary mx-1"><i class="fas fa-book"></i></a>`;
-                if(links['Scopus']) linksHtml += `<a href="${links['Scopus']}" target="_blank" class="btn btn-sm btn-light text-warning mx-1"><i class="fas fa-star"></i></a>`;
-                if(links['Google Scholar']) linksHtml += `<a href="${links['Google Scholar']}" target="_blank" class="btn btn-sm btn-light text-success mx-1"><i class="fas fa-graduation-cap"></i></a>`;
-                
+                if (links['Sinta']) linksHtml += `<a href="${links['Sinta']}" target="_blank" class="btn btn-sm btn-light text-primary mx-1"><i class="fas fa-book"></i></a>`;
+                if (links['Scopus']) linksHtml += `<a href="${links['Scopus']}" target="_blank" class="btn btn-sm btn-light text-warning mx-1"><i class="fas fa-star"></i></a>`;
+                if (links['Google Scholar']) linksHtml += `<a href="${links['Google Scholar']}" target="_blank" class="btn btn-sm btn-light text-success mx-1"><i class="fas fa-graduation-cap"></i></a>`;
+
                 return `
                 <tr>
                     <td class="ps-4 text-center">
@@ -2721,7 +3331,8 @@ checkAuth();
                         <button class="btn btn-sm btn-light text-danger" onclick="deleteAnggota(${item.id_dosen})"><i class="fas fa-trash-alt"></i></button>
                     </td>
                 </tr>
-            `}).join('');
+            `
+            }).join('');
         }
 
         // Filter sederhana
@@ -2737,36 +3348,38 @@ checkAuth();
             try {
                 const resUsers = await fetch('api/anggota.php?action=get_users');
                 const jsonUsers = await resUsers.json();
-                
-                if(jsonUsers.success) {
-                    allUsersData = jsonUsers.data; 
+
+                if (jsonUsers.success) {
+                    allUsersData = jsonUsers.data;
                 } else {
                     Swal.fire("Gagal Load User", jsonUsers.message, "error");
                     return;
                 }
-            } catch(e) { 
+            } catch (e) {
                 Swal.fire("Koneksi Error", "Tidak bisa mengambil data user.", "error");
                 return;
             }
 
             // 2. Load Detail Data jika Edit
             let data = null;
-            if(id) {
+            if (id) {
                 try {
                     const resDetail = await fetch(`api/anggota.php?action=detail&id=${id}`);
                     const jsonDetail = await resDetail.json();
-                    if(jsonDetail.success) {
+                    if (jsonDetail.success) {
                         data = jsonDetail.data;
                     } else {
                         Swal.fire("Error", jsonDetail.message, "error");
                         return;
                     }
-                } catch(e) { console.error("Gagal load detail"); }
+                } catch (e) {
+                    console.error("Gagal load detail");
+                }
             }
 
             const isEdit = data !== null;
             const hasImage = isEdit && data.foto && data.foto !== '';
-            
+
             document.getElementById('page-title-text').innerText = isEdit ? 'Edit Data Anggota' : 'Tambah Anggota Baru';
 
             const currentUserName = isEdit ? data.nama : '';
@@ -2873,10 +3486,10 @@ checkAuth();
 
             // Load Links
             const linksData = (isEdit && data.links_dynamic) ? data.links_dynamic : [];
-            if(linksData.length > 0) {
+            if (linksData.length > 0) {
                 linksData.forEach(link => addLinkRow(link.platform, link.url));
             } else {
-                addLinkRow(); 
+                addLinkRow();
             }
 
             // Close user list listener
@@ -2889,55 +3502,65 @@ checkAuth();
             // SUBMIT HANDLER
             document.getElementById('formAnggota').onsubmit = (e) => {
                 e.preventDefault();
-                
+
                 // Validasi ID User
-                if(document.getElementById('input_id_user').value === '') {
+                if (document.getElementById('input_id_user').value === '') {
                     Swal.fire('Peringatan', 'Silakan cari dan pilih user terlebih dahulu.', 'warning');
                     return;
                 }
 
                 // Langsung fetch manual agar responsif
                 const formData = new FormData(e.target);
-                
-                fetch('api/anggota.php', { method: 'POST', body: formData })
-                .then(r => r.json())
-                .then(res => {
-                    if(res.success) {
-                        Swal.fire('Berhasil', 'Data anggota berhasil disimpan.', 'success');
-                        loadAnggota();
-                    } else {
-                        Swal.fire('Gagal', res.message, 'error');
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    Swal.fire('Error', 'Terjadi kesalahan pada server.', 'error');
-                });
+
+                fetch('api/anggota.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            Swal.fire('Berhasil', 'Data anggota berhasil disimpan.', 'success');
+                            loadAnggota();
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Error', 'Terjadi kesalahan pada server.', 'error');
+                    });
             };
         }
 
         // --- FUNGSI DELETE ---
         function deleteAnggota(id) {
             Swal.fire({
-                title: 'Hapus?', text: "Data tidak bisa kembali!", icon: 'warning',
-                showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya, Hapus'
+                title: 'Hapus?',
+                text: "Data tidak bisa kembali!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus'
             }).then((result) => {
                 if (result.isConfirmed) {
                     const fd = new FormData();
                     fd.append('action', 'delete');
                     fd.append('id', id);
 
-                    fetch('api/anggota.php', { method: 'POST', body: fd })
-                    .then(r => r.json())
-                    .then(res => {
-                        if(res.success) {
-                            Swal.fire('Terhapus', 'Data dihapus', 'success');
-                            loadAnggota();
-                        } else {
-                            Swal.fire('Gagal', res.message, 'error');
-                        }
-                    })
-                    .catch(err => Swal.fire('Error', 'Koneksi error', 'error'));
+                    fetch('api/anggota.php', {
+                            method: 'POST',
+                            body: fd
+                        })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                Swal.fire('Terhapus', 'Data dihapus', 'success');
+                                loadAnggota();
+                            } else {
+                                Swal.fire('Gagal', res.message, 'error');
+                            }
+                        })
+                        .catch(err => Swal.fire('Error', 'Koneksi error', 'error'));
                 }
             });
         }
@@ -2945,9 +3568,12 @@ checkAuth();
         function searchUserLocal(val) {
             const listEl = document.getElementById('userResultList');
             const keyword = val ? val.toLowerCase().trim() : '';
-            
-            if (!keyword) { listEl.classList.add('d-none'); return; }
-            
+
+            if (!keyword) {
+                listEl.classList.add('d-none');
+                return;
+            }
+
             // Cek apakah data user sudah dimuat
             if (!allUsersData || allUsersData.length === 0) {
                 listEl.innerHTML = `<li class="list-group-item text-danger small">Data user belum siap. Coba refresh halaman.</li>`;
@@ -2980,14 +3606,12 @@ checkAuth();
             document.getElementById('userResultList').classList.add('d-none');
         }
 
-        function addLinkRow(platform='', url='') {
+        function addLinkRow(platform = '', url = '') {
             const div = document.createElement('div');
             div.className = 'input-group mb-2';
             div.innerHTML = `
                 <select name="link_platform[]" class="form-select" style="max-width: 130px;">
-                    <option value="">Platform</option>
                     <option value="Sinta" ${platform=='Sinta'?'selected':''}>Sinta</option>
-                    <option value="Scopus" ${platform=='Scopus'?'selected':''}>Scopus</option>
                     <option value="Google Scholar" ${platform=='Google Scholar'?'selected':''}>Scholar</option>
                 </select>
                 <input type="text" name="link_url[]" class="form-control" placeholder="URL..." value="${url}">
@@ -2999,7 +3623,9 @@ checkAuth();
         function previewFile(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) { document.getElementById('previewImg').src = e.target.result; }
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                }
                 reader.readAsDataURL(input.files[0]);
             }
         }
@@ -3012,17 +3638,17 @@ checkAuth();
 
         function loadUsers() {
             document.getElementById('page-title-text').innerText = 'Manajemen Pengguna';
-            
+
             fetch('api/users.php')
                 .then(r => r.json())
                 .then(result => {
-                    if(!result.success) {
+                    if (!result.success) {
                         document.getElementById('content-area').innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
                         return;
                     }
-                    
+
                     allUsersList = result.data || [];
-                    
+
                     const html = `
                     <div class="fade-in">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -3053,7 +3679,7 @@ checkAuth();
                             </div>
                         </div>
                     </div>`;
-                    
+
                     document.getElementById('content-area').innerHTML = html;
                     renderUserTable(allUsersList);
                 })
@@ -3062,16 +3688,19 @@ checkAuth();
 
         function renderUserTable(data) {
             const tbody = document.getElementById('userTableBody');
-            if (!data.length) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">Belum ada data user.</td></tr>`; return; }
+            if (!data.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">Belum ada data user.</td></tr>`;
+                return;
+            }
 
             tbody.innerHTML = data.map(u => {
-                const roleBadge = u.role === 'admin' 
-                    ? '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill">Admin</span>' 
-                    : '<span class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill">Mahasiswa</span>';
-                
-                const statusBadge = u.is_active == 1 
-                    ? '<span class="badge bg-success bg-opacity-10 text-success rounded-pill">Active</span>' 
-                    : '<span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">Inactive</span>';
+                const roleBadge = u.role === 'admin' ?
+                    '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill">Admin</span>' :
+                    '<span class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill">Mahasiswa</span>';
+
+                const statusBadge = u.is_active == 1 ?
+                    '<span class="badge bg-success bg-opacity-10 text-success rounded-pill">Active</span>' :
+                    '<span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">Inactive</span>';
 
                 // Safe JSON for onclick
                 const userJson = JSON.stringify(u).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
@@ -3147,19 +3776,22 @@ checkAuth();
                     fd.append('action', 'update_role');
                     fd.append('id_user', data.id_user);
                     fd.append('role', data.role);
-                    if(data.is_active) fd.append('is_active', 1);
+                    if (data.is_active) fd.append('is_active', 1);
 
-                    fetch('api/users.php', { method: 'POST', body: fd })
-                    .then(r => r.json())
-                    .then(res => {
-                        if(res.success) {
-                            Swal.fire('Berhasil', res.message, 'success');
-                            loadUsers();
-                        } else {
-                            Swal.fire('Gagal', res.message, 'error');
-                        }
-                    })
-                    .catch(err => Swal.fire('Error', 'Terjadi kesalahan sistem', 'error'));
+                    fetch('api/users.php', {
+                            method: 'POST',
+                            body: fd
+                        })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                Swal.fire('Berhasil', res.message, 'success');
+                                loadUsers();
+                            } else {
+                                Swal.fire('Gagal', res.message, 'error');
+                            }
+                        })
+                        .catch(err => Swal.fire('Error', 'Terjadi kesalahan sistem', 'error'));
                 }
             });
         }
@@ -3178,16 +3810,19 @@ checkAuth();
                     fd.append('action', 'delete');
                     fd.append('id', id);
 
-                    fetch('api/users.php', { method: 'POST', body: fd })
-                    .then(r => r.json())
-                    .then(res => {
-                        if(res.success) {
-                            Swal.fire('Terhapus!', 'User berhasil dihapus.', 'success');
-                            loadUsers();
-                        } else {
-                            Swal.fire('Gagal', res.message, 'error');
-                        }
-                    });
+                    fetch('api/users.php', {
+                            method: 'POST',
+                            body: fd
+                        })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                Swal.fire('Terhapus!', 'User berhasil dihapus.', 'success');
+                                loadUsers();
+                            } else {
+                                Swal.fire('Gagal', res.message, 'error');
+                            }
+                        });
                 }
             });
         }
@@ -3196,12 +3831,12 @@ checkAuth();
         // === [UPDATED] LOGO & MASKOT UI ===
         // ==========================================
 
-        function loadMaknaLogo(){ 
+        function loadMaknaLogo() {
             document.getElementById('page-title-text').innerText = 'Identitas Visual';
-            fetch('api/settings.php').then(r=>r.json()).then(res=>{ 
-                const s = res.data||{}; 
-                const v = (k) => s[k]?.value||''; 
-                const img = (k) => fixImagePath(s[k]?.file_path); 
+            fetch('api/settings.php').then(r => r.json()).then(res => {
+                const s = res.data || {};
+                const v = (k) => s[k]?.value || '';
+                const img = (k) => fixImagePath(s[k]?.file_path);
 
                 const html = `
                 <div class="row g-4 fade-in">
@@ -3241,12 +3876,12 @@ checkAuth();
                             </div>
                         </div>
                     </div>
-                </div>`; 
-                document.getElementById('content-area').innerHTML = html; 
-            }); 
+                </div>`;
+                document.getElementById('content-area').innerHTML = html;
+            });
         }
 
-        function openSetForm(k, t, v, currentImg){ 
+        function openSetForm(k, t, v, currentImg) {
             const html = `
             <div class="form-container-view fade-in">
                 <form id="fSet">
@@ -3296,21 +3931,24 @@ checkAuth();
                 </form>
             </div>`;
             document.getElementById('content-area').innerHTML = html;
-            document.getElementById('fSet').onsubmit = (e) => { e.preventDefault(); submitFormPage('api/settings.php', new FormData(e.target), loadMaknaLogo); }
+            document.getElementById('fSet').onsubmit = (e) => {
+                e.preventDefault();
+                submitFormPage('api/settings.php', new FormData(e.target), loadMaknaLogo);
+            }
         }
 
         // ==========================================
         // === [UPDATED] VISI & MISI UI (UNIFIED STYLE) ===
         // ==========================================
 
-        function loadVisiMisi(){ 
+        function loadVisiMisi() {
             document.getElementById('page-title-text').innerText = 'Arah & Tujuan';
-            fetch('api/settings.php').then(r=>r.json()).then(res=>{ 
-                const s=res.data||{}; 
+            fetch('api/settings.php').then(r => r.json()).then(res => {
+                const s = res.data || {};
                 const vVisi = s.visi?.value || 'Belum ada data visi.';
                 const vMisi = s.misi?.value || 'Belum ada data misi.';
 
-                const html=`
+                const html = `
                 <div class="row justify-content-center fade-in">
                     <div class="col-lg-10">
                         <div class="card border-0 shadow-sm rounded-4">
@@ -3349,20 +3987,20 @@ checkAuth();
                             </div>
                         </div>
                     </div>
-                </div>`; 
-                document.getElementById('content-area').innerHTML=html; 
-            }); 
+                </div>`;
+                document.getElementById('content-area').innerHTML = html;
+            });
         }
 
-        function openVisiMisiForm(){
+        function openVisiMisiForm() {
             // Fetch data first to prevent quotes issues in onclick
             document.getElementById('content-area').innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>';
-            
-            fetch('api/settings.php').then(r=>r.json()).then(res=>{
+
+            fetch('api/settings.php').then(r => r.json()).then(res => {
                 const s = res.data || {};
                 const v = s.visi?.value || '';
                 const m = s.misi?.value || '';
-                
+
                 const html = `
                 <div class="row justify-content-center fade-in">
                     <div class="col-lg-8">
@@ -3399,7 +4037,10 @@ checkAuth();
                     </div>
                 </div>`;
                 document.getElementById('content-area').innerHTML = html;
-                document.getElementById('fVm').onsubmit=(e)=>{e.preventDefault(); submitFormPage('api/settings.php',new FormData(e.target),loadVisiMisi);}
+                document.getElementById('fVm').onsubmit = (e) => {
+                    e.preventDefault();
+                    submitFormPage('api/settings.php', new FormData(e.target), loadVisiMisi);
+                }
             });
         }
 
@@ -3407,13 +4048,13 @@ checkAuth();
         // === [UPDATED] IDENTITAS LAB UI ===
         // ==========================================
 
-        function loadIdentitas(){ 
+        function loadIdentitas() {
             document.getElementById('page-title-text').innerText = 'Profil Laboratorium';
-            fetch('api/settings.php').then(r=>r.json()).then(res=>{ 
-                const s=res.data||{}; 
-                const v=(k)=>s[k]?s[k].value:''; 
-                
-                const html=`
+            fetch('api/settings.php').then(r => r.json()).then(res => {
+                const s = res.data || {};
+                const v = (k) => s[k] ? s[k].value : '';
+
+                const html = `
                 <div class="row justify-content-center fade-in">
                     <div class="col-lg-10 col-xl-8">
                         <div class="card border-0 shadow-sm rounded-4">
@@ -3472,10 +4113,13 @@ checkAuth();
                             </div>
                         </div>
                     </div>
-                </div>`; 
-                document.getElementById('content-area').innerHTML=html; 
-                document.getElementById('fId').onsubmit=(e)=>{e.preventDefault();submitFormPage('api/settings.php', new FormData(e.target), loadIdentitas);} 
-            }); 
+                </div>`;
+                document.getElementById('content-area').innerHTML = html;
+                document.getElementById('fId').onsubmit = (e) => {
+                    e.preventDefault();
+                    submitFormPage('api/settings.php', new FormData(e.target), loadIdentitas);
+                }
+            });
         }
 
         // ==========================================
@@ -3483,40 +4127,53 @@ checkAuth();
         // ==========================================
 
         function submitFormPage(url, data, callback) {
-            fetch(url, {method:'POST', body:data})
-            .then(r=>r.json())
-            .then(res => {
-                if(res.success){
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: 'Data berhasil disimpan.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    if(callback) callback(); 
-                } else {
+            fetch(url, {
+                    method: 'POST',
+                    body: data
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: 'Data berhasil disimpan.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        if (callback) callback();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: res.message
+                        });
+                    }
+                })
+                .catch(err => {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Gagal!',
-                        text: res.message
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan koneksi'
                     });
-                }
-            })
-            .catch(err => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: 'Terjadi kesalahan koneksi'
                 });
+        }
+
+        function loadLog() {
+            document.getElementById('page-title-text').innerText = 'Log Aktivitas';
+            fetchData('api/log.php?action=list', ['Waktu', 'User', 'Aktivitas', 'Deskripsi', 'IP'], (i) => `<td>${i.waktu}</td><td>${i.nama}</td><td><span class="badge bg-info text-dark">${i.aktivitas}</span></td><td class="text-start">${i.deskripsi}</td><td>${i.ip_address}</td>`, 'Riwayat Aktivitas', null);
+        }
+
+        function fetchData(url, heads, rowFn, title, modalFn) {
+            fetch(url).then(r => r.json()).then(res => {
+                if (!res.success) return Swal.fire('Error', res.message, 'error');
+                const h = heads.map(x => `<th>${x}</th>`).join('') + (modalFn ? '<th>Aksi</th>' : '');
+                const b = res.data.length ? res.data.map(x => `<tr>${rowFn(x)}${modalFn?`<td class="text-center"><button class="btn btn-sm btn-light border text-warning me-1" onclick="${modalFn}(${Object.values(x)[0]})"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-light border text-danger" onclick="deleteItem('${url}',${Object.values(x)[0]})"><i class="fas fa-trash"></i></button></td>`:''}</tr>`).join('') : '<tr><td colspan="10" class="text-center py-5 text-muted">Kosong.</td></tr>';
+                document.getElementById('content-area').innerHTML = `<div class="card fade-in"><div class="card-header"><span>${title}</span>${modalFn?`<button class="btn-primary-custom" onclick="${modalFn}()"><i class="fas fa-plus"></i> Tambah</button>`:''}</div><div class="card-body p-0"><table class="table"><thead><tr>${h}</tr></thead><tbody>${b}</tbody></table></div></div>`;
             });
         }
-        
-        function loadLog(){ document.getElementById('page-title-text').innerText = 'Log Aktivitas'; fetchData('api/log.php?action=list', ['Waktu','User','Aktivitas','Deskripsi','IP'], (i)=>`<td>${i.waktu}</td><td>${i.nama}</td><td><span class="badge bg-info text-dark">${i.aktivitas}</span></td><td class="text-start">${i.deskripsi}</td><td>${i.ip_address}</td>`, 'Riwayat Aktivitas', null); }
 
-        function fetchData(url, heads, rowFn, title, modalFn){ fetch(url).then(r=>r.json()).then(res=>{ if(!res.success)return Swal.fire('Error', res.message, 'error'); const h=heads.map(x=>`<th>${x}</th>`).join('')+(modalFn?'<th>Aksi</th>':''); const b=res.data.length?res.data.map(x=>`<tr>${rowFn(x)}${modalFn?`<td class="text-center"><button class="btn btn-sm btn-light border text-warning me-1" onclick="${modalFn}(${Object.values(x)[0]})"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-light border text-danger" onclick="deleteItem('${url}',${Object.values(x)[0]})"><i class="fas fa-trash"></i></button></td>`:''}</tr>`).join(''):'<tr><td colspan="10" class="text-center py-5 text-muted">Kosong.</td></tr>'; document.getElementById('content-area').innerHTML=`<div class="card fade-in"><div class="card-header"><span>${title}</span>${modalFn?`<button class="btn-primary-custom" onclick="${modalFn}()"><i class="fas fa-plus"></i> Tambah</button>`:''}</div><div class="card-body p-0"><table class="table"><thead><tr>${h}</tr></thead><tbody>${b}</tbody></table></div></div>`; }); }
-        
-        function deleteItem(u,id){ 
+        function deleteItem(u, id) {
             Swal.fire({
                 title: 'Apakah Anda yakin?',
                 text: "Data akan dihapus secara permanen!",
@@ -3527,21 +4184,28 @@ checkAuth();
                 confirmButtonText: 'Ya, Hapus!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const d=new FormData(); d.append('action','delete'); d.append('id',id); 
-                    fetch(u,{method:'POST',body:d}).then(r=>r.json()).then(res=>{ 
-                        if(res.success){ 
-                            loadPage(currentPage); 
+                    const d = new FormData();
+                    d.append('action', 'delete');
+                    d.append('id', id);
+                    fetch(u, {
+                        method: 'POST',
+                        body: d
+                    }).then(r => r.json()).then(res => {
+                        if (res.success) {
+                            loadPage(currentPage);
                             Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-                        }else{ 
-                            Swal.fire('Gagal!', 'Data gagal dihapus.', 'error'); 
-                        } 
+                        } else {
+                            Swal.fire('Gagal!', 'Data gagal dihapus.', 'error');
+                        }
                     });
                 }
             });
         }
-        
-        function escapeHtml(s){ return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''; }
-        
+
+        function escapeHtml(s) {
+            return s ? s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+        }
+
         function loadKontak() {
             document.getElementById('page-title-text').innerText = 'Pesan Masuk';
             fetch('api/kontak.php').then(r => r.json()).then(result => {
@@ -3596,12 +4260,12 @@ checkAuth();
 
             tbody.innerHTML = data.map(item => {
                 const isRead = item.is_read == 1;
-                const rowClass = isRead ? '' : 'bg-light'; 
-                const badgeStatus = isRead 
-                    ? '<span class="badge bg-light text-secondary border border-secondary border-opacity-25 rounded-pill"><i class="fas fa-check-double me-1"></i> Dibaca</span>' 
-                    : '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill"><i class="fas fa-circle me-1" style="font-size:8px;"></i> Baru</span>';
+                const rowClass = isRead ? '' : 'bg-light';
+                const badgeStatus = isRead ?
+                    '<span class="badge bg-light text-secondary border border-secondary border-opacity-25 rounded-pill"><i class="fas fa-check-double me-1"></i> Dibaca</span>' :
+                    '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill"><i class="fas fa-circle me-1" style="font-size:8px;"></i> Baru</span>';
                 let dateDisplay = item.created_at;
-                
+
                 // PENTING: Mengamankan string JSON agar tidak error jika ada tanda kutip di dalam pesan
                 const itemSafe = JSON.stringify(item).replace(/'/g, "&apos;");
 
@@ -3625,7 +4289,7 @@ checkAuth();
                 </tr>`;
             }).join('');
         }
-        
+
         function viewPesan(item) {
             Swal.fire({
                 title: `<h5 class="fw-bold text-primary mb-0">${item.subjek}</h5>`,
@@ -3655,18 +4319,18 @@ checkAuth();
 
             if (item.is_read == 0) {
                 const formData = new FormData();
-                formData.append('action', 'mark_read'); 
+                formData.append('action', 'mark_read');
                 formData.append('id', item.id_kontak);
-                
+
                 fetch('api/kontak.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(r => r.json())
-                .then(res => {
-                    loadKontak(); 
-                })
-                .catch(err => console.log('Gagal update status read:', err));
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        loadKontak();
+                    })
+                    .catch(err => console.log('Gagal update status read:', err));
             }
         }
 
@@ -3685,20 +4349,23 @@ checkAuth();
                     const formData = new FormData();
                     formData.append('action', 'delete');
                     formData.append('id', id);
-                    
-                    fetch('api/kontak.php', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(res => {
-                        if (res.success) {
-                            Swal.fire('Terhapus!', 'Pesan berhasil dihapus.', 'success');
-                            loadKontak(); 
-                        } else {
-                            Swal.fire('Gagal!', res.message || 'Terjadi kesalahan.', 'error');
-                        }
-                    })
-                    .catch(err => {
-                        Swal.fire('Error', 'Gagal menghubungi server.', 'error');
-                    });
+
+                    fetch('api/kontak.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(res => {
+                            if (res.success) {
+                                Swal.fire('Terhapus!', 'Pesan berhasil dihapus.', 'success');
+                                loadKontak();
+                            } else {
+                                Swal.fire('Gagal!', res.message || 'Terjadi kesalahan.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire('Error', 'Gagal menghubungi server.', 'error');
+                        });
                 }
             });
         }
@@ -3727,4 +4394,5 @@ checkAuth();
         loadPage('beranda');
     </script>
 </body>
+
 </html>

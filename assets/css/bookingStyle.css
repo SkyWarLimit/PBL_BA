@@ -567,7 +567,7 @@ body {
 }
 
 /* ========================================= */
-/* CONTENT AREA */
+/* 3. STYLE CONTENT AREA (DARI KODE ASLI) */
 /* ========================================= */
 
 .content-container {
@@ -603,6 +603,7 @@ body {
   max-width: 760px;
 }
 
+/* Style Calendar & Form Booking */
 .calendar-container {
   background-color: white;
   border-radius: 10px;
@@ -610,18 +611,25 @@ body {
   padding: 25px;
 }
 
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.calendar-month { font-size: 24px; font-weight: 700; color: #333; }
+.calendar-nav { display: flex; gap: 10px; }
+.calendar-nav button { background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.calendar-table { width: 100%; border-collapse: collapse; }
+.calendar-table th { text-align: center; padding: 10px 0; font-weight: 600; color: #666; }
+.calendar-table td { text-align: center; padding: 12px 0; cursor: pointer; border-radius: 5px; }
+.calendar-table td:hover { background-color: #f0f8ff; }
+.calendar-table td.active { background-color: #2b95fd; color: white; }
+.calendar-table td.other-month { color: #ccc; }
 
-.calendar-month {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-}
+.booking-form { background-color: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); padding: 25px; margin-top: 30px; }
+.form-group { margin-bottom: 20px; }
+.form-label { font-weight: 600; color: #333; margin-bottom: 8px; }
+.form-control { border: 1px solid #ddd; border-radius: 5px; padding: 10px 15px; width: 100%; }
+.time-inputs { display: flex; gap: 15px; }
+.time-inputs .form-group { flex: 1; }
+.booking-btn { background-color: #2b95fd; color: white; border: none; padding: 12px 30px; border-radius: 5px; font-weight: 600; width: 100%; margin-top: 10px; }
+.booking-btn:hover { background-color: #1a7fd8; }
 
 .calendar-nav {
   display: flex;
@@ -720,4 +728,3 @@ body {
 .booking-btn:hover {
   background-color: #1a7fd8;
 }
-

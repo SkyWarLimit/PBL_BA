@@ -36,6 +36,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 }
+
+// --- 2. AMBIL DATA SETTING (Logo) ---
+$logoSrc = '../assets/images/logo.png';
+
+try {
+    $database = new Database(); // Pastikan inisialisasi ulang jika belum ada
+    $db = $database->getConnection();
+
+    // --- PERBAIKAN 2: SQL Query untuk PostgreSQL ---
+    // Kata "key" harus dibungkus kutip dua ("key") karena itu reserved word di Postgres
+    $sql = 'SELECT "key", value, file_path FROM settings WHERE "key" IN (\'logo\')';
+
+    $stmt = $db->query($sql);
+    $settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $settings = [];
+    foreach ($settingsRaw as $row) {
+        $settings[$row['key']] = $row;
+    }
+
+    if (isset($settings['logo'])) {
+        if (!empty($settings['logo']['file_path'])) {
+            $logoSrc =  $settings['logo']['file_path']; // Path relatif mungkin perlu disesuaikan
+        }
+    }
+} catch (Exception $e) {
+    // Silent fail agar login tetap bisa tampil meski gambar error
+}
 ?>
 
 <!DOCTYPE html>
@@ -142,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <div class="login-container">
         <div class="register-left">
-            <img src="../assets/images/logo.png" alt="Logo Lab" class="login-logo">
+            <img src="<?= htmlspecialchars($logoSrc); ?>" alt="Logo Laboratorium">
             <h3 class="welcome-title">Join Us Now!</h3>
             <p class="welcome-text">Bergabunglah dengan komunitas Laboratorium Business Analytics dan mulai kelola data Anda.</p>
         </div>
